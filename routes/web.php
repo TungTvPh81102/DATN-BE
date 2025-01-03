@@ -7,7 +7,9 @@ use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\API\Auth\GoogleController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -21,11 +23,20 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+#============================== ROUTE GOOGLE AUTH =============================
+Route::prefix('auth')->as('auth.')->group(function () {
+    Route::get('google', [GoogleController::class, 'redirectToGoogle'])->name('google');
+    Route::get('google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
+
+});
+
 Route::prefix('admin')->as('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'login'])->name('login');
     Route::post('login', [AuthController::class, 'handleLogin'])->name('handleLogin');
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');
 });
+
 
 Route::prefix('admin')->as('admin.')
     ->middleware(['roleHasAdmins', 'check_permission:view.dashboard'])
@@ -143,9 +154,25 @@ Route::prefix('admin')->as('admin.')
                 ->can('coupon.delete');
         });
 
+        #============================== ROUTE SETTINGS =============================
+        Route::prefix('settings')->as('settings.')->group(function () {
+            Route::get('/', [SettingController::class, 'index'])->name('index');
+            Route::get('/create', [SettingController::class, 'create'])->name('create')
+                ->can('setting.create');
+            Route::post('/', [SettingController::class, 'store'])->name('store')
+                ->can('setting.create');
+            Route::get('/edit/{setting}', [SettingController::class, 'edit'])->name('edit')
+                ->can('setting.update');
+            Route::put('/{setting}', [SettingController::class, 'update'])->name('update')
+                ->can('setting.update');
+            Route::delete('/{setting}', [SettingController::class, 'destroy'])->name('destroy')
+                ->can('setting.delete');
+        });
+
         #============================== ROUTE APPROVAL =============================
 
         #============================== ROUTE INVOICE =============================
+
 
 
     });

@@ -99,7 +99,7 @@
                                 Danh sách vai trò </a>
                         </li>
                         <li class="nav-item">
-                            <a href="apps-chat.html" class="nav-link" data-key="t-chat">
+                            <a href="{{ route('admin.roles.create') }}" class="nav-link" data-key="t-chat">
                                 Thêm vai trò </a>
                         </li>
                     </ul>
@@ -119,11 +119,11 @@
             <div class="collapse menu-dropdown" id="sidebarCategory">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
-                        <a href="apps-chat.html" class="nav-link" data-key="t-chat">
+                        <a href="{{ route('admin.categories.index') }}" class="nav-link" data-key="t-chat">
                             Danh sách danh mục </a>
                     </li>
                     <li class="nav-item">
-                        <a href="apps-chat.html" class="nav-link" data-key="t-chat">
+                        <a href="{{ route('admin.categories.create') }}" class="nav-link" data-key="t-chat">
                             Thêm mới danh mục </a>
                     </li>
                 </ul>
@@ -155,11 +155,11 @@
             <div class="collapse menu-dropdown" id="sidebarPost">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
-                        <a href="apps-chat.html" class="nav-link" data-key="t-chat">
+                        <a href="{{ route('admin.posts.index') }}" class="nav-link" data-key="t-chat">
                             Danh sách bài viết </a>
                     </li>
                     <li class="nav-item">
-                        <a href="apps-chat.html" class="nav-link" data-key="t-chat">
+                        <a href="{{ route('admin.posts.create') }}" class="nav-link" data-key="t-chat">
                             Thêm mới bài viết </a>
                     </li>
                 </ul>
@@ -185,6 +185,23 @@
             <a class="nav-link menu-link" href="#sidebarComment">
                 <i class="las la-comment"></i> <span data-key="t-authentication">Quản lý bình luận</span>
             </a>
+
+            <a class="nav-link menu-link" href="#sidebarSetting" data-bs-toggle="collapse" role="button"
+                aria-expanded="false" aria-controls="sidebarSetting">
+                <i class=" ri-settings-3-line"></i> <span data-key="t-authentication">Quản lý settings</span>
+            </a>
+            <div class="collapse menu-dropdown" id="sidebarSetting">
+                <ul class="nav nav-sm flex-column">
+                    <li class="nav-item">
+                        <a href="{{ route('admin.settings.index') }}" class="nav-link" data-key="t-chat">
+                            Danh sách settings </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('admin.settings.create') }}" class="nav-link" data-key="t-chat">
+                            Thêm mới settings </a>
+                    </li>
+                </ul>
+            </div>
 
         </li>
 

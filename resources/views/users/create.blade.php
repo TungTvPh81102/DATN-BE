@@ -10,8 +10,11 @@
 
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
-                            <li class="breadcrumb-item"><a>Quản lý thành viên</a></li>
-                            <li class="breadcrumb-item active">Thêm mới người dùng</li>
+                            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                            <li class="breadcrumb-item active"><a href="{{ route('admin.users.index') }}">Danh sách người
+                                    dùng</a></li>
+                            <li class="breadcrumb-item active"><a href="{{ route('admin.users.create') }}">Thêm mới người
+                                    dùng</a></li>
                         </ol>
                     </div>
 
@@ -22,9 +25,6 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center d-flex">
                 <h4 class="card-title mb-0 flex-grow-1">Thêm mới người dùng</h4>
-                @if (session()->has('error') && session()->get('error') != null)
-                    <span class="badge bg-danger text-end">Thao tác không thành công</span>
-                @endif
             </div><!-- end card header -->
             <div class="card-body">
                 <div class="live-preview">
@@ -85,7 +85,8 @@
                             <select name="role" id="" class="form-select mb-2">
                                 <option value="">Chọn vai trò</option>
                                 @foreach ($roles as $role)
-                                    <option {{ old('role') == $role ? 'selected' : '' }} value="{{ $role }}">{{ $role }}</option>
+                                    <option {{ old('role') == $role ? 'selected' : '' }} value="{{ $role }}">
+                                        {{ $role }}</option>
                                 @endforeach
                             </select>
                             @error('role')

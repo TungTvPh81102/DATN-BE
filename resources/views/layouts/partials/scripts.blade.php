@@ -92,3 +92,42 @@
         });
     });
 </script>
+<script>
+    function showToast(type, message) {
+        switch (type) {
+            case 'success':
+                toastr.success(message, {
+                    positionClass: "toast-top-right",
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 4000
+                });
+                break;
+            case 'error':
+                toastr.error(message, {
+                    positionClass: "toast-top-right",
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 4000
+                });
+                break;
+            case 'warning':
+                toastr.warning(message, {
+                    positionClass: "toast-top-right",
+                    closeButton: true,
+                    progressBar: true,
+                    timeOut: 4000
+                });
+                break;
+        }
+    }
+    @if (session('success'))
+        showToast('success', "{{ session('success') }}");
+    @elseif (session('error'))
+        showToast('error', "{{ session('error') }}");
+    @elseif ($errors->any())
+        @foreach ($errors->all() as $warning)
+            showToast('warning', "{{ $warning }}");
+        @endforeach
+    @endif
+</script>

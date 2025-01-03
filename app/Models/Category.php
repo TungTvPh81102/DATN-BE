@@ -17,4 +17,19 @@ class Category extends Model
         'icon',
         'status',
     ];
+
+    public function parent()
+    {
+        return $this->belongsTo(Category::class, 'parent_id')->withTrashed();
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Category::class, 'parent_id')->withTrashed();
+    }
+
+    public function posts()
+    {
+        return $this->morphedByMany(Post::class, 'categorizable');
+    }
 }
