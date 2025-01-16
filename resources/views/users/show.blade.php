@@ -36,8 +36,8 @@
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="{{route('admin.dashboard')}}">Dashboard</a></li>
-                            <li class="breadcrumb-item active"><a href="{{route('admin.users.index')}}">Danh sách người dùng</a></li>
-                            <li class="breadcrumb-item active"><a href="{{route('admin.users.show', $user->id)}}">Chi tiết người dùng</a></li>
+                            <li class="breadcrumb-item active"><a href="{{ route('admin.' . (session('nameRouteUser')['role_name'] ?? 'clients') . '.index') }}">Danh sách người dùng</a></li>
+                            <li class="breadcrumb-item active"><a href="{{route('admin.users.show', $user)}}">Chi tiết người dùng</a></li>
                         </ol>
                     </div>
 
@@ -114,7 +114,7 @@
                             <div class="col-md-9">{{ $user->updated_at }}</div>
                         </div>
                         <div class="text-start mt-5">
-                            <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">Quay lại</a>
+                            <a href="{{ route('admin.' . (session('nameRouteUser')['role_name'] ?? 'clients') . '.index') }}" class="btn btn-secondary">Quay lại</a>
                             <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-warning">
                                 Chỉnh sửa
                             </a>

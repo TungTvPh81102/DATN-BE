@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\API\Users;
+namespace App\Http\Requests\API\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -32,7 +32,6 @@ class SinginUserRequest extends FormRequest
             // Email
             'email.required' => 'Email là bắt buộc.',
             'email.email'    => 'Định dạng email không hợp lệ.',
-            'email.unique'   => 'Email đã tồn tại.',
             'email.max'      => 'Email không được vượt quá 255 ký tự.',
             'email.regex'    => 'Định dạng email không hợp lệ.',
 

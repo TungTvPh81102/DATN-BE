@@ -61,16 +61,16 @@
             <div class="collapse menu-dropdown" id="sidebarAuth">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
-                        <a href="{{ route('admin.users.index') }}" class="nav-link">
+                        <a href="{{ route('admin.clients.index') }}" class="nav-link">
                             Danh sách người dùng </a>
                     </li>
                     <li class="nav-item">
-                        <a href="apps-chat.html" class="nav-link">
+                        <a href="{{ route('admin.instructors.index') }}" class="nav-link">
                             Người hướng dẫn </a>
                     </li>
                     @can('super_admin.view')
                         <li class="nav-item">
-                            <a href="apps-chat.html" class="nav-link">
+                            <a href="{{ route('admin.admins.index') }}" class="nav-link">
                                 Danh sách quản trị viên </a>
                         </li>
                     @endcan
@@ -79,6 +79,12 @@
                             <a href="{{ route('admin.users.create') }}" class="nav-link">
                                 Thêm mới người dùng
                             </a>
+                        </li>
+                    @endcan
+                    @can('super_admin.view')
+                        <li class="nav-item">
+                            <a href="{{ route('admin.users.deleted.index') }}" class="nav-link">
+                                Danh sách thành viên đã xóa </a>
                         </li>
                     @endcan
                 </ul>
@@ -172,11 +178,11 @@
             <div class="collapse menu-dropdown" id="sidebarCoupon">
                 <ul class="nav nav-sm flex-column">
                     <li class="nav-item">
-                        <a href="{{route('admin.coupons.index')}}" class="nav-link" data-key="t-chat">
+                        <a href="{{ route('admin.coupons.index') }}" class="nav-link" data-key="t-chat">
                             Danh sách mã giảm giá </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{route('admin.coupons.create')}}" class="nav-link" data-key="t-chat">
+                        <a href="{{ route('admin.coupons.create') }}" class="nav-link" data-key="t-chat">
                             Thêm mới mã giảm giá </a>
                     </li>
                 </ul>
@@ -203,6 +209,9 @@
                 </ul>
             </div>
 
+            <a class="nav-link menu-link" href="#sidebarComment">
+                <i class="las la-comment"></i> <span data-key="t-authentication">Cấu hình thanh toán</span>
+            </a>
         </li>
 
     </ul>

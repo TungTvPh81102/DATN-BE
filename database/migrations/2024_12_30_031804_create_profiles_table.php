@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->string('phone')->unique()->nullable();
             $table->string('address')->nullable();
-            $table->string('experience');
+            $table->string('experience')->nullable();
             $table->json('bio')->nullable();
             $table->timestamps();
         });

@@ -17,11 +17,10 @@ return new class extends Migration
             $table->foreignIdFor(Chapter::class)->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->string('slug')->unique();
-            $table->float('duration')->default(0);
             $table->text('content')->nullable();
-            $table->string('playback_id')->nullable();
             $table->boolean('is_free_preview')->default(0);
             $table->integer('order')->default(0);
+            $table->string('type')->default('video');
             $table->morphs('lessonable');
             $table->timestamps();
         });

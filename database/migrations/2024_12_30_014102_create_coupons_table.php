@@ -21,7 +21,7 @@ return new class extends Migration
                 'percentage',
                 'fixed'
             ])->default('fixed');
-            $table->decimal('discount', 10, 2)->default(0);
+            $table->decimal('discount_value', 10, 2)->default(0);
             $table->date('start_date');
             $table->date('expire_date');
             $table->string('description');

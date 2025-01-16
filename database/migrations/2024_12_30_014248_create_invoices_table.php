@@ -17,8 +17,7 @@ return new class extends Migration
             $table->foreignIdFor(\App\Models\Course::class)->constrained()->cascadeOnDelete();
             $table->string('coupon_code')->nullable();
             $table->string('coupon_discount')->nullable();
-            $table->decimal('total_coin', 10, 2)->default(0);
-            $table->decimal('total_coin_discount', 10, 2)->default(0);
+            $table->decimal('total', 10, 2)->default(0);
             $table->decimal('final_total', 10, 2)->default(0);
             $table->string('status')->default('Đang xử lý');
             $table->timestamps();

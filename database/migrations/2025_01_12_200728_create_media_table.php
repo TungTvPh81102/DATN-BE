@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('courses', function (Blueprint $table) {
-            $table->renameColumn('requirement', 'requirements');
+        Schema::create('media', function (Blueprint $table) {
+            $table->id();
+            $table->foreignIdFor(\App\Models\Message::class)->nullable();
+            $table->string('file_path');
+            $table->string('file_type');
+            $table->string('file_size');
+            $table->timestamps();
         });
     }
 
@@ -21,8 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('courses', function (Blueprint $table) {
-            $table->renameColumn('requirements', 'requirement');
-        });
+        Schema::dropIfExists('media');
     }
 };

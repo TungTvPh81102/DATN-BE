@@ -11,7 +11,7 @@
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="{{route('admin.dashboard')}}">Dashboard</a></li>
-                            <li class="breadcrumb-item active"><a href="{{route('admin.users.index')}}">Danh sách người dùng</a></li>
+                            <li class="breadcrumb-item active"><a href="{{ route('admin.' . (session('nameRouteUser')['role_name'] ?? 'clients') . '.index') }}">Danh sách người dùng</a></li>
                             <li class="breadcrumb-item active"><a href="{{route('admin.users.edit', $user->id)}}">Cập nhật người dùng</a></li>
                         </ol>
                     </div>
@@ -90,10 +90,20 @@
                                     <span class="text-danger mt-2">{{ $message }}</span>
                                 @enderror
                             </div>
+                            <div class="col-md-12 mb-3">
+                                <label for="">Xác thực email</label>
+                                <div class="form-check form-switch form-switch-warning">
+                                    <input class="form-check-input" type="checkbox" role="switch" name="email_verified"
+                                        id="email_verified" value="1" @checked($user->email_verified_at != null)>
+                                </div>
+                                @error('role')
+                                    <span class="text-danger mt-2">{{ $message }}</span>
+                                @enderror
+                            </div>
                             <div class="col-12">
                                 <div class="text-start">
                                     <button type="submit" class="btn btn-primary">Cập nhật</button>
-                                    <a class="btn btn-success" href="{{ route('admin.users.index') }}">Quay lại</a>
+                                    <a class="btn btn-success" href="{{ route('admin.' . (session('nameRouteUser')['role_name'] ?? 'clients') . '.index') }}">Quay lại</a>
                                 </div>
                             </div>
                         </div>

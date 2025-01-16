@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             // $table->foreignIdFor(Course::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Lesson::class)->constrained()->cascadeOnDelete();
-            $table->float('duration')->default(0);
+            $table->float('time')->default(0);
             $table->timestamps();
         });
     }

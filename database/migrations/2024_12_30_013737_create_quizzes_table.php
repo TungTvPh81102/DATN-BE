@@ -14,7 +14,6 @@ return new class extends Migration
     {
         Schema::create('quizzes', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Lesson::class)->constrained()->cascadeOnDelete();
             $table->string('question');
             $table->string('image')->nullable();
             $table->enum('answer_type', ['multiple_choice', 'single_choice'])->default('single_choice');

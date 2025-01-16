@@ -13,7 +13,8 @@ class Transaction extends Model
         'transactionable_id',
         'transactionable_type',
         'amount',
-        'coin',
         'status',
+        'type',
+        'user_id'
     ];
 }

@@ -22,19 +22,26 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('thumbnail')->nullable();
+            $table->string('intro')->nullable();
             $table->decimal('price', 10, 2)->default(0);
             $table->decimal('price_sale', 10, 2)->default(0);
             $table->text('description')->nullable();
-            $table->float('duration')->default(0);
             $table->enum('level', [Course::LEVEL_BEGINNER, Course::LEVEL_INTERMEDIATE, Course::LEVEL_ADVANCED])->default(Course::LEVEL_BEGINNER);
             $table->integer('total_student')->default(0);
-            $table->json('requirement')->nullable();
+            $table->json('requirements')->nullable();
             $table->json('benefits')->nullable();
             $table->json('qa')->nullable();
+            $table->boolean('is_popular')->default(false);
+            $table->boolean('is_sequential')->default(false);
             $table->enum('status', [Course::STATUS_DRAFT, Course::STATUS_PENDING, Course::STATUS_APPROVED, Course::STATUS_REJECTED])->default(Course::STATUS_DRAFT);
             $table->date('accepted')->nullable();
             $table->softDeletes();
             $table->timestamps();
+
+            $table->fullText([
+                'name',
+                'description',
+            ]);
         });
     }
 
