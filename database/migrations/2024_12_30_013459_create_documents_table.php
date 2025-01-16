@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->text('content');
             $table->text('file_path');
-            $table->string('url_path');
+            $table->string('file_type');
             $table->timestamps();
         });
     }

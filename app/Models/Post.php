@@ -24,7 +24,7 @@ class Post extends Model
         'content',
         'thumbnail',
         'status',
-        'view',
+        'views',
         'is_hot',
         'published_at',
     ];

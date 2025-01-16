@@ -11,7 +11,7 @@
                     <div class="page-title-right">
                         <ol class="breadcrumb m-0">
                             <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active"><a href="{{ route('admin.users.index') }}">Danh sách người
+                            <li class="breadcrumb-item active"><a href="{{ route('admin.' . (session('nameRouteUser')['role_name'] ?? 'clients') . '.index') }}">Danh sách người
                                     dùng</a></li>
                             <li class="breadcrumb-item active"><a href="{{ route('admin.users.create') }}">Thêm mới người
                                     dùng</a></li>
@@ -95,7 +95,7 @@
                         </div>
                         <div class="col-12">
                             <div class="text-end">
-                                <a class="btn btn-success" href="{{ route('admin.users.index') }}">Quay lại</a>
+                                <a class="btn btn-success" href="{{ route('admin.' . (session('nameRouteUser')['role_name'] ?? 'clients') . '.index') }}">Quay lại</a>
                                 <button type="submit" class="btn btn-primary">Thêm</button>
                             </div>
                         </div>

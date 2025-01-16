@@ -15,7 +15,7 @@
         <span class="logo-lg">
             <img src="{{ asset('assets/images/logo-container.png') }}" alt="" width="40" height="40">
         </span>
-        <span id="custom-text-logo" class="custom-text-logo">CourseHUB</span>
+        <span id="custom-text-logo" class="custom-text-logo">CourseMeLy</span>
     </div>
 
 </a>

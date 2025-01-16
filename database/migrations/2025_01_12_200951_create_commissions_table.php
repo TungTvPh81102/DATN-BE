@@ -10,10 +10,12 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('like_posts', function (Blueprint $table) {
-            $table->foreignIdFor(\App\Models\Post::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(\App\Models\User::class)->constrained()->cascadeOnDelete();
-            $table->string('like_type');
+        Schema::create('commissions', function (Blueprint $table) {
+            $table->id();
+            $table->string('difficulty_level');
+            $table->decimal('system_percentage', 5, 2)->default(0);
+            $table->decimal('instructor_percentage', 5, 2)->default(0);
+            $table->timestamps();
         });
     }
 
@@ -22,6 +24,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('like_posts');
+        Schema::dropIfExists('commissions');
     }
 };

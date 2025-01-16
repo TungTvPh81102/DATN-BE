@@ -26,11 +26,17 @@ return new class extends Migration
                 \App\Models\Post::STATUS_PUBLISHED,
                 \App\Models\Post::STATUS_PRIVATE,
             ])->default(\App\Models\Post::STATUS_DRAFT);
-            $table->integer('view')->default(0);
+            $table->integer('views')->default(0);
             $table->boolean('is_hot')->default(false);
             $table->timestamp('published_at')->nullable();
             $table->softDeletes();
             $table->timestamps();
+
+            $table->fullText([
+                'title',
+                'description',
+                'content',
+            ]);
         });
     }
 

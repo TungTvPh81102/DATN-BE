@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\API\Auth\GoogleController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\SupportBankController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,14 +23,20 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
-#============================== ROUTE GOOGLE AUTH =============================
 
+#============================== ROUTE GOOGLE AUTH =============================
 Route::prefix('admin')->as('admin.')->group(function () {
     Route::get('login', [AuthController::class, 'login'])->name('login');
     Route::post('login', [AuthController::class, 'handleLogin'])->name('handleLogin');
     Route::get('logout', [AuthController::class, 'logout'])->name('logout');
 });
 
+Route::get('email', function () {
+    //    \Illuminate\Support\Facades\Mail::to('quaixe121811@gmail.com')
+    //        ->send(new \App\Mail\Auth\VerifyEmail());
+
+    return view('emails.auth.verify');
+});
 
 Route::prefix('admin')->as('admin.')
     ->middleware(['roleHasAdmins', 'check_permission:view.dashboard'])
@@ -37,22 +44,35 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE AUTH =============================
         Route::get('dashboard', function () {
             return view('dashboard');
-        })
-            ->name('dashboard');
+        })->name('dashboard');
 
         #============================== ROUTE USER =============================
-        Route::prefix('users')->as('users.')->group(function () {
-            Route::get('/', [UserController::class, 'index'])->name('index');
-            Route::get('/create', [UserController::class, 'create'])->name('create')
+        Route::prefix('users')->group(function () {
+            Route::get('user-clients', [UserController::class, 'index'])->name('clients.index');
+            Route::get('user-instructors', [UserController::class, 'index'])->name('instructors.index');
+            Route::get('user-admins', [UserController::class, 'index'])->name('admins.index');
+            Route::get('user-deleted', [UserController::class, 'index'])->name('users.deleted.index');
+
+            Route::as('users.')->group(function (){
+                Route::get('/create', [UserController::class, 'create'])->name('create')
                 ->can('user.create');
-            Route::post('/', [UserController::class, 'store'])->name('store')
-                ->can('user.create');
-            Route::get('/{id}', [UserController::class, 'show'])->name('show');
-            Route::get('/edit/{user}', [UserController::class, 'edit'])->name('edit');
-            Route::put('/{user}', [UserController::class, 'update'])->name('update')
-                ->can('user.update');
-            Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy')
-                ->can('user.delete');
+                Route::post('/', [UserController::class, 'store'])->name('store')
+                    ->can('user.create');
+                Route::get('/{user}', [UserController::class, 'show'])->name('show');
+                Route::get('/edit/{user}', [UserController::class, 'edit'])->name('edit');
+                Route::put('/{user}', [UserController::class, 'update'])->name('update')
+                    ->can('user.update');
+                Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy')
+                    ->can('user.delete');
+                Route::put('/updateEmailVerified/{user}', [UserController::class, 'updateEmailVerified'])
+                ->name('updateEmailVerified')->can('user.update');
+                Route::put('/updateEmailVerified/{user}', [UserController::class, 'updateEmailVerified'])
+                ->name('updateEmailVerified')->can('user.update');
+                Route::delete('/{user}/force-delete', [UserController::class, 'forceDelete'])
+                ->name('forceDelete')->can('user.update');
+                Route::put('/{user}/restore-delete', [UserController::class, 'restoreDelete'])
+                ->name('restoreDelete')->can('user.update');
+            });
         });
 
         #============================== ROUTE ROLE =============================
@@ -162,6 +182,21 @@ Route::prefix('admin')->as('admin.')
                 ->can('setting.delete');
         });
 
+        #============================== ROUTE SUPPORT BANK =============================
+        Route::prefix('support-banks')->as('support-banks.')->group(function () {
+            Route::get('/', [SupportBankController::class, 'index'])->name('index');
+            Route::get('/create', [SupportBankController::class, 'create'])->name('create')
+                ->can('support-bank.create');
+            Route::post('/', [SupportBankController::class, 'store'])->name('store')
+                ->can('support-bank.create');
+            Route::get('/{id}', [SupportBankController::class, 'show'])->name('show');
+            Route::get('/edit/{supportBank}', [SupportBankController::class, 'edit'])->name('edit')
+                ->can('support-bank.update');
+            Route::put('/{supportBank}', [SupportBankController::class, 'update'])->name('update')
+                ->can('support-bank.update');
+            Route::delete('/{supportBank}', [SupportBankController::class, 'destroy'])->name('destroy')
+                ->can('support-bank.delete');
+        });
         #============================== ROUTE APPROVAL =============================
 
         #============================== ROUTE INVOICE =============================

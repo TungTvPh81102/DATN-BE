@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Lesson::class)->constrained()->cascadeOnDelete();
             $table->boolean('is_completed')->default(false);
-            $table->integer('last_time_video')->default(0);
+            $table->integer('last_time_video')->default(0)->nullable();
             $table->timestamps();
         });
     }
