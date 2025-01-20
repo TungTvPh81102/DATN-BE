@@ -24,7 +24,8 @@ class UpdateNoteRequest extends FormRequest
         return [
             'user_id' => 'required|integer',
             'lesson_id' => 'required|integer',
-            'duration' => 'required|integer',
+            'time' => 'required|integer',
+            'content'=>'required|max:2000',
         ];
     }
     public function messages()
@@ -34,8 +35,10 @@ class UpdateNoteRequest extends FormRequest
             'user_id.integer' => 'user_id phải là số nguyên',
             'lesson_id.required'=>'lesson_id là bắt buộc',
             'lesson_id.integer' => 'lesson_id phải là số nguyên',
-            'duration.required' => 'duration là bắt buộc',
-            'duration.integer' => 'duration phải là số nguyên',
+            'time.required' => 'time là bắt buộc',
+            'time.integer' => 'time phải là số nguyên',
+            'content.required' => 'content là bắt buộc',
+            'content.max'=>'content không được vượt quá 2000 kí tự'
         ];
     }
 }
