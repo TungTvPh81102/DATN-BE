@@ -306,7 +306,7 @@
                             <div class="chat-message-list">
 
                                 <ul class="list-unstyled chat-list chat-user-list mb-0" id="conversationList">
-                                    @foreach ($data['channels'] as $channel)
+                                    <<<<<<< HEAD=======@foreach ($data['channels'] as $channel)
                                         <li class="">
                                             <a href="#" class="unread-msg-user group-button"
                                                 data-channel-id="{{ $channel->id }}">
@@ -325,7 +325,8 @@
                                                 </div>
                                             </a>
                                         </li>
-                                    @endforeach
+                                        @endforeach
+                                        >>>>>>> 4ef90b1e0acaa21a00b3f01876bd103c76dec98d
 
                                 </ul>
                             </div>
@@ -335,6 +336,7 @@
                     <div class="tab-pane" id="contacts" role="tabpanel">
                         <div class="chat-room-list pt-3" data-simplebar>
                             <div class="sort-contact">
+
                             </div>
                         </div>
                     </div>
@@ -369,99 +371,123 @@
                                                                 class="rounded-circle avatar-xs" alt="">
                                                             <span class="user-status"></span>
                                                         </div>
-                                                        <div class="flex-grow-1 overflow-hidden" id="groupInfo">
+                                                        <<<<<<< HEAD @if ($channels->isNotEmpty())
+                                                            <div class="flex-grow-1 overflow-hidden" id="groupInfo"
+                                                                data-conversation-id="{{ $channels->first()->id }}"></div>
+                                                        @else
+                                                            <p>No channels available.</p>
+                                                            @endif
                                                             <h5 class="text-truncate mb-0 fs-16">
                                                                 <a class="text-reset username" id="name"></a>
                                                             </h5>
                                                             <p class="text-truncate text-muted fs-14 mb-0 userStatus">
                                                                 <small id="memberCount"></small>
                                                             </p>
-                                                        </div>
+                                                            =======
+                                                            <div class="flex-grow-1 overflow-hidden" id="groupInfo">
+                                                                <h5 class="text-truncate mb-0 fs-16">
+                                                                    <a class="text-reset username" id="name"></a>
+                                                                </h5>
+                                                                <p class="text-truncate text-muted fs-14 mb-0 userStatus">
+                                                                    <small id="memberCount"></small>
+                                                                </p>
+                                                            </div>
 
+                                                            >>>>>>> 4ef90b1e0acaa21a00b3f01876bd103c76dec98d
                                                     </div>
+
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-sm-8 col-4">
-                                            <ul class="list-inline user-chat-nav text-end mb-0">
-                                                <li class="list-inline-item m-0">
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-ghost-secondary btn-icon" type="button"
-                                                            data-bs-toggle="dropdown" aria-haspopup="true"
-                                                            aria-expanded="false">
-                                                            <i data-feather="search" class="icon-sm"></i>
-                                                        </button>
-                                                        <div class="dropdown-menu p-0 dropdown-menu-end dropdown-menu-lg">
-                                                            <div class="p-2">
-                                                                <div class="search-box">
-                                                                    <input type="text"
-                                                                        class="form-control bg-light border-light"
-                                                                        placeholder="Search here..."
-                                                                        onkeyup="searchMessages()" id="searchMessage">
-                                                                    <i class="ri-search-2-line search-icon"></i>
-                                                                </div>
+                                    </div>
+                                    <div class="col-sm-8 col-4">
+                                        <ul class="list-inline user-chat-nav text-end mb-0">
+                                            <li class="list-inline-item m-0">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-ghost-secondary btn-icon" type="button"
+                                                        data-bs-toggle="dropdown" aria-haspopup="true"
+                                                        aria-expanded="false">
+                                                        <i data-feather="search" class="icon-sm"></i>
+                                                    </button>
+                                                    <div class="dropdown-menu p-0 dropdown-menu-end dropdown-menu-lg">
+                                                        <div class="p-2">
+                                                            <div class="search-box">
+                                                                <input type="text"
+                                                                    class="form-control bg-light border-light"
+                                                                    placeholder="Search here..."
+                                                                    onkeyup="searchMessages()" id="searchMessage">
+                                                                <i class="ri-search-2-line search-icon"></i>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                </li>
+                                                </div>
+                                            </li>
 
-                                                <li class="list-inline-item d-none d-lg-inline-block m-0">
-                                                    <button type="button" class="btn btn-ghost-secondary btn-icon"
-                                                        data-bs-toggle="offcanvas"
-                                                        data-bs-target="#userProfileCanvasExample"
-                                                        aria-controls="userProfileCanvasExample">
-                                                        <i data-feather="info" class="icon-sm"></i>
+                                            <li class="list-inline-item d-none d-lg-inline-block m-0">
+                                                <button type="button" class="btn btn-ghost-secondary btn-icon"
+                                                    data-bs-toggle="offcanvas" data-bs-target="#userProfileCanvasExample"
+                                                    aria-controls="userProfileCanvasExample">
+                                                    <i data-feather="info" class="icon-sm"></i>
+                                                </button>
+                                            </li>
+
+                                            <li class="list-inline-item m-0">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-ghost-secondary btn-icon" type="button"
+                                                        data-bs-toggle="dropdown" aria-haspopup="true"
+                                                        aria-expanded="false">
+                                                        <i data-feather="more-vertical" class="icon-sm"></i>
                                                     </button>
-                                                </li>
-
-                                                <li class="list-inline-item m-0">
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-ghost-secondary btn-icon" type="button"
-                                                            data-bs-toggle="dropdown" aria-haspopup="true"
-                                                            aria-expanded="false">
-                                                            <i data-feather="more-vertical" class="icon-sm"></i>
-                                                        </button>
-                                                        <div class="dropdown-menu dropdown-menu-end">
-                                                            <a class="dropdown-item d-block d-lg-none user-profile-show"
-                                                                href="#"><i
-                                                                    class="ri-user-2-fill align-bottom text-muted me-2"></i>
-                                                                View Profile</a>
-                                                            <a class="dropdown-item" href="#"><i
-                                                                    class="ri-inbox-archive-line align-bottom text-muted me-2"></i>
-                                                                Archive</a>
-                                                            <a class="dropdown-item" href="#"><i
-                                                                    class="ri-mic-off-line align-bottom text-muted me-2"></i>
-                                                                Muted</a>
-                                                            <a class="dropdown-item" href="#"><i
-                                                                    class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>
-                                                                Delete</a>
-                                                        </div>
+                                                    <div class="dropdown-menu dropdown-menu-end">
+                                                        <a class="dropdown-item d-block d-lg-none user-profile-show"
+                                                            href="#"><i
+                                                                class="ri-user-2-fill align-bottom text-muted me-2"></i>
+                                                            View Profile</a>
+                                                        <a class="dropdown-item" href="#"><i
+                                                                class="ri-inbox-archive-line align-bottom text-muted me-2"></i>
+                                                            Archive</a>
+                                                        <a class="dropdown-item" href="#"><i
+                                                                class="ri-mic-off-line align-bottom text-muted me-2"></i>
+                                                            Muted</a>
+                                                        <a class="dropdown-item" href="#"><i
+                                                                class="ri-delete-bin-5-line align-bottom text-muted me-2"></i>
+                                                            Delete</a>
                                                     </div>
-                                                </li>
-                                            </ul>
-                                        </div>
+                                                </div>
+                                            </li>
+                                        </ul>
                                     </div>
-
                                 </div>
-                                <!-- end chat user head -->
-                                <div class="chat-conversation p-3 p-lg-4 " id="chatBox" data-simplebar>
-                                    <div id="elmLoader">
+                                <<<<<<< HEAD </div>
+                                    <!-- end chat user head -->
+                                    <div class="chat-conversation p-3 p-lg-4 " id="chatBox" data-simplebar>
+                                        {{-- <div id="elmLoader">
                                         <div class="spinner-border text-primary avatar-sm" role="status">
                                             <span class="visually-hidden">Loading...</span>
                                         </div>
+                                    </div> --}}
+                                        <ul class="list-unstyled chat-conversation-list" id="messagesList">
+                                            =======
+                                            <!-- end chat user head -->
+                                            <div class="chat-conversation p-3 p-lg-4 " id="chatBox" data-simplebar>
+                                                <div id="elmLoader">
+                                                    <div class="spinner-border text-primary avatar-sm" role="status">
+                                                        <span class="visually-hidden">Loading...</span>
+                                                    </div>
+                                                </div>
+                                                <ul class="list-unstyled chat-conversation-list" id="messagesList">
+                                                    >>>>>>> 4ef90b1e0acaa21a00b3f01876bd103c76dec98d
+
+                                                </ul>
+                                                <!-- end chat-conversation-list -->
+                                            </div>
+                                            <div class="alert alert-warning alert-dismissible copyclipboard-alert px-4 fade show "
+                                                id="copyClipBoard" role="alert">
+                                                Message copied
+                                            </div>
                                     </div>
-                                    <ul class="list-unstyled chat-conversation-list" id="messagesList">
 
-                                    </ul>
-                                    <!-- end chat-conversation-list -->
-                                </div>
-                                <div class="alert alert-warning alert-dismissible copyclipboard-alert px-4 fade show "
-                                    id="copyClipBoard" role="alert">
-                                    Message copied
-                                </div>
-                            </div>
-
-                            {{-- <div class="position-relative" id="channel-chat">
+                                    {{-- <div class="position-relative" id="channel-chat">
                                 <div class="p-3 user-chat-topbar">
                                     <div class="row align-items-center">
                                         <div class="col-sm-4 col-8">
@@ -565,54 +591,80 @@
                                 </div>
                             </div> --}}
 
-                            <!-- end chat-conversation -->
+                                    <!-- end chat-conversation -->
 
-                            <div class="chat-input-section p-3 p-lg-4">
+                                    <div class="chat-input-section p-3 p-lg-4">
 
-                                <form id="chatinput-form" enctype="multipart/form-data">
-                                    @csrf
-                                    <div class="row g-0 align-items-center">
-                                        <div class="col-auto">
-                                            <div class="chat-input-links me-2">
-                                                <div class="links-list-item">
-                                                    <button type="button"
-                                                        class="btn btn-link text-decoration-none emoji-btn"
-                                                        id="emoji-btn">
-                                                        <i class="bx bx-smile align-middle"></i>
-                                                    </button>
-                                                    <button type="button" class="btn btn-link text-decoration-none"
-                                                        id="upload-btn">
-                                                        <i class="bx bx-paperclip align-middle"></i>
-                                                    </button>
 
-                                                    <input type="file" id="fileInput" style="display: none;">
+                                        <form id="chatinput-form" enctype="multipart/form-data">
+                                            @csrf
+                                            <div class="row g-0 align-items-center">
+                                                <div class="col-auto">
+                                                    <div class="chat-input-links me-2">
+                                                        <div class="links-list-item">
+                                                            <button type="button"
+                                                                class="btn btn-link text-decoration-none emoji-btn"
+                                                                id="emoji-btn">
+                                                                <i class="bx bx-smile align-middle"></i>
+                                                            </button>
+                                                            <button type="button"
+                                                                class="btn btn-link text-decoration-none" id="upload-btn">
+                                                                <i class="bx bx-paperclip align-middle"></i>
+                                                            </button>
+
+                                                            <input type="file" id="fileInput" style="display: none;">
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col">
+                                                    <div class="chat-input-feedback">
+                                                        Please Enter a Message
+                                                    </div>
+                                                    <input type="text"
+                                                        class="form-control chat-input bg-light border-light"
+                                                        id="messageInput" placeholder="Type your message..."
+                                                        autocomplete="off">
+                                                    <input type="hidden" id="parentMessageId">
+                                                    <!-- Nếu có tính năng trả lời tin nhắn -->
+                                                </div>
+                                                <div class="col-auto">
+                                                    <div class="chat-input-links ms-2">
+                                                        <div class="links-list-item">
+                                                            <button type="submit" id="sendMessageButton"
+                                                                class="btn btn-success chat-send waves-effect waves-light">
+                                                                <i class="ri-send-plane-2-fill align-bottom"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                </div>
+
+
+                                            </div>
+
+                                            <div class="col">
+                                                <div class="chat-input-feedback">
+                                                    Please Enter a Message
+                                                </div>
+                                                <input type="text"
+                                                    class="form-control chat-input bg-light border-light"
+                                                    id="messageInput" placeholder="Type your message..."
+                                                    autocomplete="off">
+                                            </div>
+                                            <div class="col-auto">
+                                                <div class="chat-input-links ms-2">
+                                                    <div class="links-list-item">
+                                                        <button type="submit" id="sendMessageButton"
+                                                            class="btn btn-success chat-send waves-effect waves-light">
+                                                            <i class="ri-send-plane-2-fill align-bottom"></i>
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <div class="col">
-                                            <div class="chat-input-feedback">
-                                                Please Enter a Message
-                                            </div>
-                                            <input type="text" class="form-control chat-input bg-light border-light"
-                                                id="messageInput" placeholder="Type your message..." autocomplete="off">
-                                            <input type="hidden" id="parentMessageId">
-                                            <!-- Nếu có tính năng trả lời tin nhắn -->
-                                        </div>
-                                        <div class="col-auto">
-                                            <div class="chat-input-links ms-2">
-                                                <div class="links-list-item">
-                                                    <button type="submit" id="sendMessageButton"
-                                                        class="btn btn-success chat-send waves-effect waves-light">
-                                                        <i class="ri-send-plane-2-fill align-bottom"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                        </div>
 
                                     </div>
-                                </form>
+                                    </form>
                             </div>
 
                             <div class="replyCard">
@@ -651,6 +703,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="{{ asset('assets/libs/glightbox/js/glightbox.min.js') }}"></script>
     <script src="{{ asset('assets/libs/fg-emoji-picker/fgEmojiPicker.js') }}"></script>
+
     <script>
         function initIcons() {
             document.addEventListener("DOMContentLoaded", function() {
@@ -729,6 +782,11 @@
                 });
             });
 
+        });
+
+
+        $(document).ready(function() {
+
             $('#conversationList a').click(function(event) {
                 event.preventDefault(); // Ngừng hành động mặc định của liên kết
 
@@ -775,7 +833,7 @@
                 let parentId = $('#parentMessageId').val();
                 let type = 'text'; // Hoặc 'image', 'file', tùy thuộc vào loại tin nhắn
                 let metaData = null; // Nếu có dữ liệu bổ sung (ví dụ: hình ảnh, file...)
-                 if (currentConversationId && content) { 
+                if (currentConversationId && content) {
                     // Gửi tin nhắn vào nhóm hiện tại
                     $.ajax({
                         url: "{{ route('admin.chats.sendGroupMessage') }}",
@@ -797,7 +855,7 @@
                     });
                 } else {
                     alert("Vui lòng chọn nhóm và nhập tin nhắn!");
-                } 
+                }
             });
             // function appendMessage(msg) {
             //     let messagesDiv = $('#messages');
@@ -887,18 +945,18 @@
     //                 }
 
     //                 return `
-    //                     <div class="message ${messageClass}">
-    //                         <div class="message-avatar">
-    //                             <img src="${message.sender.avatar}" alt="avatar">
-    //                         </div>
-    //                         <div class="message-content">
-    //                             <div class="message-header">
-    //                                 <strong>${message.sender.name}</strong>
-    //                                 <span class="message-time">${time}</span>
-    //                             </div>
-    //                             ${messageContent}
-    //                         </div>
-    //                     </div>`;
+        //                     <div class="message ${messageClass}">
+        //                         <div class="message-avatar">
+        //                             <img src="${message.sender.avatar}" alt="avatar">
+        //                         </div>
+        //                         <div class="message-content">
+        //                             <div class="message-header">
+        //                                 <strong>${message.sender.name}</strong>
+        //                                 <span class="message-time">${time}</span>
+        //                             </div>
+        //                             ${messageContent}
+        //                         </div>
+        //                     </div>`;
     //             }).join('');
 
     //             $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
@@ -922,20 +980,20 @@
                         'received'; // Xác định lớp tin nhắn   
                     const time = formatTime(message.created_at);
                     return `
-                                                        <div class=" message ${messageClass}">
-                                                            <div class="message-avatar">
-                                                                <img src="${message.sender.avatar}" alt="avatar">
-                                                            </div>
-                                                            <div class="message-content">
-                                                                <div class="message-header">
-                                                                    <strong>${message.sender.name}</strong>
-                                                                    <span class="message-time">${time}</span>
-                                                                    </div>
-                                                                    <p>   
-                                                                        ${message.metaData ? message.metaData : message.content}
-                                                                        </p>
-                                                                 </div>
-                                                            </div>`;
+                                                            <div class=" message ${messageClass}">
+                                                                <div class="message-avatar">
+                                                                    <img src="${message.sender.avatar}" alt="avatar">
+                                                                </div>
+                                                                <div class="message-content">
+                                                                    <div class="message-header">
+                                                                        <strong>${message.sender.name}</strong>
+                                                                        <span class="message-time">${time}</span>
+                                                                        </div>
+                                                                        <p>   
+                                                                            ${message.metaData ? message.metaData : message.content}
+                                                                            </p>
+                                                                     </div>
+                                                                </div>`;
                 }).join(''); // Chuyển mảng thành chuỗi HTML
 
                 $('#elmLoader').hide(); // Ẩn loader khi tải xong tin nhắn
@@ -973,22 +1031,22 @@
     //     reaction.style.left = `${xOffset}px`;
     //     reaction.style.top = `${yOffset}px`;
 
-    //         // Thêm reaction vào container
-    //         reactionContainer.appendChild(reaction);
+        //         // Thêm reaction vào container
+        //         reactionContainer.appendChild(reaction);
 
-    //         // Sau khi animation kết thúc, xóa reaction
-    //         setTimeout(() => {
-    //             reaction.remove();
-    //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
-    //     }
+        //         // Sau khi animation kết thúc, xóa reaction
+        //         setTimeout(() => {
+        //             reaction.remove();
+        //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
+        //     }
 
-    //     });
+        //     });
     </script>
     <script>
-        @if(session('success'))
+        @if (session('success'))
             toastr.success("{{ session('success') }}");
         @endif
-        @if(session('error'))
+        @if (session('error'))
             toastr.error("{{ session('error') }}");
         @endif
     </script>

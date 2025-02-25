@@ -3,12 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\QaSystems\ImportQaSystemRequest;
 use App\Http\Requests\Admin\QaSystems\StoreQaSystemRequest;
 use App\Http\Requests\Admin\QaSystems\UpdateQaSystemRequest;
+use App\Imports\QaSystemImport;
 use App\Models\QaSystem;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
+
+use Maatwebsite\Excel\Facades\Excel;
+
 use Illuminate\Http\Request;
+
 
 class QaSystemController extends Controller
 {
@@ -148,6 +154,22 @@ class QaSystemController extends Controller
         }
     }
 
+
+    public function importFile(ImportQaSystemRequest $request)
+    {
+        try {
+
+        Excel::import(new QaSystemImport, $request->file('file'));
+
+        return redirect()->route('admin.qa-systems.index')->with('success', 'Import dữ liệu thành công');
+
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
     private function filter($request, $query)
     {
         $filters = [

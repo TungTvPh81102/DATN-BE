@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\AnalyticController;
 use App\Http\Controllers\Admin\ChatController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\QaSystemController;
 use App\Http\Controllers\Admin\RevenueStatisticController;
 use App\Http\Controllers\Admin\TopCourseController;
 use App\Http\Controllers\Admin\WalletController;
@@ -337,6 +338,7 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/', [\App\Http\Controllers\Admin\QaSystemController::class, 'index'])->name('index');
                 Route::get('/create', [\App\Http\Controllers\Admin\QaSystemController::class, 'create'])->name('create');
                 Route::post('/', [\App\Http\Controllers\Admin\QaSystemController::class, 'store'])->name('store');
+                Route::post('/import', [QaSystemController::class, 'importFile'])->name('import');
                 Route::get('/edit/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'edit'])->name('edit');
                 Route::put('/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'update'])->name('update');
                 Route::delete('/{qaSystem}', [\App\Http\Controllers\Admin\QaSystemController::class, 'destroy'])->name('destroy');
@@ -358,5 +360,6 @@ Route::prefix('admin')->as('admin.')
                 Route::get('/get-group-info', [ChatController::class, 'getGroupInfo'])->name('getGroupInfo');
                 Route::post('/send-message', [ChatController::class, 'sendGroupMessage'])->name('sendGroupMessage');
                 Route::get('/get-messages/{conversationId}', [ChatController::class, 'getGroupMessages'])->name('getGroupMessages');
+                Route::get('/get-messages/{conversationId}', [ChatController::class, 'getPrivateMessages'])->name('getPrivateMessages');
             });    
     });

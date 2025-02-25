@@ -99,8 +99,4 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(WishList::class, 'user_id');
     }
 
-    public function conversations()
-    {
-        return $this->belongsToMany(Conversation::class);
-    }
 }

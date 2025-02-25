@@ -10,4 +10,6 @@ class ConversationUser extends Model
     use HasFactory;
 
     protected $fillable = ['conversation_id', 'user_id', 'is_blocked', 'last_read_at'];
+
+    
 }

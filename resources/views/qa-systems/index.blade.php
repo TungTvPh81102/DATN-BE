@@ -29,51 +29,64 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="card-title mb-0">{{ $subTitle ?? '' }}</h4>
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('admin.withdrawals.export') }}" class="btn btn-sm btn-success h-75">Export
-                                dữ
-                                liệu</a>
-                            <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
-                                Tìm kiếm nâng cao
-                            </button>
-                            <div class="dropdown">
-                                <button class="btn btn-sm btn-primary" type="button" id="filterDropdown"
-                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="ri-filter-2-line"></i>
+                        <<<<<<< HEAD <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                data-bs-target="#importModal">Import dữ liệu</button>
+
+                    </div>
+
+
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-primary" type="button" id="filterDropdown" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <i class="ri-filter-2-line"></i>
+                            =======
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('admin.withdrawals.export') }}" class="btn btn-sm btn-success h-75">Export
+                                    dữ
+                                    liệu</a>
+                                <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
+                                    Tìm kiếm nâng cao
+                                    >>>>>>> 4ef90b1e0acaa21a00b3f01876bd103c76dec98d
                                 </button>
-                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown"
-                                    style="min-width: 500px;">
-                                    <div class="container">
-                                        <div class="row">
-                                            <li class="col-6">
-                                                <div class="mb-2">
-                                                    <label for="startDate" class="form-label">Ngày bắt đầu</label>
-                                                    <input type="date" class="form-control form-control-sm"
-                                                        name="startDate" id="dateRequest" data-filter
-                                                        value="{{ request()->input('startDate') ?? '' }}">
-                                                </div>
-                                            </li>
-                                            <li class="col-6">
-                                                <div class="mb-2">
-                                                    <label for="endDate" class="form-label">Ngày kết thúc</label>
-                                                    <input type="date" class="form-control form-control-sm"
-                                                        name="endDate" id="dateComplete" data-filter
-                                                        value="{{ request()->input('endDate') ?? '' }}">
-                                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-primary" type="button" id="filterDropdown"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ri-filter-2-line"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown"
+                                        style="min-width: 500px;">
+                                        <div class="container">
+                                            <div class="row">
+                                                <li class="col-6">
+                                                    <div class="mb-2">
+                                                        <label for="startDate" class="form-label">Ngày bắt đầu</label>
+                                                        <input type="date" class="form-control form-control-sm"
+                                                            name="startDate" id="dateRequest" data-filter
+                                                            value="{{ request()->input('startDate') ?? '' }}">
+                                                    </div>
+                                                </li>
+                                                <li class="col-6">
+                                                    <div class="mb-2">
+                                                        <label for="endDate" class="form-label">Ngày kết thúc</label>
+                                                        <input type="date" class="form-control form-control-sm"
+                                                            name="endDate" id="dateComplete" data-filter
+                                                            value="{{ request()->input('endDate') ?? '' }}">
+                                                    </div>
+                                                </li>
+                                            </div>
+                                            <li class="mt-2 d-flex gap-1">
+                                                <button class="btn btn-sm btn-success flex-grow-1" type="reset"
+                                                    id="resetFilter">Reset
+                                                </button>
+                                                <button class="btn btn-sm btn-primary flex-grow-1" id="applyFilter">Áp
+                                                    dụng
+                                                </button>
                                             </li>
                                         </div>
-                                        <li class="mt-2 d-flex gap-1">
-                                            <button class="btn btn-sm btn-success flex-grow-1" type="reset"
-                                                id="resetFilter">Reset
-                                            </button>
-                                            <button class="btn btn-sm btn-primary flex-grow-1" id="applyFilter">Áp
-                                                dụng
-                                            </button>
-                                        </li>
-                                    </div>
-                                </ul>
+                                    </ul>
+                                </div>
                             </div>
-                        </div>
                     </div>
                     <!-- end card header -->
 
@@ -83,8 +96,8 @@
                             <div class="col-md-4">
                                 <label class="form-label">Tiêu đề</label>
                                 <input class="form-control form-control-sm" name="title" type="text"
-                                    placeholder="Nhập tiêu đề..."
-                                    value="{{ request()->input('title') ?? '' }}" data-advanced-filter>
+                                    placeholder="Nhập tiêu đề..." value="{{ request()->input('title') ?? '' }}"
+                                    data-advanced-filter>
                             </div>
                             <div class="col-md-4">
                                 <label for="answer_type" class="form-label">Loại câu hỏi</label>
@@ -137,11 +150,13 @@
                                 <div class="col-sm">
                                     <div class="d-flex justify-content-sm-end">
                                         <div class="search-box ms-2">
+
                                             <input type="text" name="search_full" class="form-control search h-75"
                                                 placeholder="Tìm kiếm..." data-search>
                                             <button id="search-full"
                                                 class="h-75 ri-search-line search-icon m-0 p-0 border-0"
                                                 style="background: none;"></button>
+
                                         </div>
                                     </div>
                                 </div>
@@ -165,10 +180,11 @@
                                     <tbody class="list">
                                         @foreach ($qaSystems as $qaSystem)
                                             <tr>
-                                                <th scope="row">
+                                                <th scope="row">0
                                                     <div class="form-check">
                                                         <input class="form-check-input" id="checkAll" type="checkbox"
                                                             name="itemID" value="{{ $qaSystem->id }}">
+
                                                     </div>
                                                 </th>
                                                 <td>{{ $loop->iteration }}</td>
@@ -226,6 +242,30 @@
         </div>
         <!-- end List-customer -->
     </div>
+
+    <div class="modal fade" id="importModal" tabindex="-1" aria-labelledby="importModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="importModalLabel">Import Dữ Liệu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <form id="importForm" action="{{ route('admin.qa-systems.import') }}" method="POST"
+                        enctype="multipart/form-data">
+                        @csrf
+                        <div class="mb-3">
+                            <label for="importFile" class="form-label">Chọn file để import:</label>
+                            <input type="file" class="form-control" name="file" id="file"
+                                accept=".xlsx,.xls,.csv" required>
+                        </div>
+                        <button type="submit" class="btn btn-success">Tiến hành Import</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('page-scripts')
@@ -237,4 +277,5 @@
     <script src="{{ asset('assets/js/common/filter.js') }}"></script>
     <script src="{{ asset('assets/js/common/search.js') }}"></script>
     <script src="{{ asset('assets/js/common/handle-ajax-search&filter.js') }}"></script>
+    
 @endpush

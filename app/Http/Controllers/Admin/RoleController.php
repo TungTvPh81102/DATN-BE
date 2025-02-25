@@ -196,6 +196,7 @@ class RoleController extends Controller
 
     public function import(Request $request) {
         try {
+            
             $request->validate([
                 'file' => 'required|mimes:xlsx,csv',
             ]);
@@ -205,6 +206,7 @@ class RoleController extends Controller
             Excel::import(new RolesImport, $file);
 
             return redirect()->route('admin.roles.index')->with('success', 'Import dữ liệu thành công');
+
         }catch (\Exception $e) {
             $this->logError($e);
 
