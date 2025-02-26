@@ -29,64 +29,54 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h4 class="card-title mb-0">{{ $subTitle ?? '' }}</h4>
-                        <<<<<<< HEAD <div class="d-flex gap-2">
+                        <div class="d-flex gap-2">
                             <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
                                 data-bs-target="#importModal">Import dữ liệu</button>
 
-                    </div>
-
-
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-primary" type="button" id="filterDropdown" data-bs-toggle="dropdown"
-                            aria-expanded="false">
-                            <i class="ri-filter-2-line"></i>
-                            =======
-                            <div class="d-flex gap-2">
-                                <a href="{{ route('admin.withdrawals.export') }}" class="btn btn-sm btn-success h-75">Export
-                                    dữ
-                                    liệu</a>
-                                <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
-                                    Tìm kiếm nâng cao
-                                    >>>>>>> 4ef90b1e0acaa21a00b3f01876bd103c76dec98d
+                            <a href="{{ route('admin.withdrawals.export') }}" class="btn btn-sm btn-success h-75">Export
+                                dữ
+                                liệu</a>
+                            <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
+                                Tìm kiếm nâng cao
+                            </button>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-primary" type="button" id="filterDropdown"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="ri-filter-2-line"></i>
                                 </button>
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-primary" type="button" id="filterDropdown"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                        <i class="ri-filter-2-line"></i>
-                                    </button>
-                                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown"
-                                        style="min-width: 500px;">
-                                        <div class="container">
-                                            <div class="row">
-                                                <li class="col-6">
-                                                    <div class="mb-2">
-                                                        <label for="startDate" class="form-label">Ngày bắt đầu</label>
-                                                        <input type="date" class="form-control form-control-sm"
-                                                            name="startDate" id="dateRequest" data-filter
-                                                            value="{{ request()->input('startDate') ?? '' }}">
-                                                    </div>
-                                                </li>
-                                                <li class="col-6">
-                                                    <div class="mb-2">
-                                                        <label for="endDate" class="form-label">Ngày kết thúc</label>
-                                                        <input type="date" class="form-control form-control-sm"
-                                                            name="endDate" id="dateComplete" data-filter
-                                                            value="{{ request()->input('endDate') ?? '' }}">
-                                                    </div>
-                                                </li>
-                                            </div>
-                                            <li class="mt-2 d-flex gap-1">
-                                                <button class="btn btn-sm btn-success flex-grow-1" type="reset"
-                                                    id="resetFilter">Reset
-                                                </button>
-                                                <button class="btn btn-sm btn-primary flex-grow-1" id="applyFilter">Áp
-                                                    dụng
-                                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterDropdown"
+                                    style="min-width: 500px;">
+                                    <div class="container">
+                                        <div class="row">
+                                            <li class="col-6">
+                                                <div class="mb-2">
+                                                    <label for="startDate" class="form-label">Ngày bắt đầu</label>
+                                                    <input type="date" class="form-control form-control-sm"
+                                                        name="startDate" id="dateRequest" data-filter
+                                                        value="{{ request()->input('startDate') ?? '' }}">
+                                                </div>
+                                            </li>
+                                            <li class="col-6">
+                                                <div class="mb-2">
+                                                    <label for="endDate" class="form-label">Ngày kết thúc</label>
+                                                    <input type="date" class="form-control form-control-sm"
+                                                        name="endDate" id="dateComplete" data-filter
+                                                        value="{{ request()->input('endDate') ?? '' }}">
+                                                </div>
                                             </li>
                                         </div>
-                                    </ul>
-                                </div>
+                                        <li class="mt-2 d-flex gap-1">
+                                            <button class="btn btn-sm btn-success flex-grow-1" type="reset"
+                                                id="resetFilter">Reset
+                                            </button>
+                                            <button class="btn btn-sm btn-primary flex-grow-1" id="applyFilter">Áp
+                                                dụng
+                                            </button>
+                                        </li>
+                                    </div>
+                                </ul>
                             </div>
+                        </div>
                     </div>
                     <!-- end card header -->
 
@@ -271,11 +261,13 @@
 @push('page-scripts')
     <script>
         var routeUrlFilter = "{{ route('admin.qa-systems.index') }}";
+        $(document).on('click', '#resetFilter', function() {
+            window.location = routeUrlFilter;
+        });
     </script>
     <script src="{{ asset('assets/js/custom/custom.js') }}"></script>
     <script src="{{ asset('assets/js/common/checkall-option.js') }}"></script>
     <script src="{{ asset('assets/js/common/filter.js') }}"></script>
     <script src="{{ asset('assets/js/common/search.js') }}"></script>
     <script src="{{ asset('assets/js/common/handle-ajax-search&filter.js') }}"></script>
-    
 @endpush

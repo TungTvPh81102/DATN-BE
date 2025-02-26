@@ -40,9 +40,10 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            <a class="btn btn-sm btn-success h-75" href="{{ route('admin.invoices.export') }}">Export dữ liệu</a>
-                            
+
+                            <a class="btn btn-sm btn-success h-75" href="{{ route('admin.invoices.export') }}">Export dữ
+                                liệu</a>
+
                             <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
                                 Tìm kiếm nâng cao
                             </button>
@@ -66,27 +67,29 @@
                                                 <div class="d-flex justify-content-between">
                                                     <input type="range" class="form-range w-50" id="amountMinRange"
                                                         name="amount_min" min="10000" max="49990000" step="10000"
-                                                        value="{{ request()->input('amount_min') ?? 10000 }}" oninput="updateRange()" data-filter>
+                                                        value="{{ request()->input('amount_min') ?? 10000 }}"
+                                                        oninput="updateRange()" data-filter>
                                                     <input type="range" class="form-range w-50" id="amountMaxRange"
                                                         name="amount_max" min="50000000" max="99990000" step="10000"
-                                                        value="{{ request()->input('amount_max') ?? 99990000 }}" oninput="updateRange()" data-filter>
+                                                        value="{{ request()->input('amount_max') ?? 99990000 }}"
+                                                        oninput="updateRange()" data-filter>
                                                 </div>
                                             </li>
                                             <div class="row">
                                                 <li class="col-6">
                                                     <div class="mb-2">
-                                                        <label for="startDate" class="form-label">Ngày mua</label>
+                                                        <label for="startDate" class="form-label">Ngày bắt đầu</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                            name="created_at" id="dateRequest" data-filter
-                                                            value="{{ request()->input('created_at') ?? '' }}">
+                                                            name="startDate" id="dateRequest" data-filter
+                                                            value="{{ request()->input('startDate') ?? '' }}">
                                                     </div>
                                                 </li>
                                                 <li class="col-6">
                                                     <div class="mb-2">
-                                                        <label for="endDate" class="form-label">Ngày xác nhận</label>
+                                                        <label for="endDate" class="form-label">Ngày kết thúc</label>
                                                         <input type="date" class="form-control form-control-sm"
-                                                            name="updated_at" id="dateComplete" data-filter
-                                                            value="{{ request()->input('updated_at') ?? '' }}">
+                                                            name="endDate" id="dateComplete" data-filter
+                                                            value="{{ request()->input('endDate') ?? '' }}">
                                                     </div>
                                                 </li>
                                             </div>
@@ -106,23 +109,29 @@
                     <div id="advancedSearch" class="card-header" style="display:none;">
                         <form>
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <label class="form-label">Mã hóa đơn</label>
+                                    <input class="form-control form-control-sm" name="code" type="text"
+                                        placeholder="Nhập tên người mua khóa học..."
+                                        value="{{ request()->input('code') ?? '' }}" data-advanced-filter>
+                                </div>
+                                <div class="col-md-3">
                                     <label class="form-label">Người mua</label>
                                     <input class="form-control form-control-sm" name="user_name_invoice" type="text"
                                         placeholder="Nhập tên người mua khóa học..."
                                         value="{{ request()->input('user_name_invoice') ?? '' }}" data-advanced-filter>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Mã khóa học</label>
-                                    <input class="form-control form-control-sm" name="course_code_invoice" type="text"
-                                        placeholder="Nhập mã khóa học..."
-                                        value="{{ request()->input('course_code_invoice') ?? '' }}" data-advanced-filter>
-                                </div>
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label class="form-label">Tên khóa học</label>
                                     <input class="form-control form-control-sm" name="course_name_invoice" type="text"
-                                        placeholder="Nhập tên khóa học..."
+                                        placeholder="Nhập mã khóa học..."
                                         value="{{ request()->input('course_name_invoice') ?? '' }}" data-advanced-filter>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Người hướng dẫn</label>
+                                    <input class="form-control form-control-sm" name="course_user_name" type="text"
+                                        placeholder="Nhập tên khóa học..."
+                                        value="{{ request()->input('course_user_name') ?? '' }}" data-advanced-filter>
                                 </div>
                                 <div class="mt-3 text-end">
                                     <button class="btn btn-sm btn-success" type="reset">Reset</button>
@@ -139,7 +148,7 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th>STT</th>
-                                            <th>Mã khóa học</th>
+                                            <th>Mã hóa đơn</th>
                                             <th>Người mua</th>
                                             <th>Khoá học</th>
                                             <th>Người hướng dẫn</th>
@@ -150,38 +159,38 @@
                                         </tr>
                                     </thead>
                                     <tbody class="list">
-                                    @foreach ($invoices as $invoice)
-                                        <tr>
-                                            <td>{{ $loop->index + 1 }}</td>
-                                            <td>{{ $invoice->code }}</td>
-                                            <td><span class="text-danger fw-bold">{{ $invoice->user->name ?? '' }}</span>
-                                            </td>
-                                            <td>
-                                                <img style="width: 70px; "
-                                                     src="{{ $invoice->course->thumbnail }}"
-                                                     class="object-fit-cover rounded me-2" alt="">
-                                                <span>
-                                                    {{ Str::limit($invoice->course->name ?? 'Không có tên', 40) }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                {{ $invoice->course->user->name ?? ''}}
-                                            </td>
-                                            <td>{{ number_format($invoice->final_total ?? 0) }} VND</td>
-                                            <td>
-                                                <span class="badge bg-primary">Hoàn thành</span>
-                                            </td>
-                                            <td>{{ $invoice->created_at ? \Carbon\Carbon::parse($invoice->created_at)->format('d/m/Y') : '' }}
-                                            </td>
-                                           <td>
-                                               <a href="">
-                                                   <button class="btn btn-sm btn-info edit-item-btn">
-                                                       <span class="ri-eye-line"></span>
-                                                   </button>
-                                               </a>
-                                           </td>
-                                        </tr>
-                                    @endforeach
+                                        @foreach ($invoices as $invoice)
+                                            <tr>
+                                                <td>{{ $loop->index + 1 }}</td>
+                                                <td>{{ $invoice->code }}</td>
+                                                <td><span
+                                                        class="text-danger fw-bold">{{ $invoice->user->name ?? '' }}</span>
+                                                </td>
+                                                <td>
+                                                    <img style="width: 70px; " src="{{ $invoice->course->thumbnail }}"
+                                                        class="object-fit-cover rounded me-2" alt="">
+                                                    <span>
+                                                        {{ Str::limit($invoice->course->name ?? 'Không có tên', 40) }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    {{ $invoice->course->instructor->name ?? '' }}
+                                                </td>
+                                                <td>{{ number_format($invoice->final_amount ?? 0) }} VND</td>
+                                                <td>
+                                                    <span class="badge bg-primary">Hoàn thành</span>
+                                                </td>
+                                                <td>{{ $invoice->created_at ? \Carbon\Carbon::parse($invoice->created_at)->format('d/m/Y') : '' }}
+                                                </td>
+                                                <td>
+                                                    <a href="">
+                                                        <button class="btn btn-sm btn-info edit-item-btn">
+                                                            <span class="ri-eye-line"></span>
+                                                        </button>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
                                     </tbody>
                                 </table>
                             </div>

@@ -53,7 +53,15 @@ class FilterController extends Controller
                 $query->whereIn('level', $request->levels);
             }
 
-            if ($request->has('is_free') && $request->is_free !== null) {
+            if ($request->has('is_free') && !empty($request->is_free) && $request->is_free == 1) {
+                $query->where('is_free', $request->is_free);
+            }
+            
+            if ($request->has('is_free') && $request->is_free !== null && $request->is_free == 0) {
+                $query->where('is_free', $request->is_free);
+            }
+
+            if ($request->has('price_sale') && !empty($request->price_sale) && $request->price_sale == 1) {
                 $query->where('is_free', $request->is_free);
             }
 

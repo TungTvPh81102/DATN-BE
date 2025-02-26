@@ -90,7 +90,7 @@ class UserController extends Controller
                     if (!empty($careerData['id'])) {
                         $career = Career::query()->where('id', $careerData['id'])->first();
 
-                        if (!$career) {
+                        if ($career) {
                             $career->update(
                                 [
                                     'profile_id' => $profile->id,

@@ -14,7 +14,7 @@
         <table style="width: 100%; position: absolute; top: 15px; left: 30px;">
             <tr>
                 <td style="width: 50%; text-align: left;">
-                    <img src="{{ public_path('assets/images/daudocoursemely.jpeg') }}"
+                    <img src="{{ $image['daudo'] }}"
                         style="width: 100px; height: auto;" alt="Dấu đỏ Course MeLy">
                 </td>
             </tr>
@@ -43,7 +43,7 @@
             <tr>
                 <td style="width: 50%; text-align: left; vertical-align: middle;">
                     <div style="text-align: center">
-                        <img src="{{ public_path('assets/images/logo-container.png') }}" alt="Course MeLy"
+                        <img src="{{ $image['logo'] }}" alt="Course MeLy"
                             style="width: 40px; vertical-align: middle;">
                         <span
                             style="color: red; font-size: 18px; font-weight: bold; vertical-align: middle; margin-left: 10px;">Course
@@ -53,7 +53,7 @@
 
                 <td style="width: 50%; text-align: right; vertical-align: middle;">
                     <div style="text-align: center">
-                        <img src="{{ public_path('images/signature.png') }}" alt="Chữ ký" style="width: 120px;">
+                        <img src="{{ url('images/signature.png') }}" alt="Chữ ký" style="width: 120px;">
                         <p style="margin: 5px 0 0 0; font-weight: bold;">{{ $course->user->name }}</p>
                     </div>
                 </td>

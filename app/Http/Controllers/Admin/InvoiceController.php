@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\InvoicesExport;
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class InvoiceController extends Controller
 {
-    use LoggableTrait;
+    use LoggableTrait, FilterTrait;
 
     public function index(Request $request)
     {
@@ -27,11 +28,7 @@ class InvoiceController extends Controller
                 ->latest('id')
                 ->where('status', 'Đã thanh toán');
 
-            if ($request->hasAny(['user_name_invoice', 'course_code_invoice', 'course_name_invoice', 'amount_min', 'amount_max', 'created_at', 'updated_at']))
-                $queryInvoice = $this->filter($request, $queryInvoice);
-
-            if ($request->has('search_full'))
-                $queryInvoice = $this->search($request->search_full, $queryInvoice);
+            $queryInvoice = $this->filterSearch($request, $queryInvoice);
 
             $invoices = $queryInvoice->paginate(10);
 
@@ -49,49 +46,39 @@ class InvoiceController extends Controller
         }
     }
 
+    private function filterSearch(Request $request, $queryInvoice)
+    {
+        try {
+            if ($request->hasAny(['course_user_name', 'user_name_invoice', 'course_name_invoice', 'amount_min', 'amount_max', 'startDate', 'endDate', 'code']))
+                $queryInvoice = $this->filter($request, $queryInvoice);
+
+            if ($request->has('search_full'))
+                $queryInvoice = $this->search($request->search_full, $queryInvoice);
+
+            return $queryInvoice;
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+        }
+    }
+
     private function filter($request, $query)
     {
         $filters = [
-            'created_at' => ['queryWhere' => '>='],
-            'updated_at' => ['queryWhere' => '<='],
-            'final_total' => ['queryWhere' => 'BETWEEN', 'attribute' => ['amount_min', 'amount_max']],
+            'code' => ['queryWhere' => 'LIKE'],
+            'created_at' => ['attribute' => ['startDate' => '>=', 'endDate' => '<=']],
+            'final_total' => ['attribute' => ['amount_min' => '>=', 'amount_max' => '<=']],
             'user_name_invoice' => null,
-            'course_code_invoice' => null,
             'course_name_invoice' => null,
         ];
 
-        foreach ($filters as $filter => $value) {
-            $filterValue = $request->input($filter);
+        $query = $this->filterTrait($filters, $request, $query);
 
-            if (!empty($filterValue)) {
-
-                if (is_array($value) && !empty($value['queryWhere'])) {
-
-                    if ($value['queryWhere'] !== 'BETWEEN') {
-                        $query->where($filter, $value['queryWhere'], $filterValue);
-                    } else {
-                        $filterValueBetweenA = $request->input($value['attribute'][0]);
-                        $filterValueBetweenB = $request->input($value['attribute'][1]);
-
-                        if (!empty($filterValueBetweenA) && !empty($filterValueBetweenB)) {
-                            $query->whereBetween($filter, [$filterValueBetweenA, $filterValueBetweenB]);
-                        }
-                    }
-                } else {
-                    if (str_contains($filter, '_')) {
-                        $elementFilter = explode('_', $filter);
-                        $relation = $elementFilter[0];
-                        $field = $elementFilter[1];
-
-                        if (method_exists($query->getModel(), $relation)) {
-
-                            $query->whereHas($relation, function ($query) use ($field, $filterValue) {
-                                $query->where($field, 'LIKE', "%$filterValue%");
-                            });
-                        }
-                    }
-                }
-            }
+        if ($request->has('course_user_name') && !empty($request->course_user_name)) {
+            $query->whereHas('course', function ($q) use ($request) {
+                $q->whereHas('user', function ($q1) use ($request) {
+                    $q1->where('name', 'LIKE', "%$request->course_user_name%");
+                });
+            });
         }
 
         return $query;
@@ -100,9 +87,8 @@ class InvoiceController extends Controller
     public function export()
     {
         try {
-            
-            return Excel::download(new InvoicesExport, 'Invoices.xlsx');
 
+            return Excel::download(new InvoicesExport, 'Invoices.xlsx');
         } catch (\Exception $e) {
 
             $this->logError($e);
@@ -115,12 +101,14 @@ class InvoiceController extends Controller
     {
         if (!empty($searchTerm)) {
             $query->where(function ($query) use ($searchTerm) {
-                $query->whereHas('user', function ($query) use ($searchTerm) {
-                    $query->where('name', 'LIKE', "%$searchTerm%");
+                $query->whereHas('user', function ($q) use ($searchTerm) {
+                    $q->where('name', 'LIKE', "%$searchTerm%");
                 })
-                    ->orWhereHas('course', function ($query) use ($searchTerm) {
-                        $query->where('name', 'LIKE', "%$searchTerm%")
-                            ->orWhere('code', 'LIKE', "%$searchTerm%");
+                    ->orWhereHas('course', function ($q1) use ($searchTerm) {
+                        $q1->where('name', 'LIKE', "%$searchTerm%")
+                            ->orWhereHas('user', function ($q2) use ($searchTerm) {
+                                $q2->where('name', 'LIKE', "%$searchTerm%");
+                            });
                     });
             });
         }
