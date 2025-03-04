@@ -201,3 +201,11 @@
 .load-more:hover {
     background-color: #0056b3;
 }
+.members-list {
+    max-height: 400px; /* Chiều cao tối đa của danh sách */
+    overflow-y: auto; /* Tạo thanh cuộn dọc khi nội dung vượt quá chiều cao */
+    border: 1px solid #ccc; /* Đường viền để dễ nhìn */
+    padding: 10px;
+    width: 300px; /* Chiều rộng tùy chỉnh */
+    margin: 20px auto; /* Canh giữa trang */
+}

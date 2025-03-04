@@ -6,7 +6,7 @@
     border-radius: 8px !important; /* Bo góc */
     padding-left: 15px !important;
     background-color: #f8f9fa !important; /* Màu nền sáng */
-    border: 1px solid #14d79d !important; /* Viền xanh */
+    border: 1px solid #147fd7 !important; /* Viền xanh */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important; /* Đổ bóng */
 }
 
@@ -34,7 +34,7 @@
 
 /* Thêm hiệu ứng cho khi mục được chọn */
 .select2-results__option[aria-selected=true] {
-    background-color: #069b44 !important;
+    background-color: #06719b !important;
     color: #ffffff !important;
 }
 
@@ -47,7 +47,7 @@
 
 /* Cải thiện các thẻ đã chọn (tag) */
 .select2-selection__choice {
-    background-color: #069b44 !important;
+    background-color: #06569b !important;
     color: #ffffff !important;
     border-radius: 20px !important;
     padding: 5px 10px !important;

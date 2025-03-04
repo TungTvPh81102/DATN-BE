@@ -121,33 +121,7 @@
 
                             <div class="chat-message-list">
 
-                                <ul class="list-unstyled chat-list chat-user-list conversationList">
-                                    @foreach ($data['channels'] as $channel)
-                                        @if ($channel->type == 'private')
-                                            <li class="">
-                                                <a href="#" class="unread-msg-user group-button"
-                                                    data-channel-id="{{ $channel->id }}">
-                                                    <div class="d-flex align-items-center">
-                                                        <div
-                                                            class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
-                                                            <div class="avatar-xxs">
-                                                                <div
-                                                                    class="avatar-title bg-light rounded-circle text-body">
-                                                                    <img src="{{ $channel->users->last()->avatar }}"
-                                                                        class="avatar-xs rounded-circle" alt="">
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="flex-grow-1 overflow-hidden">
-                                                            <p class="text-truncate mb-0">
-                                                                {{ $channel->users->last()->name }}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </a>
-                                            </li>
-                                        @endif
-                                    @endforeach
+                                <ul class="list-unstyled chat-list chat-user-list usersList">
                                 </ul>
                             </div>
 
@@ -170,29 +144,25 @@
 
                                 <ul class="list-unstyled chat-list chat-user-list mb-0 conversationList">
                                     @foreach ($data['channels'] as $channel)
-                                        @if ($channel->type == 'group')
-                                            <li class="">
-                                                <a href="#" class="unread-msg-user group-button"
-                                                    data-channel-id="{{ $channel->id }}">
-                                                    <div class="d-flex align-items-center">
-                                                        <div
-                                                            class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
-                                                            <div class="avatar-xxs">
-                                                                <div
-                                                                    class="avatar-title bg-light rounded-circle text-body">
-                                                                    #
-                                                                </div>
+                                        <li class="">
+                                            <a href="#" class="unread-msg-user group-button"
+                                                data-channel-id="{{ $channel->id }}">
+                                                <div class="d-flex align-items-center">
+                                                    <div class="flex-shrink-0 chat-user-img align-self-center me-2 ms-0">
+                                                        <div class="avatar-xxs">
+                                                            <div class="avatar-title bg-light rounded-circle text-body">
+                                                                #
                                                             </div>
                                                         </div>
-                                                        <div class="flex-grow-1 overflow-hidden">
-                                                            <p class="text-truncate mb-0">
-                                                                {{ $channel->name }}
-                                                            </p>
-                                                        </div>
                                                     </div>
-                                                </a>
-                                            </li>
-                                        @endif
+                                                    <div class="flex-grow-1 overflow-hidden">
+                                                        <p class="text-truncate mb-0">
+                                                            {{ $channel->name }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </li>
                                     @endforeach
 
                                 </ul>
@@ -233,10 +203,9 @@
                                                     <div class="d-flex align-items-center">
                                                         <div
                                                             class="flex-shrink-0 chat-user-img online user-own-img align-self-center me-3 ms-0">
-                                                            @if ($channel->type == 'private')
-                                                                <img id="imageUser" src=""
-                                                                    class="rounded-circle avatar-xs" alt="">
-                                                            @endif
+
+                                                            <img id="imageUser" src=""
+                                                                class="rounded-circle avatar-xs" alt="">
                                                             <span class="user-status"></span>
                                                         </div>
                                                         <div class="flex-grow-1 overflow-hidden" id="groupInfo">
@@ -371,11 +340,13 @@
                                                                         </div>
                                                                     </div>
                                                                     <div class="border-top border-top-dashed p-3">
-                                                                        <h5 class="fs-15 mb-3">Danh sách thành viên(<b class="memberCount"></b>)</h5>
-                                                                        <ul class="list-group" id="membersList">
+                                                                        <h5 class="fs-15 mb-3">Danh sách thành viên(<b
+                                                                                class="memberCount"></b>)</h5>
+                                                                        <ul class="list-group member-list"
+                                                                            id="membersList">
 
                                                                         </ul>
-                                                                    </div> 
+                                                                    </div>
                                                                     <div class="border-top border-top-dashed p-3">
                                                                         <h5 class="fs-15 mb-3">File đã gửi</h5>
 
@@ -385,7 +356,7 @@
 
                                                                             </div>
                                                                             <div class="text-center mt-2">
-                                                                                <button  id="loadMore" type="button"
+                                                                                <button id="loadMore" type="button"
                                                                                     class="btn btn-danger">Load more <i
                                                                                         class="ri-arrow-right-fill align-bottom ms-1"></i></button>
                                                                             </div>
@@ -408,22 +379,26 @@
                                                                                 aria-label="Close"> </button>
                                                                         </div>
                                                                         <div class="modal-body">
-                                                                            <form id="createGroupChatForm">
+                                                                            <form>
                                                                                 @csrf
                                                                                 <div class="form-group mb-3">
                                                                                     <label for="groupMembers"
                                                                                         class="font-weight-bold">Chọn thành
                                                                                         viên</label>
+                                                                                        @foreach ($data['channelsWithAdminsNotInGroup'] as $channelData)
                                                                                     <select tabindex="-1" id="addMembers"
                                                                                         name="members[]"
                                                                                         multiple="multiple">
-                                                                                        @foreach ($data['admins'] as $admin)
+                                                                                        
+                                                                                        @foreach ($channelData['adminsNotInGroup'] as $member)
                                                                                             <option
-                                                                                                value="{{ $admin->id }}">
-                                                                                                {{ $admin->name }}
+                                                                                                value="{{ $member->id }}"
+                                                                                                class="select-member-option">
+                                                                                                {{ $member->name }}
                                                                                             </option>
-                                                                                        @endforeach
+                                                                                        @endforeach  
                                                                                     </select>
+                                                                                    @endforeach
                                                                                 </div>
 
                                                                         </div>
@@ -431,7 +406,9 @@
                                                                             <button type="button" class="btn btn-light"
                                                                                 data-bs-dismiss="modal">Close</button>
                                                                             <button type="submit"
-                                                                                class="btn btn-primary ">Thêm</button>
+                                                                                class="btn btn-primary getID"
+                                                                                id="addMembersButton"
+                                                                                data-conversation-id="">Thêm</button>
                                                                         </div>
                                                                         </form>
                                                                     </div><!-- /.modal-content -->
@@ -469,8 +446,7 @@
                                                 <li class="list-inline-item m-0">
                                                     <button type="button" class="btn btn-ghost-secondary btn-icon"
                                                         title="Thêm thành viên" data-bs-toggle="modal"
-                                                        data-bs-target="#myModal" id="addMembersButton"
-                                                        data-channel-id="3">
+                                                        data-bs-target="#myModal">
                                                         <i class="las la-user-plus"
                                                             style="font-size: 20px;color:black"></i>
                                                     </button>
@@ -732,6 +708,7 @@
                             $('.memberCount').text(response.data.memberCount);
                             $('#nameUser').text(response.data.direct);
                             $('#imageUser').attr('src', response.data.avatar);
+                            $('.getID').attr('data-conversation-id', response.data.channelId);
                             loadMessages(response.data.group.id);
                             loadSentFiles(response.data.group.id);
                             let membersHtml = '';
@@ -778,48 +755,48 @@
                         // alert('Đã nhận tin nhắn mới');
                     });
             });
-            $('#addMembersButton').click(function() {
-                event.preventDefault();
-                var conversationId = $(this).data(
-                    'channel-id'); // Giả sử bạn có conversationId từ data attribute của nút
-                $('#addMembers').select2(); // ID của select trong modal
-                var members = []; // Mảng chứa id các thành viên mới
-                console.log(conversationId);
 
-                // Lấy tất cả các thành viên mới (có thể từ checkbox hoặc select box)
-                $('input[name="members[]"]:checked').each(function() {
-                    members.push($(this).val()); // Thêm id thành viên vào mảng members
-                });
+            $('#addMembers').select2();
+            document.getElementById('addMembersButton').addEventListener('click', function(e) {
+                e.preventDefault(); // Ngăn chặn việc gửi form mặc định
 
-                if (members.length > 0) {
-                    // Gửi AJAX request
-                    $.ajax({
-                        url: 'http://127.0.0.1:8000/admin/chats/conversations/' + conversationId +
-                            '/add-members', // Đường dẫn tới route
-                        type: 'POST',
-                        data: {
-                            members: members, // Dữ liệu thành viên
-                        },
-                        success: function(response) {
-                            if (response.status === 'success') {
-                                // Cập nhật UI sau khi thêm thành viên thành công
-                                var newMemberIds = response.data.conversation
-                                    .users; // Giả sử trả về danh sách người dùng
-                                newMemberIds.forEach(function(userId) {
-                                    // Thêm thành viên vào UI (ví dụ: danh sách thành viên trong nhóm)
-                                    $('#memberList').append('<li>' + userId + '</li>');
-                                });
-                                // Có thể cập nhật danh sách thành viên trong UI nếu cần
-                            } else {
-                                alert(response.error);
-                            }
-                        },
-                        error: function(xhr, status, error) {
-                            console.error('Có lỗi xảy ra: ', error);
-                            alert('Thao tác không thành công.');
-                        }
-                    });
+                // Lấy danh sách thành viên đã chọn từ select
+                let selectedMembers = $('#addMembers').val();
+
+                // Kiểm tra xem có thành viên nào được chọn không
+                if (selectedMembers.length === 0) {
+                    alert("Vui lòng chọn ít nhất một thành viên");
+                    return;
                 }
+                var channelId = $(this).data('conversation-id'); // Lấy ID của nhóm chat
+                console.log('Id nhóm:', channelId);
+
+                // Gửi yêu cầu AJAX tới backend
+                $.ajax({
+                    url: 'http://127.0.0.1:8000/admin/chats/add-members-to-group', // URL backend của bạn (cập nhật theo route của bạn)
+                    type: 'POST',
+                    data: {
+                        members: selectedMembers, // Danh sách thành viên đã chọn
+                        group_id: channelId, // ID nhóm chat (thêm vào tham số nếu cần thiết)
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Cập nhật giao diện nếu thành viên được thêm thành công
+                            alert('Thành viên đã được thêm vào nhóm!');
+
+                            // Bạn có thể cập nhật danh sách thành viên ở frontend, ví dụ như thêm thành viên vào danh sách nhóm chat.
+
+                            // Đóng modal sau khi thêm thành viên
+                            $('#myModal').modal('hide');
+                        } else {
+                            alert('Có lỗi xảy ra khi thêm thành viên.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.log(xhr.responseText);
+                        alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+                    }
+                });
             });
             // Khi người dùng nhấn gửi tin nhắn
             $('#sendMessageButton').click(function(e) {
@@ -1029,7 +1006,7 @@
         //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
         //     }
         function renderMessage(response) {
-            
+
             const messageClass = response.message.sender.id == userId ?
                 'sender' : 'received';
             const time = formatTime(response.message.created_at);
@@ -1071,13 +1048,5 @@
     `;
             return messageHtml;
         }
-    </script>
-    <script>
-        @if (session('success'))
-            toastr.success("{{ session('success') }}");
-        @endif
-        @if (session('error'))
-            toastr.error("{{ session('error') }}");
-        @endif
     </script>
 @endpush

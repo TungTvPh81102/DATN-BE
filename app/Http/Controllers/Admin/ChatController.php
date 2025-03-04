@@ -142,29 +142,32 @@ class ChatController extends Controller
         $channels = Conversation::whereHas('users', function ($query) {
             $query->where('user_id', auth()->id()); // Kiểm tra người dùng hiện tại có trong nhóm không
         })->get();
-
+        $channelsWithAdminsNotInGroup = $channels->map(function ($channel) use ($admins) {
+            // Lọc các admin chưa tham gia vào kênh
+            $memberNotInGroup = $admins->filter(function ($admin) use ($channel) {
+                return !$channel->users->contains('id', $admin->id);
+            });
+            return [
+                'channel' => $channel,
+                'adminsNotInGroup' => $memberNotInGroup
+            ];
+        });
         return [
             'admins' => $admins,
-            'channels' => $channels
+            'channels' => $channels,
+            'channelsWithAdminsNotInGroup' => $channelsWithAdminsNotInGroup
         ];
     }
-
     public function getGroupInfo(Request $request)
     {
         try {
             $groupId = $request->id;
             $group = Conversation::findOrFail($groupId);
-            if ($group->type == 'group') {
-                $name = $group->name;
-                $memberCount = $group->users()->count() . ' thành viên';
-            } elseif ($group->type == 'private') {
-                $name = $group->users->last()->name;
-                $avatar = $group->users->last()->avatar;
-                $memberCount = "";
-            }
+            $name = $group->name;
+            $memberCount = $group->users()->count() . ' thành viên';
             $member = $group->users()->select('user_id', 'name', 'avatar')->get();
             $leader = User::find($group->owner_id);
-
+            $channelId = $group->id;
             // Trả về thông tin nhóm
             return response()->json([
                 'status' => 'success',
@@ -175,6 +178,7 @@ class ChatController extends Controller
                     'group' => $group,
                     'leader' => $leader,
                     'avatar' => $avatar ?? url('assets/images/users/multi-user.jpg'),
+                    'channelId' => $channelId,
                 ]
             ]);
         } catch (\Exception $e) {
@@ -196,46 +200,29 @@ class ChatController extends Controller
 
         return response()->json(['status' => 'success', 'messages' => $messages, 'id' => $conversationId]);
     }
-    public function addMembersToConversation(StoreGroupChatRequest $request, $conversationId)
+    public function addMembersToGroup(Request $request)
     {
-        try {
-            $request->validated();
-            $conversation = Conversation::findOrFail($conversationId);
+        $validated = $request->validate([
+            'members' => 'required|array',
+            'members.*' => 'exists:users,id',  // Kiểm tra rằng các ID thành viên tồn tại trong bảng users 
+        ]);
 
-            if ($conversation->owner_id !== auth()->id()) {
-                return response()->json([
-                    'status' => 'error',
-                    'error' => 'Bạn không có quyền thêm thành viên vào nhóm này.'
-                ], 403);
-            }
-
-            // Thêm các thành viên vào nhóm
-            foreach ($request->members as $memberId) {
-                if ($memberId == auth()->id()) {
-                    continue; // Bỏ qua nếu thành viên là người tạo nhóm
-                }
-                $user = User::find($memberId);
-                if ($user) {
-                    $conversation->users()->attach($memberId);
-                }
-            }
-            $data = $this->getAdminsAndChannels();
-            $data['conversation'] = $conversation;
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Thêm thành viên thành công.',
-                'data' => $data
-            ]);
-        } catch (\Exception $e) {
-            $this->logError($e, $request->all());
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Thao tác không thành công.',
-            ]);
+        // Lấy group_id và members
+        $group = Conversation::find($request->group_id);
+        $members = $request->members;
+        $existingMembers = $group->users->pluck('id')->toArray();  // Lấy ID thành viên hiện tại của nhóm
+        $newMembers = array_diff($members, $existingMembers);  // Lọc ra các thành viên chưa có trong nhóm
+        // Thêm thành viên vào nhóm (giả sử nhóm có quan hệ many-to-many với users)
+        foreach ($newMembers as $memberId) {
+            $group->users()->attach($memberId);  // Thêm thành viên vào nhóm
         }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Thành viên đã được thêm vào nhóm.',
+        ]);
     }
+
     public function getSentFiles($conversationId)
     {
         try {
