@@ -67,8 +67,6 @@
                             </div>
                         </div>
 
-
-
                         <div class="flex-shrink-0">
                             <div data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="bottom"
                                 title="Add Contact">
@@ -339,29 +337,116 @@
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                    <div class="border-top border-top-dashed p-3">
-                                                                        <h5 class="fs-15 mb-3">Danh sách thành viên(<b
-                                                                                class="memberCount"></b>)</h5>
-                                                                        <ul class="list-group member-list"
-                                                                            id="membersList">
+                                                                    <ul class="nav nav-tabs" id="myTab"
+                                                                        role="tablist">
+                                                                        <div class="row w-100">
+                                                                            <li class="nav-item col-6"
+                                                                                role="presentation">
+                                                                                <button class="nav-link active"
+                                                                                    id="members-tab" data-bs-toggle="tab"
+                                                                                    data-bs-target="#members"
+                                                                                    type="button" role="tab"
+                                                                                    aria-controls="members"
+                                                                                    aria-selected="true">
+                                                                                    Danh sách thành viên
+                                                                                </button>
+                                                                            </li>
+                                                                            <li class="nav-item col-6"
+                                                                                role="presentation">
+                                                                                <button class="nav-link" id="files-tab"
+                                                                                    data-bs-toggle="tab"
+                                                                                    data-bs-target="#files" type="button"
+                                                                                    role="tab" aria-controls="files"
+                                                                                    aria-selected="false">
+                                                                                    File đã gửi
+                                                                                </button>
+                                                                            </li>
+                                                                        </div>
+                                                                    </ul>
 
-                                                                        </ul>
-                                                                    </div>
-                                                                    <div class="border-top border-top-dashed p-3">
-                                                                        <h5 class="fs-15 mb-3">File đã gửi</h5>
+                                                                    <!-- Nội dung tabs chính -->
+                                                                    <div class="tab-content" id="myTabContent">
+                                                                        <!-- Danh sách thành viên -->
+                                                                        <div class="tab-pane fade show active border-top border-top-dashed p-3"
+                                                                            id="members" role="tabpanel"
+                                                                            aria-labelledby="members-tab">
+                                                                            <ul class="list-group member-list"
+                                                                                id="membersList"></ul>
+                                                                        </div>
 
-                                                                        <div class="vstack gap-2">
-                                                                            <div class="border rounded border-dashed p-2"
-                                                                                id="sentFilesList">
+                                                                        <!-- File đã gửi -->
+                                                                        <div class="tab-pane fade border-top border-top-dashed p-3"
+                                                                            id="files" role="tabpanel"
+                                                                            aria-labelledby="files-tab">
+                                                                            <!-- Tabs con -->
+                                                                            <ul class="nav nav-pills mb-3" id="fileSubTab"
+                                                                                role="tablist">
+                                                                                <div class="row w-100">
+                                                                                    <li class="nav-item col-6"
+                                                                                        role="presentation">
+                                                                                        <button class="nav-link active"
+                                                                                            id="media-tab"
+                                                                                            data-bs-toggle="tab"
+                                                                                            data-bs-target="#media"
+                                                                                            type="button" role="tab"
+                                                                                            aria-controls="media"
+                                                                                            aria-selected="true">
+                                                                                            Ảnh & Video
+                                                                                        </button>
+                                                                                    </li>
+                                                                                    <li class="nav-item col-6"
+                                                                                        role="presentation">
+                                                                                        <button class="nav-link"
+                                                                                            id="documents-tab"
+                                                                                            data-bs-toggle="tab"
+                                                                                            data-bs-target="#documents"
+                                                                                            type="button" role="tab"
+                                                                                            aria-controls="documents"
+                                                                                            aria-selected="false">
+                                                                                            File
+                                                                                        </button>
+                                                                                    </li>
+                                                                                </div>
+                                                                            </ul>
 
-                                                                            </div>
-                                                                            <div class="text-center mt-2">
-                                                                                <button id="loadMore" type="button"
-                                                                                    class="btn btn-danger">Load more <i
-                                                                                        class="ri-arrow-right-fill align-bottom ms-1"></i></button>
+                                                                            <!-- Nội dung tabs con -->
+                                                                            <div class="tab-content"
+                                                                                id="fileSubTabContent">
+                                                                                <!-- Ảnh & Video -->
+                                                                                <div class="tab-pane fade show active"
+                                                                                    id="media" role="tabpanel"
+                                                                                    aria-labelledby="media-tab">
+                                                                                    <div class="border rounded border-dashed p-2"
+                                                                                        id="mediaFilesList"></div>
+                                                                                    <div class="text-center mt-2">
+                                                                                        <button id="loadMoreMedia"
+                                                                                            type="button"
+                                                                                            class="btn btn-danger">
+                                                                                            Load more <i
+                                                                                                class="ri-arrow-right-fill align-bottom ms-1"></i>
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <!-- File -->
+                                                                                <div class="tab-pane fade" id="documents"
+                                                                                    role="tabpanel"
+                                                                                    aria-labelledby="documents-tab">
+                                                                                    <div class="border rounded border-dashed p-2"
+                                                                                        id="documentFilesList"></div>
+                                                                                    <div class="text-center mt-2">
+                                                                                        <button id="loadMoreDocuments"
+                                                                                            type="button"
+                                                                                            class="btn btn-danger">
+                                                                                            Load more <i
+                                                                                                class="ri-arrow-right-fill align-bottom ms-1"></i>
+                                                                                        </button>
+                                                                                    </div>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
+
                                                                 </div>
                                                                 <!--end offcanvas-body-->
                                                             </div>
@@ -513,7 +598,7 @@
                                                         <i class="bx bx-paperclip align-middle"></i>
                                                     </button>
 
-                                                    <input type="file" name="fileinput" id="fileInput"
+                                                    <input type="file" name="input_file" id="fileInput"
                                                         style="display: none;">
                                                 </div>
                                             </div>
@@ -526,7 +611,6 @@
                                             <input type="text" class="form-control chat-input bg-light border-light"
                                                 id="messageInput" placeholder="Type your message..." autocomplete="off">
                                             <input type="hidden" id="parentMessageId">
-                                            <!-- Nếu có tính năng trả lời tin nhắn -->
                                         </div>
                                         <div class="col-auto">
                                             <div class="chat-input-links ms-2">
@@ -618,29 +702,50 @@
             $("#upload-btn").click(function() {
                 $("#fileInput").click();
             });
-            document.getElementById("fileInput").addEventListener("change", function() {
+
+            $("#fileInput").change(function() {
                 let file = this.files[0];
-                let messageInput = document.getElementById("messageInput");
-                let previewContainer = document.getElementById("previewContainer");
-                let imagePreview = document.getElementById("imagePreview");
+                console.log(file);
 
-                if (file) {
-                    // messageInput.value = file.name;
+                let previewContainer = $("#previewContainer");
 
-                    // Kiểm tra xem tệp có phải ảnh không
-                    if (file.type.startsWith("image/")) {
-                        let reader = new FileReader();
-                        reader.onload = function(e) {
-                            imagePreview.src = e.target.result;
-                            previewContainer.style.display = "block"; // Hiển thị khu vực ảnh
-                        };
-                        reader.readAsDataURL(file);
+                if (!file) return;
+
+                let fileType = file.type;
+                let fileExt = file.name.split('.').pop().toLowerCase();
+                let reader = new FileReader();
+
+                reader.onload = function(e) {
+                    let previewHtml = '';
+
+                    if (fileType.startsWith("image/")) {
+                        previewHtml = `<img src="${e.target.result}" class="thumbnail" 
+                                style="max-width:150px; border-radius: 8px;">`;
+                    } else if (fileType.startsWith("video/")) {
+                        previewHtml = `<video class="thumbnail" controls style="max-width:150px; border-radius: 8px;">
+                                <source src="${e.target.result}" type="${fileType}">
+                              </video>`;
+                    } else if (fileType === "application/pdf") {
+                        previewHtml = `<embed src="${e.target.result}" class="thumbnail" 
+                                style="width:100px; height:100px; border-radius: 8px;">`;
                     } else {
-                        previewContainer.style.display = "none"; // Ẩn nếu không phải ảnh
+                        let fileThumbnail = getFileThumbnail(fileExt);
+                        previewHtml = `<div class="file-thumbnail">
+                                <img src="${fileThumbnail}" style="width:50px; height:50px;"> 
+                                <p>${file.name}</p>
+                              </div>`;
                     }
-                }
+
+                    previewContainer.html(previewHtml).show();
+                };
+
+                reader.readAsDataURL(file);
             });
         });
+
+        function getFileThumbnail(ext) {
+            return `/assets/images/icons/${ext}.png`;
+        }
 
         function removeImage() {
             document.getElementById("imagePreview").src = "";
@@ -811,13 +916,13 @@
                 formData.append('type', type);
                 // Kiểm tra nếu có ảnh được chọn
                 let fileInput = $('#fileInput')[0].files[0];
+
                 if (fileInput) {
-                    formData.append('fileinput', fileInput);
-                    type = 'image'; // Đổi type thành image nếu có file ảnh
-                    formData.set('type', type);
+                    formData.append('input_file', fileInput);
                 }
+
                 if (currentConversationId && content || fileInput) {
-                    // Gửi tin nhắn vào nhóm hiện tại
+
                     $.ajax({
                         url: "{{ route('admin.chats.sendGroupMessage') }}",
                         method: 'POST',
@@ -856,30 +961,67 @@
                     $('#messagesList').html(''); // Xóa danh sách tin nhắn cũ
 
                     const messagesHtml = response.messages.map(message => {
-                        // console.log(response);
 
                         // Kiểm tra ID người gửi và người nhận
                         const messageClass = message.sender.id == userId ? 'sender' :
-                            'received'; // Xác định lớp tin nhắn   
+                            'received';
                         const time = formatTime(message.created_at);
                         let messageContent = '';
                         try {
-                            // Kiểm tra nếu có `media` và lấy ảnh đầu tiên
                             if (message.media && message.media.length > 0) {
-                                let mediaFile = message.media[0].file_path; // Lấy đường dẫn ảnh
-                                messageContent = `
-                                    <p>${message.content}</p>
-                                    <img src="/storage/${mediaFile}" alt="Hình ảnh" 
-                                    style=max-width:350px; border-radius: 8px;">
-                                    `;
+                                let mediaFile = message.media[0].file_path;
+                                let fileType = message.media[0].file_type;
+                                let fileExt = mediaFile.split('.').pop().toLowerCase();
+                                let mediaPreview = '';
+                                let fileSize = formatFileSize(message.media[0].file_size);
+                                let fileIcon = getFileThumbnail(fileExt);
+                                console.log(message.media[0].file_size);
+
+                                if (fileType.startsWith('image')) {
+                                    mediaPreview = `
+                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px;">
+                                        <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
+                                    </div>`;
+                                } else if (fileType.startsWith('video')) {
+                                    mediaPreview = `
+                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <video controls style="max-width:100%; border-radius: 8px;">
+                                            <source src="/storage/${mediaFile}" type="${fileType}">
+                                        </video>                                 
+                                    </div>`;
+                                } else if (fileType === 'application/pdf') {
+                                    mediaPreview = `
+                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <embed src="/storage/${mediaFile}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
+                                        <a href="/storage/${mediaFile}" download class="btn btn-primary btn-sm mt-2">
+                                            <i class='bx bx-download'></i>
+                                        </a>                                    
+                                    </div>`;
+                                } else {
+                                    mediaPreview = `
+                                    <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                                        <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                                            <div class="col-9">
+                                                <p class="mb-1 small text-truncate" style="max-width: 250px;">${mediaFile.split('/').pop()}</p>
+                                                <p class="text-muted">${fileSize}</p>
+                                            </div>
+                                            <div class="col-2 d-flex align-items-center justify-content-center">
+                                                <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
+                                                    <i class='fs-4 bx bx-download'></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                                }
+
+                                messageContent = `<p>${message.content}</p> ${mediaPreview}`;
                             } else {
-                                messageContent =
-                                    `<p>${message.content}</p>`; // Hiển thị văn bản nếu không có ảnh
+                                messageContent = `<p>${message.content}</p>`;
                             }
                         } catch (error) {
-                            console.error("Lỗi lấy ảnh:", error);
-                            messageContent =
-                                `<p>${message.content}</p>`; // Nếu lỗi, fallback về content
+                            console.error("Lỗi lấy file:", error);
+                            messageContent = `<p>${message.content}</p>`;
                         }
                         return `
                             <div class=" message ${messageClass} style="padding-top: 10px">
@@ -922,16 +1064,53 @@
                     function renderImages() {
                         $('#sentFilesList').html(''); // Xóa nội dung cũ
                         let filesToShow = allFiles.slice(0, visibleImages); // Lấy số ảnh cần hiển thị
-
+                        const mediaHtml = [];
+                        const documentHtml = [];
                         const filesHtml = filesToShow.map(file => {
-                            return `
-                        <div class="gallery-item">
-                            <img src="/storage/${file.file_path}" alt="File đã gửi">
-                        </div>
-                    `;
+                            console.log(file);
+                            let mediaFile = file.file_path;
+                            let fileType = file.file_type;
+                            let fileExt = mediaFile.split('.').pop().toLowerCase();
+                            let mediaPreview = '';
+                            let fileSize = formatFileSize(file.file_size);
+                            let fileIcon = getFileThumbnail(fileExt);
+
+                            if (fileType.startsWith('image')) {
+                                mediaPreview = `
+                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; height: 200px; display: flex; align-items: center; justify-content: center;">
+                                        <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                                    </div>`;
+                                mediaHtml.push(`<div class="gallery-item">${mediaPreview}</div>`);
+                            } else if (fileType.startsWith('video')) {
+                                mediaPreview = `
+                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; height: 200px;">
+                                        <video controls style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+                                            <source src="/storage/${mediaFile}" type="${fileType}">
+                                        </video>                                
+                                    </div>`;
+                                mediaHtml.push(`<div class="gallery-item">${mediaPreview}</div>`);
+                            } else {
+                                let filePreview = `
+                                                <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                                    <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                                                    <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                                                        <div class="col-9">
+                                                            <p class="mb-1 small text-truncate" style="max-width: 250px;">${mediaFile.split('/').pop()}</p>
+                                                            <p class="text-muted">${fileSize} KB</p>
+                                                        </div>
+                                                        <div class="col-2 d-flex align-items-center justify-content-center">
+                                                            <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
+                                                                <i class='fs-4 bx bx-download'></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>`;
+                                documentHtml.push(`<div class="gallery-item">${filePreview}</div>`);
+                            }
                         }).join('');
 
-                        $('#sentFilesList').append(filesHtml);
+                        $('#mediaFilesList').append(mediaHtml.join(''));
+                        $('#documentFilesList').append(documentHtml.join(''));
 
                         if (visibleImages >= allFiles.length) {
                             $('#loadMore').hide(); // Ẩn nút khi không còn ảnh để load
@@ -1003,30 +1182,65 @@
         //         }, 1000); // Thời gian hiệu ứng hoạt hình (1 giây)
         //     }
         function renderMessage(response) {
-
             const messageClass = response.message.sender.id == userId ?
                 'sender' : 'received';
             const time = formatTime(response.message.created_at);
             let messageContent = '';
 
             try {
-                if (response.message.media && response.message.media
-                    .length > 0) {
-                    let mediaFile = response.message.media[0]
-                        .file_path; // Lấy đường dẫn ảnh
-                    messageContent = `
-                <p>${response.message.content}</p>
-                <img src="/storage/${mediaFile}" alt="Hình ảnh" 
-                style="max-width:350px; border-radius: 8px;">
-            `;
+                if (response.message.media && response.message.media.length > 0) {
+                    let mediaFile = response.message.media[0].file_path;
+                    let fileType = response.message.media[0].file_type;
+                    let fileExt = mediaFile.split('.').pop().toLowerCase();
+                    let mediaPreview = '';
+                    let fileSize = formatFileSize(response.message.media[0].file_size);
+                    let fileIcon = getFileThumbnail(fileExt);
+
+                    if (fileType.startsWith('image')) {
+                        mediaPreview = `
+                                    <div class="file-container border rounded bg-light p-2" style="max-width: 400px; min-height: 100px;">
+                                        <img src="/storage/${mediaFile}" alt="Hình ảnh" style="max-width:100%; border-radius: 8px;">
+                                    </div>`;
+                    } else if (fileType.startsWith('video')) {
+                        mediaPreview = `
+                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <video controls style="max-width:100%; border-radius: 8px;">
+                                            <source src="/storage/${mediaFile}" type="${fileType}">
+                                        </video>                                
+                                    </div>`;
+                    } else if (fileType === 'application/pdf') {
+                        mediaPreview = `
+                                    <div class="file-container d-flex flex-column p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <embed src="/storage/${mediaFile}" type="application/pdf" style="width:100%; height:300px; border-radius: 8px;">
+                                        <a href="/storage/${mediaFile}" download class="btn btn-primary btn-sm mt-2">
+                                            <i class='bx bx-download'></i>
+                                        </a>                                    
+                                    </div>`;
+                    } else {
+                        mediaPreview = `
+                                    <div class="file-container d-flex align-items-center p-2 border rounded bg-light" style="max-width: 400px; min-height: 100px;">
+                                        <img src="${fileIcon}" class="me-2 file-icon" style="width: 50px; height: 50px;">
+                                        <div class="flex-grow-1 text-truncate d-flex justify-content-between align-items-center">
+                                            <div class="col-9">
+                                                <p class="mb-1 small text-truncate" style="max-width: 250px;">${mediaFile.split('/').pop()}</p>
+                                                <p class="text-muted">${fileSize} KB</p>
+                                            </div>
+                                            <div class="col-2 d-flex align-items-center justify-content-center">
+                                                <a href="/storage/${mediaFile}" download class="card btn btn-light btn-sm py-2 my-auto">
+                                                    <i class='fs-4 bx bx-download'></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>`;
+                    }
+
+                    messageContent = `<p>${response.message.content}</p> ${mediaPreview}`;
                 } else {
-                    messageContent =
-                        `<p>${response.message.content}</p>`; // Hiển thị văn bản nếu không có ảnh
+                    messageContent = `<p>${response.message.content}</p>`;
                 }
             } catch (error) {
-                console.error("Lỗi lấy ảnh:", error);
-                messageContent =
-                    `<p>${response.message.content}</p>`; // Nếu lỗi, fallback về content
+                console.error("Lỗi lấy file:", error);
+                messageContent = `<p>${response.message.content}</p>`;
             }
 
             let messageHtml = `
@@ -1044,6 +1258,14 @@
         </div>
     `;
             return messageHtml;
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + " B";
+            const sizes = ["KB", "MB", "GB", "TB"];
+            let i = Math.floor(Math.log(bytes) / Math.log(1024));
+            let size = (bytes / Math.pow(1024, i)).toFixed(2);
+            return `${size} ${sizes[i - 1]}`;
         }
     </script>
 @endpush

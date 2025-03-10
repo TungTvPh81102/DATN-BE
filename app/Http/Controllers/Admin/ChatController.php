@@ -92,7 +92,6 @@ class ChatController extends Controller
         try {
             DB::beginTransaction();
             $validated = $request->validated();
-
             $message = Message::create([
                 'conversation_id' => $validated['conversation_id'],
                 'sender_id' => auth()->id(),
@@ -103,8 +102,8 @@ class ChatController extends Controller
                 'meta_data' => $validated['meta_data'] ?? null,
             ]);
 
-            if ($request->hasFile('fileinput')) {
-                $file = $request->file('fileinput');
+            if ($request->hasFile('input_file')) {
+                $file = $request->file('input_file');
                 $filePath = $this->uploadToLocal($file, self::FOLDER);
 
                 $media = Media::create([

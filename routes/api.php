@@ -455,7 +455,6 @@ Route::prefix('blogs')
     ->group(function () {
         Route::get('/', [\App\Http\Controllers\API\Common\BlogController::class, 'index']);
         Route::get('/{blog}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogBySlug']);
-        Route::get('/category/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByCategory']);
         Route::get('/tag/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByTag']);
         Route::post('/recent-views', [BlogController::class, 'recentViews']);
     });

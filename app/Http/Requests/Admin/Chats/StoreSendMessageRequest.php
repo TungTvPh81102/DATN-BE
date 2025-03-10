@@ -28,7 +28,7 @@ class StoreSendMessageRequest extends FormRequest
         'parent_id' => 'nullable|exists:messages,id',  
         'meta_data' => 'nullable|json',
         'input_file' =>'nullable|file' 
-        ];
+        ];  
     }
     public function messages()
     {
