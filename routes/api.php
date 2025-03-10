@@ -397,16 +397,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/get-message/{conversationId}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetMessage']);
             Route::post('/send-message', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiSendMessage']);
         });
-
-    #============================== ROUTE COMMENT =============================
-    Route::prefix('comments')
-        ->group(function () {
-            Route::post('/', [CommentController::class, 'store']);
-            Route::put('/{id}', [CommentController::class, 'update']);
-            Route::delete('/{id}', [CommentController::class, 'destroy']);
-            Route::get('/{commentableId}/{commentableType}', [CommentController::class, 'index']);
-        });
-
+        
     #============================== ROUTE REACTION =============================
     Route::prefix('reactions')
         ->group(function () {
@@ -458,6 +449,17 @@ Route::prefix('blogs')
         Route::get('/category/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByCategory']);
         Route::get('/tag/{slug}', [\App\Http\Controllers\API\Common\BlogController::class, 'getBlogsByTag']);
         Route::post('/recent-views', [BlogController::class, 'recentViews']);
+    });
+    Route::prefix('blogs')
+    ->group(function () {
+        Route::prefix('comments')
+            ->group(function () {
+                Route::get('/{blog}/blog-comment', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getCommentBlog']);
+                Route::post('/store-blog-comment', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'storeCommentBlog']);
+                Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getReplies']);
+                Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'reply']);
+                Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'deleteComment']);
+            });
     });
 
 #============================== ROUTE QA SYSTEM =================================
