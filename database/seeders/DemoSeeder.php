@@ -26,6 +26,9 @@ class DemoSeeder extends Seeder
     public function run(): void
     {
         try {
+
+            dd(config('broadcasting.connections.pusher.key'));
+
             Log::info('Start seeding demo data...');
 
             DB::beginTransaction();
