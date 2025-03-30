@@ -28,7 +28,7 @@
         "simplesoftwareio/simple-qrcode": "^4.2",
         "spatie/laravel-analytics": "^5.5",
         "spatie/laravel-permission": "^6.10",
-        "van-ons/laraberg": "^2.0",
+        "van-ons/laraberg": "^2.0"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.14",
