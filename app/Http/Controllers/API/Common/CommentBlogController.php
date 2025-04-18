@@ -119,18 +119,18 @@ class CommentBlogController extends Controller
                 $violationKey = "comment_violations:user_{$user->id}";
                 $violations = Redis::incr($violationKey);
                 if ($violations === 1) {
-                    Redis::expire($violationKey, 3600); 
+                    Redis::expire($violationKey, 3600);
                 }
                 if ($violations > config('comments.max_violations')) {
                     Redis::setex($blockKey, config('comments.block_duration'), true);
-                    Redis::del($violationKey); 
+                    Redis::del($violationKey);
                     return response()->json([
                         'status' => 'error',
                         'message' => 'Bạn đã bị cấm bình luận trong 1 tiếng do sử dụng từ ngữ không phù hợp quá nhiều lần.',
-                        'countdown' => 3600 
+                        'countdown' => 3600
                     ], 400);
                 }
-    
+
                 return $this->respondError('Bình luận chứa từ ngữ không phù hợp.');
             }
             $comment = Comment::query()->create([
@@ -148,12 +148,55 @@ class CommentBlogController extends Controller
                 Log::error('Redis error: ' . $e->getMessage());
                 return $this->respondServerError('Hệ thống gặp lỗi, vui lòng thử lại sau.');
             }
-                $this->logError($e, $request->all());
+            $this->logError($e, $request->all());
 
-                return $this->respondServerError();
-            }
+            return $this->respondServerError();
+        }
     }
+    public function getCommentBlockTime(Request $request)
+    {
+        try {
+            $user = Auth::user();
 
+            if (!$user) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+
+            // Kiểm tra xem người dùng có bị chặn không
+            $blockKey = "comment_block:user_{$user->id}";
+            if (!Redis::exists($blockKey)) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Bạn không bị cấm bình luận.',
+                    'is_blocked' => false,
+                ], 200);
+            }
+
+            // Lấy thời gian còn lại từ Redis
+            $ttl = Redis::ttl($blockKey);
+            $blockUntil = Carbon::now()->addSeconds($ttl);
+            $minutes = floor($ttl / 60);
+            $seconds = $ttl % 60;
+            $formattedCountdown = sprintf('%02d:%02d', $minutes, $seconds);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Bạn đang bị cấm bình luận.',
+                'is_blocked' => true,
+                'countdown' => $ttl,
+                'formatted_countdown' => $formattedCountdown,
+                'block_until' => $blockUntil->toDateTimeString(),
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Error in getCommentBlockTime: ' . $e->getMessage());
+            if ($e instanceof RedisException) {
+                Log::error('Redis error: ' . $e->getMessage());
+                return $this->respondServerError('Hệ thống gặp lỗi, vui lòng thử lại sau.');
+            }
+            $this->logError($e, $request->all());
+            return $this->respondServerError();
+        }
+    }
     public function getReplies(Request $request, string $commentId)
     {
         try {

@@ -192,6 +192,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'reply']);
                     Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'deleteComment']);
                     Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getReplies']);
+                    Route::get('/comment-block-time', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getCommentBlockTime']);
                     Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'reply']);
                 });
         });
@@ -539,6 +540,7 @@ Route::prefix('blogs')
                 Route::get('/{blog}/blog-comment', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getCommentBlog']);
                 Route::post('/store-blog-comment', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'storeCommentBlog'])->middleware('auth:sanctum');
                 Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getReplies']);
+                Route::get('/comment-block-time', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'getCommentBlockTime']);
                 Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'reply'])->middleware('auth:sanctum');
                 Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentBlogController::class, 'deleteComment'])->middleware('auth:sanctum');
             });
