@@ -12,8 +12,8 @@
                 <div class="col-md-auto">
                     <div class="avatar-md">
                         <div class="avatar-title bg-white rounded-circle">
-                            <img src="{{ Storage::url($approval->approvable->thumbnail) ?? asset('assets/images/no-photo.jpg') }}" alt=""
-                                 class="rounded-circle img-fluid h-100 object-fit-cover">
+                            <img src="{{ Storage::url($approval->approvable->thumbnail) ?? asset('assets/images/no-photo.jpg') }}"
+                                alt="" class="rounded-circle img-fluid h-100 object-fit-cover">
                         </div>
                     </div>
                 </div>
@@ -51,7 +51,8 @@
                                 Danh mục: {{ $approval->approvable->category->name ?? '' }}
                             </div>
                             <div class="vr"></div>
-                            <div>Ngày tạo: <span class="fw-medium">{{ $approval->approvable->created_at ?? '' }}</span></div>
+                            <div>Ngày tạo: <span class="fw-medium">{{ $approval->approvable->created_at ?? '' }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -61,29 +62,27 @@
                         @case('pending')
                             <div class="d-flex gap-1">
                                 <form action="{{ route('admin.approvals.posts.approve', $approval->id) }}" method="POST"
-                                      id="approveForm">
+                                    id="approveForm">
                                     @csrf
                                     @method('PUT')
                                     <button class="btn btn-primary approve" type="button">Phê duyệt</button>
                                 </form>
-                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                        data-bs-target="#rejectModal">
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal">
                                     Từ chối
                                 </button>
                             </div>
 
                             <div id="rejectModal" class="modal fade" tabindex="-1" aria-labelledby="myModalLabel"
-                                 aria-hidden="true">
+                                aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <h5 class="modal-title" id="myModalLabel">Từ chối bài viết</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
+                                                aria-label="Close"></button>
                                         </div>
-                                        <form id="rejectForm"
-                                              action="{{ route('admin.approvals.posts.reject', $approval->id) }}"
-                                              method="POST">
+                                        <form id="rejectForm" action="{{ route('admin.approvals.posts.reject', $approval->id) }}"
+                                            method="POST">
                                             @csrf
                                             @method('PUT')
                                             <div class="modal-body">
@@ -132,12 +131,19 @@
                     <div class="d-flex profile-wrapper">
                         <ul class="nav nav-pills animation-nav profile-nav gap-2 gap-lg-3 flex-grow-1" role="tablist">
                             <li class="nav-item">
-                                <a class="nav-link fs-14 active" data-bs-toggle="tab" href="#overview-tab"
-                                   role="tab">
+                                <a class="nav-link fs-14 active" data-bs-toggle="tab" href="#overview-tab" role="tab">
                                     <i class="ri-airplay-fill d-inline-block d-md-none"></i> <span
                                         class="d-none d-md-inline-block">Tổng quan</span>
                                 </a>
                             </li>
+                            @if (!empty($approval->approval_logs))
+                                <li class="nav-item">
+                                    <a class="nav-link fs-14" data-bs-toggle="tab" href="#approval_logs" role="tab">
+                                        <i class="ri-folder-4-line d-inline-block d-md-none"></i> <span
+                                            class="d-none d-md-inline-block">Lịch sử kiểm duyệt</span>
+                                    </a>
+                                </li>
+                            @endif
                         </ul>
                     </div>
                 </div>
@@ -195,6 +201,74 @@
                                         </tbody>
                                     </table>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane" id="approval_logs" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Lịch sử kiểm duyệt</h5>
+                            </div>
+                            <div class="card-body">
+                                @php
+                                    $approval_logs = collect(json_decode($approval->approval_logs, true))
+                                        ->sortByDesc('action_at')
+                                        ->values()
+                                        ->all();
+                                @endphp
+
+                                @if (!empty($approval_logs))
+                                    @foreach ($approval_logs as $log)
+                                        <div
+                                            class="card mb-3 shadow-sm border-start border-4 
+                                    @switch($log['status'])
+                                        @case('approved') border-success @break
+                                        @case('rejected') border-danger @break
+                                        @default border-secondary
+                                    @endswitch
+                                ">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="mb-0">{{ $log['name'] }}</h6>
+                                                    <small
+                                                        class="text-muted">{{ \Carbon\Carbon::parse($log['action_at'])->format('d/m/Y H:i') }}</small>
+                                                </div>
+
+                                                <p class="mb-1">
+                                                    <strong>Trạng thái: </strong>
+                                                    @switch($log['status'])
+                                                        @case('approved')
+                                                            <span class="badge bg-success">Duyệt</span>
+                                                        @break
+
+                                                        @case('rejected')
+                                                            <span class="badge bg-danger">Từ chối</span>
+                                                        @break
+
+                                                        @default
+                                                            <span class="badge bg-secondary">{{ ucfirst($log['status']) }}</span>
+                                                    @endswitch
+                                                </p>
+
+                                                @if (!empty($log['note']))
+                                                    <p class="mb-1"><strong>Ghi chú:</strong> {{ $log['note'] }}</p>
+                                                @endif
+
+                                                @if (!empty($log['reason']))
+                                                    <p class="mb-0"><strong>Lý do:</strong> {{ $log['reason'] }}</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="d-flex justify-content-center align-items-center" style="height: 150px;">
+                                        <p class="text-muted fs-5 mb-0">Chưa có lịch sử kiểm duyệt</p>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>

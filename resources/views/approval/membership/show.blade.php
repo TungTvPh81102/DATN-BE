@@ -26,16 +26,26 @@
         <div class="row">
             <div class="col-lg-8">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title"><i class=" ri-copper-diamond-line"></i>Thông tin kiểm duyệt
-                            #{{ $approval->id }}</h5>
-                        @if ($approval->status == 'approved')
-                            <span class="approval-status status-approved">Đã phê duyệt</span>
-                        @elseif($approval->status == 'rejected')
-                            <span class="approval-status status-rejected">Đã từ chối</span>
-                        @else
-                            <span class="approval-status status-pending">Đang chờ duyệt</span>
-                        @endif
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="ri-copper-diamond-line"></i> Thông tin kiểm duyệt #{{ $approval->id }}
+                        </h5>
+
+                        <div class="d-flex align-items-center gap-2">
+                            @if ($approval->status == 'approved')
+                                <span class="approval-status status-approved">Đã phê duyệt</span>
+                            @elseif($approval->status == 'rejected')
+                                <span class="approval-status status-rejected">Đã từ chối</span>
+                            @else
+                                <span class="approval-status status-pending">Đang chờ duyệt</span>
+                            @endif
+
+                            {{-- Nút mở modal --}}
+                            <a href="javascript:void(0)" class="badge bg-primary text-white" data-bs-toggle="modal"
+                                data-bs-target="#approvalLogsModal">
+                                <i class="ri-time-line me-1"></i> Lịch sử kiểm duyệt
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -299,6 +309,79 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="approvalLogsModal" tabindex="-1" aria-labelledby="approvalLogsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="approvalLogsModalLabel">
+                        <i class="ri-time-line me-1"></i> Lịch sử kiểm duyệt
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+                </div>
+                <div class="modal-body">
+                    @php
+                        $approval_logs = collect(json_decode($approval->approval_logs, true))
+                            ->sortByDesc('action_at')
+                            ->values()
+                            ->all();
+                    @endphp
+
+                    @if (!empty($approval_logs))
+                        @foreach ($approval_logs as $log)
+                            <div
+                                class="card mb-3 shadow-sm border-start border-4 
+                            @switch($log['status'])
+                                @case('approved') border-success @break
+                                @case('rejected') border-danger @break
+                                @default border-secondary
+                            @endswitch">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <small class="text-muted">
+                                            {{ \Carbon\Carbon::parse($log['action_at'])->format('d/m/Y H:i') }}
+                                        </small>
+                                        <h6 class="mb-0">{{ $log['name'] }}</h6>
+                                    </div>
+
+                                    <p class="mb-1">
+                                        <strong>Trạng thái: </strong>
+                                        @switch($log['status'])
+                                            @case('approved')
+                                                <span class="badge bg-success">Duyệt</span>
+                                            @break
+
+                                            @case('rejected')
+                                                <span class="badge bg-danger">Từ chối</span>
+                                            @break
+
+                                            @default
+                                                <span class="badge bg-secondary">{{ ucfirst($log['status']) }}</span>
+                                        @endswitch
+                                    </p>
+
+                                    @if (!empty($log['note']))
+                                        <p class="mb-1"><strong>Ghi chú:</strong> {{ $log['note'] }}</p>
+                                    @endif
+
+                                    @if (!empty($log['reason']))
+                                        <p class="mb-0"><strong>Lý do:</strong> {{ $log['reason'] }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center text-muted py-4">
+                            <h6 class="mb-0">Chưa có lịch sử kiểm duyệt.</h6>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('page-scripts')

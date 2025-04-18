@@ -223,6 +223,14 @@
                                         class="d-none d-md-inline-block">Tiêu chí</span>
                                 </a>
                             </li>
+                            @if (!empty($approval->approval_logs))
+                                <li class="nav-item">
+                                    <a class="nav-link fs-14" data-bs-toggle="tab" href="#approval_logs" role="tab">
+                                        <i class="ri-folder-4-line d-inline-block d-md-none"></i> <span
+                                            class="d-none d-md-inline-block">Lịch sử kiểm duyệt</span>
+                                    </a>
+                                </li>
+                            @endif
                             @if ($approval->content_modification == 1)
                                 <li class="nav-item">
                                     <a class="nav-link fs-14" data-bs-toggle="tab" href="#modify-content"
@@ -567,71 +575,136 @@
                 </div>
             </div>
             <div class="tab-pane" id="test-case" role="tabpanel">
-                <div class="tab-pane" id="test-case" role="tabpanel">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="mb-0">Danh sách tiêu chí kiểm duyệt khóa học</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="accordion" id="criteriaAccordionCourse">
-                                        <!-- Tiêu chí 1: Thông tin cơ bản khóa học -->
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header" id="criteriaHeadingOne">
-                                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                                    data-bs-target="#criteriaCollapseOne" aria-expanded="true"
-                                                    aria-controls="criteriaCollapseOne">
-                                                    <strong>Tiêu chí 1:</strong> Tổng quan về khóa học
-                                                </button>
-                                            </h2>
-                                            <div id="criteriaCollapseOne" class="accordion-collapse collapse show"
-                                                aria-labelledby="criteriaHeadingOne" data-bs-parent="#criteriaAccordion">
-                                                <div class="accordion-body">
-                                                    <div class="row" id="criteria_course_overview">
-                                                    </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Danh sách tiêu chí kiểm duyệt khóa học</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="accordion" id="criteriaAccordionCourse">
+                                    <!-- Tiêu chí 1: Thông tin cơ bản khóa học -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="criteriaHeadingOne">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#criteriaCollapseOne" aria-expanded="true"
+                                                aria-controls="criteriaCollapseOne">
+                                                <strong>Tiêu chí 1:</strong> Tổng quan về khóa học
+                                            </button>
+                                        </h2>
+                                        <div id="criteriaCollapseOne" class="accordion-collapse collapse show"
+                                            aria-labelledby="criteriaHeadingOne" data-bs-parent="#criteriaAccordion">
+                                            <div class="accordion-body">
+                                                <div class="row" id="criteria_course_overview">
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <!-- Tiêu chí 2: Chương trình giảng dạy -->
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header" id="criteriaHeadingTwo">
-                                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                                    data-bs-target="#criteriaCollapseTwo" aria-expanded="false"
-                                                    aria-controls="criteriaCollapseTwo">
-                                                    <strong>Tiêu chí 2:</strong> Chương trình giảng dạy
-                                                </button>
-                                            </h2>
-                                            <div id="criteriaCollapseTwo" class="accordion-collapse collapse"
-                                                aria-labelledby="criteriaHeadingTwo" data-bs-parent="#criteriaAccordion">
-                                                <div class="accordion-body">
-                                                    <div class="row" id="criteria_course_curriculum">
-                                                    </div>
+                                    <!-- Tiêu chí 2: Chương trình giảng dạy -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="criteriaHeadingTwo">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#criteriaCollapseTwo" aria-expanded="false"
+                                                aria-controls="criteriaCollapseTwo">
+                                                <strong>Tiêu chí 2:</strong> Chương trình giảng dạy
+                                            </button>
+                                        </h2>
+                                        <div id="criteriaCollapseTwo" class="accordion-collapse collapse"
+                                            aria-labelledby="criteriaHeadingTwo" data-bs-parent="#criteriaAccordion">
+                                            <div class="accordion-body">
+                                                <div class="row" id="criteria_course_curriculum">
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
 
-                                        <!-- Tiêu chí 3: Bài học -->
-                                        <div class="accordion-item">
-                                            <h2 class="accordion-header" id="criteriaHeadingThree">
-                                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                                                    data-bs-target="#criteriaCollapseThree" aria-expanded="false"
-                                                    aria-controls="criteriaCollapseThree">
-                                                    <strong>Tiêu chí 3:</strong> Mục tiêu khóa học
-                                                </button>
-                                            </h2>
-                                            <div id="criteriaCollapseThree" class="accordion-collapse collapse"
-                                                aria-labelledby="criteriaHeadingThree"
-                                                data-bs-parent="#criteriaAccordion">
-                                                <div class="accordion-body">
-                                                    <div class="row" id="criteria_course_objectives">
-                                                    </div>
+                                    <!-- Tiêu chí 3: Bài học -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header" id="criteriaHeadingThree">
+                                            <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#criteriaCollapseThree" aria-expanded="false"
+                                                aria-controls="criteriaCollapseThree">
+                                                <strong>Tiêu chí 3:</strong> Mục tiêu khóa học
+                                            </button>
+                                        </h2>
+                                        <div id="criteriaCollapseThree" class="accordion-collapse collapse"
+                                            aria-labelledby="criteriaHeadingThree" data-bs-parent="#criteriaAccordion">
+                                            <div class="accordion-body">
+                                                <div class="row" id="criteria_course_objectives">
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane" id="approval_logs" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Lịch sử kiểm duyệt</h5>
+                            </div>
+                            <div class="card-body">
+                                @php
+                                    $approval_logs = collect(json_decode($approval->approval_logs, true))
+                                        ->sortByDesc('action_at')
+                                        ->values()
+                                        ->all();
+                                @endphp
+
+                                @if (!empty($approval_logs))
+                                    @foreach ($approval_logs as $log)
+                                        <div
+                                            class="card mb-3 shadow-sm border-start border-4 
+                                    @switch($log['status'])
+                                        @case('approved') border-success @break
+                                        @case('rejected') border-danger @break
+                                        @default border-secondary
+                                    @endswitch
+                                ">
+                                            <div class="card-body">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="mb-0">{{ $log['name'] }}</h6>
+                                                    <small
+                                                        class="text-muted">{{ \Carbon\Carbon::parse($log['action_at'])->format('d/m/Y H:i') }}</small>
+                                                </div>
+
+                                                <p class="mb-1">
+                                                    <strong>Trạng thái: </strong>
+                                                    @switch($log['status'])
+                                                        @case('approved')
+                                                            <span class="badge bg-success">Duyệt</span>
+                                                        @break
+
+                                                        @case('rejected')
+                                                            <span class="badge bg-danger">Từ chối</span>
+                                                        @break
+
+                                                        @default
+                                                            <span class="badge bg-secondary">{{ ucfirst($log['status']) }}</span>
+                                                    @endswitch
+                                                </p>
+
+                                                @if (!empty($log['note']))
+                                                    <p class="mb-1"><strong>Ghi chú:</strong> {{ $log['note'] }}</p>
+                                                @endif
+
+                                                @if (!empty($log['reason']))
+                                                    <p class="mb-0"><strong>Lý do:</strong> {{ $log['reason'] }}</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                @else
+                                    <div class="d-flex justify-content-center align-items-center" style="height: 150px;">
+                                        <p class="text-muted fs-5 mb-0">Chưa có lịch sử kiểm duyệt</p>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     </div>
