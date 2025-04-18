@@ -474,7 +474,7 @@ class LearningPathController extends Controller
 
                 case Coding::class:
                     $userCodingInput = $request->input('code');
-                    // $userCodeResult = $request->input('result');
+                    $userCodeResult = $request->input('result');
 
                     if (!$userCodingInput) {
                         return $this->respondError('Vui lòng thực hiện bài kiểm tra.');

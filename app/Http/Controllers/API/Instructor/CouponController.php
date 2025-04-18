@@ -212,18 +212,28 @@ class CouponController extends Controller
                         ->whereNotIn('user_id', $data['user_ids'])
                         ->delete();
 
+                    $existingCouponUses = CouponUse::query()
+                        ->where('coupon_id', $coupon->id)
+                        ->get()
+                        ->keyBy('user_id');
+
                     foreach ($data['user_ids'] as $user_id) {
-                        CouponUse::query()->updateOrCreate(
-                            [
+                        if ($existingCouponUses->has($user_id)) {
+                            $existingUse = $existingCouponUses->get($user_id);
+
+                            if ($existingUse->status === 'unused') {
+                                $existingUse->expired_at = $data['expire_date'] ?? null;
+                                $existingUse->save();
+                            }
+                        } else {
+                            CouponUse::create([
                                 'user_id' => $user_id,
-                                'coupon_id' => $coupon->id
-                            ],
-                            [
+                                'coupon_id' => $coupon->id,
                                 'status' => 'unused',
-                                'applied_at' => $data['start_date'] ?? null,
+                                'applied_at' => null,
                                 'expired_at' => $data['expire_date'] ?? null
-                            ]
-                        );
+                            ]);
+                        }
                     }
                 }
             } else {
