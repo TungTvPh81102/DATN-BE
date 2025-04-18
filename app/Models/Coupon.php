@@ -26,9 +26,9 @@ class Coupon extends Model
         'specific_course'
     ];
     
-    protected $casts = [
-        'expire_date' => 'date',
-    ];
+    // protected $casts = [
+    //     'expire_date' => 'date',
+    // ];
 
     public function scopeSearch($query, $keyword)
     {

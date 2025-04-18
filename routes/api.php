@@ -94,6 +94,9 @@ Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'get
 Route::get('/{{ Auth::user()->code }}/get-validate-instructor');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/chat-box', [CommonController::class, 'chatBox']);
+    Route::delete('/chat-box/clear', [CommonController::class, 'clearChatHistory']);
+
     Route::post('/broadcasting/auth', [\App\Http\Controllers\API\Common\BroadcastController::class, 'authenticate']);
 
     Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
@@ -328,6 +331,7 @@ Route::middleware('auth:sanctum')->group(function () {
                         ->group(function () {
                             Route::get('/', [CourseController::class, 'index']);
                             Route::get('/course-approved', [CourseController::class, 'courseApproved']);
+                            Route::get('/course-with-price', [CourseController::class, 'courseWithPrice']);
                             Route::get('/trash', [CourseController::class, 'trash']);
                             Route::get('/{course}', [CourseController::class, 'getCourseOverView']);
                             Route::get('/{course}/course-list-of-user', [CourseController::class, 'courseListOfUser']);

@@ -30,24 +30,21 @@ class LearnerController extends Controller
                 return $this->respondForbidden('Bạn không có quyền truy cập');
             }
 
-            $courses = Course::query()->where('user_id', $user->id)->pluck('id');
+            $courseIds = Course::where('user_id', $user->id)->pluck('id');
 
             $learners = DB::table('course_users')
                 ->join('users', 'course_users.user_id', '=', 'users.id')
-                ->whereIn('course_users.course_id', $courses)
+                ->whereIn('course_users.course_id', $courseIds)
                 ->select(
-                    'users.code',
                     'users.id',
+                    'users.code',
                     'users.name',
                     'users.email',
                     'users.avatar',
-                    'course_users.enrolled_at',
-                    DB::raw('COUNT(course_users.course_id) as total_courses')
+                    DB::raw('MIN(course_users.enrolled_at) as first_enrolled_at')
                 )
-                ->groupBy('course_users.user_id', 'users.id', 'users.name', 'users.email', 'users.avatar', 'course_users.enrolled_at',
-                    'users.code')
-                ->distinct()
-                ->orderBy('enrolled_at', 'desc')
+                ->groupBy('users.id', 'users.code', 'users.name', 'users.email', 'users.avatar')
+                ->orderBy('first_enrolled_at', 'desc')
                 ->get();
 
             if ($learners->isEmpty()) {

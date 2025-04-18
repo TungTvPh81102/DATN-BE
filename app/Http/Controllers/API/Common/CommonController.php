@@ -402,20 +402,15 @@ class CommonController extends Controller
 
     public function chatBox(Request $request)
     {
+        if ($request->input('clear_history', false)) {
+            return $this->clearChatHistory();
+        }
+
         $userMessage = $request->input('message', '');
         $context = $request->input('context', 'Chưa có, khi chưa có bạn hãy hỏi lại học viên');
-        $clearHistory = $request->input('clear_history', false);
         $timestamp = Carbon::now()->format('[d/m/Y H:i:s]');
 
         $chatHistory = Session::get('chat_history', []);
-
-        if ($clearHistory) {
-            Session::forget('chat_history');
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Chat history cleared'
-            ]);
-        }
 
         if (empty($chatHistory)) {
             $chatHistory[] = [
@@ -454,12 +449,13 @@ class CommonController extends Controller
 
         Session::put('chat_history', $chatHistory);
 
-        return response()->json([
+        return $this->respondOk('Lấy dữ liệu thành công', [
             'reply' => $aiReply,
             'time' => Carbon::now()->format('H:i')
         ]);
     }
-    public function resetChatBox()
+
+    public function clearChatHistory()
     {
         Session::forget('chat_history');
         return $this->respondNoContent();

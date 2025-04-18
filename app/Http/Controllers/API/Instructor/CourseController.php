@@ -84,6 +84,46 @@ class CourseController extends Controller
         }
     }
 
+    public function courseWithPrice()
+    {
+        try {
+            $courses = Course::query()
+                ->where('user_id', Auth::id())
+                ->select([
+                    'id',
+                    'name',
+                    'thumbnail',
+                    'price',
+                    'price_sale',
+                    'status',
+                    'created_at',
+                    'category_id'
+                ])
+                ->with([
+                    'category:id,name',
+                ])
+                ->where('status', 'approved')
+                ->where('is_free', 0)
+                ->where(function ($query) {
+                    $query->where('price', '>', 0)
+                        ->orWhere('price_sale', '>', 0);
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return $this->respondOk(
+                'Danh sách khoá học của: ' . Auth::user()->name,
+                $courses
+            );
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError(
+                'Có lỗi xảy ra, vui lòng thử lại',
+            );
+        }
+    }
+
     public function courseApproved()
     {
         try {

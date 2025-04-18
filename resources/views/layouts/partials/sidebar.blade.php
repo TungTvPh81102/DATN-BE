@@ -36,7 +36,7 @@
         <li class="nav-item cusor-pointer">
             @canany(['top-instructors.read'])
                 <a class="nav-link menu-link" href="{{ route('admin.top-instructors.index') }}">
-                    <i class="ri-user-star-line"></i> <!-- Thay icon ở đây -->
+                    <i class="ri-graduation-cap-line"></i> <!-- Thay icon ở đây -->
                     <span data-key="t-dashboards">Thống kê top giảng viên</span>
                 </a>
             @endcanany
