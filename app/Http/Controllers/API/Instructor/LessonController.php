@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Lessons\MoveLessonsRequest;
 use App\Http\Requests\API\Lessons\StoreLessonRequest;
 use App\Http\Requests\API\Lessons\UpdateLessonRequest;
 use App\Http\Requests\API\Lessons\UpdateOrderLessonRequest;
@@ -84,7 +85,8 @@ class LessonController extends Controller
 
             $lesson = $this->createLesson($data, $lessonable);
 
-            return $this->respondCreated('Tạo bài học thành công',
+            return $this->respondCreated(
+                'Tạo bài học thành công',
                 $lesson->load('lessonable')
             );
         } catch (\Exception $e) {
@@ -124,7 +126,8 @@ class LessonController extends Controller
                 'slug' => !empty($data['title']) ? Str::slug($data['title']) : $lesson->slug,
             ]);
 
-            return $this->respondOk('Cập nhật tiêu đề bài học thành công',
+            return $this->respondOk(
+                'Cập nhật tiêu đề bài học thành công',
                 $lesson->load('lessonable')
             );
         } catch (\Exception $e) {
@@ -173,7 +176,8 @@ class LessonController extends Controller
 
             DB::commit();
 
-            return $this->respondOk('Thao tác thành công',
+            return $this->respondOk(
+                'Thao tác thành công',
                 $lesson->load('lessonable')
             );
         } catch (\Exception $e) {
@@ -263,6 +267,94 @@ class LessonController extends Controller
             return $this->respondOk('Xóa bài học thành công');
         } catch (\Exception $e) {
             $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
+        }
+    }
+
+    public function moveLessons(MoveLessonsRequest $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $data = $request->validated();
+            $sourceChapterId = $data['sourceChapterId'];
+            $targetChapterId = $data['targetChapterId'];
+            $lessonIds = $data['lessonIds'];
+            $slug = $data['slug'];
+            $preserveOrder = $data['preserveOrder'] ?? false;
+
+            $course = Course::query()
+                ->where('slug', $slug)
+                ->first();
+
+            if (!$course) {
+                return $this->respondNotFound('Không tìm thấy khoá học');
+            }
+
+            if ($course->user_id !== auth()->id()) {
+                return $this->respondForbidden('Không có quyền thực hiện thao tác');
+            }
+
+            $sourceChapter = $course->chapters()->find($sourceChapterId);
+            if (!$sourceChapter) {
+                return $this->respondNotFound('Không tìm thấy chương nguồn');
+            }
+
+            $targetChapter = $course->chapters()->find($targetChapterId);
+            if (!$targetChapter) {
+                return $this->respondNotFound('Không tìm thấy chương đích');
+            }
+
+            $lessons = $sourceChapter->lessons()->whereIn('id', $lessonIds)->get();
+            if ($lessons->count() !== count($lessonIds)) {
+                return $this->respondError('Một số bài học không tồn tại trong chương nguồn');
+            }
+
+            $highestOrder = $targetChapter->lessons()->max('order') ?? 0;
+
+            if ($preserveOrder) {
+                foreach ($lessonIds as $index => $lessonId) {
+                    $lesson = $lessons->firstWhere('id', $lessonId);
+                    if ($lesson) {
+                        $lesson->update([
+                            'chapter_id' => $targetChapterId,
+                            'order' => $highestOrder + $index + 1
+                        ]);
+                    }
+                }
+            } else {
+                foreach ($lessons as $index => $lesson) {
+                    $lesson->update([
+                        'chapter_id' => $targetChapterId,
+                        'order' => $highestOrder + $index + 1
+                    ]);
+                }
+            }
+
+            $remainingLessons = $sourceChapter->lessons()->orderBy('order')->get();
+            foreach ($remainingLessons as $index => $lesson) {
+                $lesson->update(['order' => $index + 1]);
+            }
+
+            $updatedSourceChapter = Chapter::with(['lessons' => function ($query) {
+                $query->orderBy('order');
+            }])->find($sourceChapterId);
+
+            $updatedTargetChapter = Chapter::with(['lessons' => function ($query) {
+                $query->orderBy('order');
+            }])->find($targetChapterId);
+
+            DB::commit();
+
+            return $this->respondOk('Di chuyển bài học thành công', [
+                'sourceChapter' => $updatedSourceChapter,
+                'targetChapter' => $updatedTargetChapter
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->logError($e, $request->all());
 
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }

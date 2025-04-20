@@ -41,10 +41,17 @@ class LearnerController extends Controller
                     'users.name',
                     'users.email',
                     'users.avatar',
-                    DB::raw('MIN(course_users.enrolled_at) as first_enrolled_at')
+                    DB::raw('MIN(course_users.enrolled_at) as enrolled_at'),
+                    DB::raw('COUNT(DISTINCT course_users.course_id) as total_courses')
                 )
-                ->groupBy('users.id', 'users.code', 'users.name', 'users.email', 'users.avatar')
-                ->orderBy('first_enrolled_at', 'desc')
+                ->groupBy(
+                    'users.id',
+                    'users.code',
+                    'users.name',
+                    'users.email',
+                    'users.avatar'
+                )
+                ->orderBy('enrolled_at', 'desc')
                 ->get();
 
             if ($learners->isEmpty()) {

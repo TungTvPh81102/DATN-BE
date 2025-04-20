@@ -17,6 +17,7 @@ use App\Http\Controllers\API\Common\TagController;
 use App\Http\Controllers\API\Common\TransactionController;
 use App\Http\Controllers\API\Common\UserController;
 use App\Http\Controllers\API\Common\WishListController;
+use App\Http\Controllers\API\Instructor\AICourseController;
 use App\Http\Controllers\API\Instructor\ChapterController;
 use App\Http\Controllers\API\Instructor\CouponController as InstructorCouponController;
 use App\Http\Controllers\API\Instructor\CourseController;
@@ -94,6 +95,14 @@ Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'get
 Route::get('/{{ Auth::user()->code }}/get-validate-instructor');
 
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::prefix('ai')->group(function () {
+        Route::post('/course-planning', [AICourseController::class, 'generateContent']);
+        Route::post('/apply-recommendation', [AICourseController::class, 'applyRecommendation']);
+        Route::post('/generate-lesson-content', [AICourseController::class, 'generateLessonContent']);
+    });
+
+
     Route::post('/chat-box', [CommonController::class, 'chatBox']);
     Route::delete('/chat-box/clear', [CommonController::class, 'clearChatHistory']);
 
@@ -176,6 +185,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('learning-paths')->as('learning-paths.')->group(function () {
         Route::get('/{slug}/lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
         Route::get('/{slug}/lesson/{lesson}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
+        Route::get('/{slug}/lessons/{lessonId}/validate-access', [\App\Http\Controllers\API\Common\LearningPathController::class, 'validateLessonAccess']);
         Route::put('/lesson/{lessonId}/update-last-time-video', [\App\Http\Controllers\API\Common\LearningPathController::class, 'updateLastTimeVideo']);
         Route::patch('/lesson/{lessonId}/complete-lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completeLesson']);
         Route::patch('/lesson/{lessonId}/complete-practice-exercise', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completePracticeExercise']);
@@ -208,33 +218,32 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     #============================== ROUTE SPIN LUCKY =============================
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::prefix('spins')->as('spins.')->group(function () {
-            // Quay vòng quay may mắn
-            Route::post('/spin', [SpinController::class, 'spin'])->name('spin');
+    Route::prefix('spins')->as('spins.')->group(function () {
+        // Quay vòng quay may mắn
+        Route::post('/spin', [SpinController::class, 'spin'])->name('spin');
 
-            // Lấy số lượt quay còn lại của người dùng
-            Route::get('/user/turn', [SpinController::class, 'getSpins'])->name('user.spins');
+        // Lấy số lượt quay còn lại của người dùng
+        Route::get('/user/turn', [SpinController::class, 'getSpins'])->name('user.spins');
 
-            // Cập nhật membership và tặng lượt quay
-            Route::post('/user/update-membership', [SpinController::class, 'updateMembership'])->name('user.update-membership');
+        // Cập nhật membership và tặng lượt quay
+        Route::post('/user/update-membership', [SpinController::class, 'updateMembership'])->name('user.update-membership');
 
-            // Hoàn thành hồ sơ và tặng lượt quay
-            Route::post('/user/complete-profile', [SpinController::class, 'completeProfile'])->name('user.complete-profile');
+        // Hoàn thành hồ sơ và tặng lượt quay
+        Route::post('/user/complete-profile', [SpinController::class, 'completeProfile'])->name('user.complete-profile');
 
-            // Hoàn thành khóa học và tặng lượt quay
-            Route::post('/user/complete-course', [SpinController::class, 'completeCourse'])->name('user.complete-course');
+        // Hoàn thành khóa học và tặng lượt quay
+        Route::post('/user/complete-course', [SpinController::class, 'completeCourse'])->name('user.complete-course');
 
-            // Lấy lịch sử quay của người dùng
-            Route::get('/user/spin-history', [SpinController::class, 'getSpinHistory'])->name('user.spin-history');
+        // Lấy lịch sử quay của người dùng
+        Route::get('/user/spin-history', [SpinController::class, 'getSpinHistory'])->name('user.spin-history');
 
-            // Lấy danh sách phần thưởng có thể trúng
-            Route::get('/rewards', [SpinController::class, 'getAvailableRewards'])->name('rewards');
+        // Lấy danh sách phần thưởng có thể trúng
+        Route::get('/rewards', [SpinController::class, 'getAvailableRewards'])->name('rewards');
 
-            //Kiểm tra trạng thái vòng quay
-            Route::get('/status', [SpinController::class, 'getSpinStatus']);
-        });
+        //Kiểm tra trạng thái vòng quay
+        Route::get('/status', [SpinController::class, 'getSpinStatus']);
     });
+
     #============================== ROUTE TRANSACTION =============================
     Route::prefix('transactions')->as('transactions.')->group(function () {
         Route::get('/', [TransactionController::class, 'index']);
@@ -367,6 +376,7 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::put('/{chapterId}/{lesson}', [LessonController::class, 'updateTitleLesson']);
                             Route::put('/{chapterId}/{lesson}/content', [LessonController::class, 'updateContentLesson']);
                             Route::delete('/{chapterId}/{lesson}', [LessonController::class, 'deleteLesson']);
+                            Route::post('/move', [LessonController::class, 'moveLessons']);
 
                             Route::post('/{chapterId}/store-lesson-video', [\App\Http\Controllers\API\Instructor\LessonVideoController::class, 'storeLessonVideo']);
                             Route::get('/{chapterId}/{lesson}/show-lesson', [\App\Http\Controllers\API\Instructor\LessonVideoController::class, 'getLessonVideo']);

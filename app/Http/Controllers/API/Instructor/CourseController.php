@@ -901,7 +901,7 @@ class CourseController extends Controller
         $pass = [];
 
         if ($chapters->count() > 0) {
-            if ($chapters->count() < 3) {
+            if ( $chapters->count() > 0 && $chapters->count() < 3) {
                 $errors[] = "Khóa học phải có ít nhất 3 chương học. Hiện tại có {$chapters->count()} chương.";
             } else {
                 $pass[] = "Khóa học phải có ít nhất 3 chương học.";
@@ -910,7 +910,7 @@ class CourseController extends Controller
 
         foreach ($chapters as $index => $chapter) {
             if (empty($chapter->title)) {
-                $errorsChapter[] = "Chương học ID {$chapter->id} không có tiêu đề.";
+                $errors[] = "Chương học ID {$chapter->id} không có tiêu đề.";
             } else {
                 $pass[] = "Chương học phải có tiêu đề";
             }
@@ -920,7 +920,7 @@ class CourseController extends Controller
             }
 
             if ($chapter->lessons()->count() < 3) {
-                $errorsChapter[] = "Chương học '{$chapter->title}' phải có ít nhất 3 bài học. Hiện tại có {$chapter->lessons()->count()} bài.";
+                $errors[] = "Chương học '{$chapter->title}' phải có ít nhất 3 bài học. Hiện tại có {$chapter->lessons()->count()} bài.";
             } else {
                 $pass[] = "Một chương phải có ít nhất 3 bài học";
             }
