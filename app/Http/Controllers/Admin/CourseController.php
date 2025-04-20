@@ -192,7 +192,6 @@ class CourseController extends Controller
     public function export()
     {
         try {
-
             return Excel::download(new CoursesExport, 'Courses.xlsx');
         } catch (\Exception $e) {
 

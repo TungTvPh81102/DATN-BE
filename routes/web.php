@@ -218,12 +218,14 @@ Route::prefix('admin')->as('admin.')
         #============================== ROUTE COUPON =============================
         Route::prefix('coupons')->as('coupons.')->group(function () {
             Route::get('/', [CouponController::class, 'index'])->name('index')->can('coupon.read');
+            Route::get('/exportCoupon', [CouponController::class, 'exportCoupon'])->name('exportCoupon');
             Route::get('/user-search', [CouponController::class, 'couponUserSearch'])->name('search');
             Route::get('/create', [CouponController::class, 'create'])->name('create')
                 ->can('coupon.create');
             Route::get('suggest-coupon-code', [CouponController::class, 'suggestionCounpoun'])->name('suggestCode');
             Route::post('/', [CouponController::class, 'store'])->name('store')
                 ->can('coupon.create');
+            Route::post('/import', [CouponController::class, 'importFile'])->name('import');
             Route::get('/deleted', [CouponController::class, 'listDeleted'])->name('deleted');
             Route::get('/{id}', [CouponController::class, 'show'])->name('show');
             Route::get('/edit/{coupon}', [CouponController::class, 'edit'])->name('edit');
@@ -235,6 +237,7 @@ Route::prefix('admin')->as('admin.')
                 ->name('restoreDelete')->can('coupon.update');
             Route::delete('/{coupon}/force-delete', [CouponController::class, 'forceDelete'])
                 ->name('forceDelete')->can('coupon.update');
+            
         });
         
         #============================== ROUTE SETTINGS =============================

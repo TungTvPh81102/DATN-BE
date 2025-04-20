@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\CouponsExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Coupons\ImportCouponRequest;
 use App\Http\Requests\Admin\Coupons\StoreCouponRequest;
 use App\Http\Requests\Admin\Coupons\UpdateCouponRequest;
+use App\Imports\CouponsImport;
 use App\Jobs\AssignCouponJob;
 use App\Models\Coupon;
 use App\Models\CouponUse;
@@ -16,6 +19,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CouponController extends Controller
 {
@@ -152,7 +156,32 @@ class CouponController extends Controller
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
+    public function exportCoupon()
+    {
+        try {
+            return Excel::download(new CouponsExport, 'Coupons.xlsx');
+        } catch (\Exception $e) {
 
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+    public function importFile(ImportCouponRequest $request)
+    {
+        try {
+
+        Excel::import(new CouponsImport, $request->file('file'));
+
+        return redirect()->route('admin.coupons.index')->with('success', 'Import dữ liệu thành công');
+
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
     public function destroy(string $id)
     {
         try {
