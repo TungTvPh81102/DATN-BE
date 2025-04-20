@@ -192,5 +192,4 @@ class ChapterController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
         }
     }
-
 }

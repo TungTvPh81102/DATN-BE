@@ -267,6 +267,123 @@ class LearningPathController extends Controller
         }
     }
 
+    public function validateLessonAccess(Request $request, $slug, $lessonId)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondUnauthorized('Vui lòng đăng nhập để truy cập bài học');
+            }
+
+            $course = Course::query()->where('slug', $slug)->first();
+
+            if (!$course) {
+                return $this->respondNotFound('Khóa học không tồn tại');
+            }
+
+            $isInstructorOfCourse = $course->user_id === $user->id;
+
+            if (!$isInstructorOfCourse) {
+                $userPurchaseCourse = CourseUser::query()
+                    ->where('user_id', $user->id)
+                    ->where('course_id', $course->id)
+                    ->where('access_status', 'active')
+                    ->exists();
+
+                if (!$userPurchaseCourse) {
+                    return $this->respondForbidden('Bạn chưa mua khoá học này hoặc quyền truy cập đã bị vô hiệu hóa');
+                }
+            }
+
+            $lesson = $course->lessons()->where('lessons.id', $lessonId)->first();
+
+            if (!$lesson) {
+                return $this->respondNotFound('Bài học không tồn tại');
+            }
+
+            if ($isInstructorOfCourse) {
+                return $this->respondOk('Bạn có quyền truy cập bài học này', [
+                    'can_access' => true
+                ]);
+            }
+
+            $allLessons = collect([]);
+            $courseChapters = $course->chapters()
+                ->with(['lessons' => function ($query) {
+                    $query->orderBy('order', 'asc');
+                }])
+                ->orderBy('order', 'asc')
+                ->get();
+
+            foreach ($courseChapters as $chapter) {
+                $allLessons = $allLessons->concat($chapter->lessons);
+            }
+
+            $currentLessonIndex = $allLessons->search(function ($item) use ($lessonId) {
+                return $item->id == $lessonId;
+            });
+
+            if ($course->level === 'advanced') {
+                if ($currentLessonIndex === 0) {
+                    return $this->respondOk('Bạn có quyền truy cập bài học này', [
+                        'can_access' => true
+                    ]);
+                }
+
+                $lastCompletedLessonIndex = -1;
+                $firstUncompletedLessonId = null;
+
+                for ($i = 0; $i < $currentLessonIndex; $i++) {
+                    $prevLesson = $allLessons[$i];
+                    $completed = LessonProgress::where('user_id', $user->id)
+                        ->where('lesson_id', $prevLesson->id)
+                        ->where('is_completed', 1)
+                        ->exists();
+
+                    if ($completed) {
+                        $lastCompletedLessonIndex = $i;
+                    } else if ($firstUncompletedLessonId === null) {
+                        $firstUncompletedLessonId = $prevLesson->id;
+
+                        if ($course->level === 'advanced') {
+                            break;
+                        }
+                    }
+                }
+
+                if ($course->level === 'advanced' && $lastCompletedLessonIndex < $currentLessonIndex - 1) {
+                    return $this->respondOk('Bạn cần hoàn thành các bài học trước khi tiếp tục', [
+                        'can_access' => false,
+                        'last_completed_lesson_index' => $lastCompletedLessonIndex,
+                        'next_valid_lesson_id' => $firstUncompletedLessonId,
+                        'next_valid_lesson_title' => $allLessons->firstWhere('id', $firstUncompletedLessonId)->title ?? null
+                    ]);
+                }
+
+                if ($lastCompletedLessonIndex >= 0) {
+                    return $this->respondOk('Bạn có quyền truy cập bài học này', [
+                        'can_access' => true
+                    ]);
+                }
+
+                return $this->respondOk('Vui lòng bắt đầu từ bài học đầu tiên', [
+                    'can_access' => false,
+                    'next_valid_lesson_id' => $allLessons[0]->id,
+                    'next_valid_lesson_title' => $allLessons[0]->title
+                ]);
+            } else {
+                return $this->respondOk('Bạn có quyền truy cập bài học này', [
+                    'can_access' => true
+                ]);
+            }
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError('Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
     public function updateLastTimeVideo(Request $request, $lessonId)
     {
         try {
