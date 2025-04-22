@@ -186,7 +186,17 @@ class CouponController extends Controller
     {
         try {
             DB::beginTransaction();
-            Coupon::findOrFail($id)->delete();
+
+            if (str_contains($id, ',')) {
+
+                $couponID = explode(',', $id);
+
+                $this->deleteCoupons($couponID);
+            } else {
+                $coupon = Coupon::query()->findOrFail($id);
+                $coupon->delete();
+            }
+
             DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Xóa dữ liệu thành công']);
         } catch (\Exception $e) {
@@ -298,6 +308,102 @@ class CouponController extends Controller
                 'error' => true,
                 'message' => 'Có lỗi xảy ra, vui lòng thử lại'
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+    public function restoreDelete(string $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            if (str_contains($id, ',')) {
+
+                $couponID = explode(',', $id);
+
+                $this->restoreDeleteBanners($couponID);
+            } else {
+                $coupon = Coupon::query()->onlyTrashed()->findOrFail($id);
+
+                if ($coupon->trashed()) {
+                    $coupon->restore();
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Khôi phục thành công'
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            $this->logError($e);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Khôi phục thất bại'
+            ]);
+        }
+    }
+    public function forceDelete(string $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            if (str_contains($id, ',')) {
+
+                $bannerID = explode(',', $id);
+
+                $this->deleteBanners($bannerID);
+            } else {
+                $banner = Coupon::query()->onlyTrashed()->findOrFail($id);
+
+                $banner->forceDelete();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Xóa thành công'
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            $this->logError($e);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Xóa thất bại'
+            ]);
+        }
+    }
+    private function deleteCoupons(array $couponID)
+    {
+
+        $coupons = Coupon::query()->whereIn('id', $couponID)->withTrashed()->get();
+
+        foreach ($coupons as $coupon) {
+
+            if ($coupon->trashed()) {
+                $coupon->forceDelete();
+            } else {
+                $coupon->delete();
+            }
+        }
+    }
+    private function restoreDeleteBanners(array $couponID)
+    {
+
+        $coupons = Coupon::query()->whereIn('id', $couponID)->onlyTrashed()->get();
+
+        foreach ($coupons as $coupon) {
+
+            if ($coupon->trashed()) {
+                $coupon->restore();
+            }
         }
     }
 }

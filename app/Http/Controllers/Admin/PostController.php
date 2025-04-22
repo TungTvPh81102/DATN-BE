@@ -261,18 +261,28 @@ class PostController extends Controller
         }
     }
 
-    public function destroy(Post $post)
+    public function destroy(string $id)
     {
         try {
-            $post->delete();
+            DB::beginTransaction();
 
-            if (isset($category->icon)) {
-                $this->deleteFromLocal($post->thubmnail, self::FOLDER);
+            if (str_contains($id, ',')) {
+
+                $postID = explode(',', $id);
+
+                $this->deletePosts($postID);
+            }else {
+                $post = Post::query()->findOrFail($id);
+                if (isset($category->icon)) {
+                    $this->deleteFromLocal($post->thubmnail, self::FOLDER);
+                }
+                $post->delete();
             }
+            DB::commit();
             return response()->json($data = ['status' => 'success', 'message' => 'Mục đã được xóa.']);
         } catch (\Exception $e) {
+            DB::rollBack();
             $this->logError($e);
-
             return response()->json($data = ['status' => 'error', 'message' => 'Lỗi thao tác.']);
         }
     }

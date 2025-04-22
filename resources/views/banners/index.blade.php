@@ -155,11 +155,11 @@
                                     </thead>
                                     <tbody id="sortableBanners" class="list form-check-all">
                                         @foreach ($banners as $banner)
-                                            <tr data-id="{{ $banner->id }}">
+                                            <tr>
                                                 <th scope="row">
                                                     <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox" name="chk_child"
-                                                            value="option1">
+                                                        <input class="form-check-input" type="checkbox" name="itemID"
+                                                            value="{{ $banner->id }}">
                                                     </div>
                                                 </th>
                                                 <td class="order">{{ $loop->iteration  }}</td>
@@ -242,7 +242,7 @@
 @push('page-scripts')
     <script>
         var routeUrlFilter = "{{ route('admin.banners.index') }}";
-
+        var routeDeleteAll = "{{ route('admin.banners.destroy', ':itemID') }}";
         $(document).on('click', '#resetFilter', function() {
             window.location = routeUrlFilter;
         });

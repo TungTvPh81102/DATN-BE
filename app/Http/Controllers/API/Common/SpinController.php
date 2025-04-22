@@ -40,49 +40,42 @@ class SpinController extends Controller
     }
     // Lấy danh sách phần thưởng từ coupons, gifts và thêm phần thưởng mặc định
     private function getAllRewards()
-{
-    $rewards = SpinConfig::all()->flatMap(function ($config) {
-        // Nếu là coupon, chia xác suất thành các biến thể
-        if ($config->type === 'coupon') {
-            $couponProbability = $config->probability / $config->cells;
-            $couponRewards = [];
-            for ($i = 1; $i <= $config->cells; $i++) {
-                $couponRewards[] = [
-                    'type' => 'coupon',
+    {
+        $rewards = SpinConfig::all()->flatMap(function ($config) {
+            $cellCount = $config->cells ?? 1; // Mặc định là 1 nếu không có cells
+            $individualProbability = $config->probability / $cellCount;
+        
+            $rewards = [];
+            for ($i = 1; $i <= $cellCount; $i++) {
+                $rewards[] = [
+                    'type' => $config->type,
                     'id' => null,
-                    'name' => "{$config->name} $i",
-                    'probability' => $couponProbability,
+                    'name' => $cellCount > 1 ? "{$config->name} $i" : $config->name,
+                    'probability' => $individualProbability,
                 ];
             }
-            return $couponRewards;
+        
+            return $rewards;
+        })->toArray();
+
+        // Lấy từ bảng gifts (chỉ lấy nếu còn hàng)
+        $gifts = Gift::where('stock', '>', 0)
+            ->where('is_selected', 1)
+            ->where('is_active', 1)
+            ->limit(2)
+            ->get();
+        foreach ($gifts as $gift) {
+            $rewards[] = [
+                'type' => 'gift',
+                'id' => $gift->id,
+                'name' => $gift->name,
+                'probability' => $gift->probability,
+                'stock' => $gift->stock,
+            ];
         }
 
-        return [[
-            'type' => $config->type,
-            'id' => null,
-            'name' => $config->name,
-            'probability' => $config->probability,
-        ]];
-    })->toArray();
-
-    // Lấy từ bảng gifts (chỉ lấy nếu còn hàng)
-    $gifts = Gift::where('stock', '>', 0)
-        ->where('is_selected', 1)
-        ->where('is_active', 1)
-        ->limit(2)
-        ->get();
-    foreach ($gifts as $gift) {
-        $rewards[] = [
-            'type' => 'gift',
-            'id' => $gift->id,
-            'name' => $gift->name,
-            'probability' => $gift->probability,
-            'stock' => $gift->stock,
-        ];
+        return $rewards;
     }
-
-    return $rewards;
-}
     // Thuật toán Weighted Random Selection
     private function getRandomReward()
     {
@@ -114,7 +107,10 @@ class SpinController extends Controller
     public function spin(Request $request)
     {
         $user = $request->user();
-
+        $setting = SpinSetting::first(); // nếu chỉ có 1 dòng cấu hình
+        if (!$setting || $setting->status !== 'active') {
+            return response()->json(['message' => 'Vòng quay đang bảo trì. Vui lòng quay lại sau.'], 403);
+        }
         //Kiểm tra giới hạn 5 lượt quay/ngày
         $todaySpins = SpinHistory::where('user_id', $user->id)
             ->whereDate('spun_at', Carbon::today())
@@ -208,74 +204,6 @@ class SpinController extends Controller
         return response()->json(['Số lượt quay còn lại' => $availableSpins]);
     }
 
-    // Cập nhật membership và tặng lượt quay
-    public function updateMembership(Request $request)
-    {
-        $user = $request->user();
-        $membership = $request->input('membership'); // basic, premium
-        $duration = $request->input('duration'); // 6 hoặc 12 tháng
-
-        $user->membership = $membership;
-        $user->membership_expiry = now()->addMonths($duration);
-        $user->save();
-
-        // Tặng lượt quay dựa trên gói
-        $spinCount = $membership === 'basic' ? 1 : 2;
-        if ($duration >= 12) {
-            $spinCount += 2;
-        } elseif ($duration >= 6) {
-            $spinCount += 1;
-        }
-
-        Spin::create([
-            'user_id' => $user->id,
-            'spin_count' => $spinCount,
-            'received_at' => now(),
-            'expires_at' => now()->addDays(7),
-        ]);
-
-        return response()->json(['message' => 'Membership updated, spins added']);
-    }
-
-    // Hoàn thành hồ sơ và tặng lượt quay
-    public function completeProfile(Request $request)
-    {
-        $user = $request->user();
-
-        if ($user->profile_completed) {
-            return response()->json(['message' => 'Hồ sơ đã hoàn thành trước đó'], 403);
-        }
-
-        $user->profile_completed = true;
-        $user->save();
-
-        Spin::create([
-            'user_id' => $user->id,
-            'spin_count' => 1,
-            'received_at' => now(),
-            'expires_at' => now()->addDays(7),
-        ]);
-
-        return response()->json(['message' => 'Hồ sơ hoàn thành, tặng 1 lượt quay']);
-    }
-
-    // Hoàn thành khóa học và tặng lượt quay
-    public function completeCourse(Request $request)
-    {
-        $user = $request->user();
-        $user->courses_completed += 1;
-        $user->save();
-
-        Spin::create([
-            'user_id' => $user->id,
-            'spin_count' => 1,
-            'received_at' => now(),
-            'expires_at' => now()->addDays(7),
-        ]);
-
-        return response()->json(['message' => 'Khóa học hoàn thành, tặng 1 lượt quay']);
-    }
-
     // Lấy lịch sử quay của người dùng
     public function getSpinHistory(Request $request)
     {
@@ -294,7 +222,8 @@ class SpinController extends Controller
         $rewards = $this->getAllRewards();
         return response()->json($rewards);
     }
-    public function generateCoupon($user) {
+    public function generateCoupon($user)
+    {
         $discountType = rand(0, 1) ? 'fixed' : 'percentage';
         $fixedValues = [10000, 20000, 50000];
         $percentValues = [10, 20, 30];
