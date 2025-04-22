@@ -91,11 +91,15 @@ trait ApiResponseTrait
         ], Response::HTTP_FORBIDDEN);
     }
 
-    public function respondError(?string $message = null): JsonResponse
+    public function respondError(?string $message = null, mixed $data = null): JsonResponse
     {
-        return $this->apiResponse([
-            'message' => $message ?? 'Error',
-        ], Response::HTTP_BAD_REQUEST);
+        $response = ['message' => $message];
+
+        if (!is_null($data)) {
+            $response['data'] = $data;
+        }
+
+        return $this->apiResponse($response, Response::HTTP_BAD_REQUEST);
     }
 
     public function respondServerError(?string $message = null): JsonResponse

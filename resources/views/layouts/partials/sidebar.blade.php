@@ -297,23 +297,6 @@
                 </div>
             @endcanany
 
-
-            <a class="nav-link menu-link" href="#sidebarInstructorCommission" data-bs-toggle="collapse"
-                role="button" aria-expanded="false" aria-controls="sidebarInstructorCommission">
-                <i class="ri-gift-line"></i> <span data-key="t-authentication">Quản lý hoa hồng</span>
-            </a>
-            <div class="collapse menu-dropdown" id="sidebarInstructorCommission">
-                <ul class="nav nav-sm flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('admin.instructor-commissions.index') }}" class="nav-link"
-                            data-key="t-chat">
-                            Danh sách hoa hồng của giảng viên </a>
-                    </li>
-
-                </ul>
-            </div>
-
-
             @canany(['setting.create', 'setting.edit', 'setting.read', 'setting.delete'])
                 <a class="nav-link menu-link" href="#sidebarSetting" data-bs-toggle="collapse" role="button"
                     aria-expanded="false" aria-controls="sidebarSetting">
@@ -356,11 +339,6 @@
                 <i class="las la-coins"></i> <span data-key="t-authentication">Phân chia doanh thu</span>
             </a>
 
-            @canany(['commissions.create', 'commissions.edit', 'commissions.read', 'commissions.delete'])
-                <a class="nav-link menu-link" href="{{ route('admin.commissions.index') }}">
-                    <i class="ri-money-dollar-circle-line"></i> <span data-key="t-authentication">Cấu hình thanh toán</span>
-                </a>
-            @endcanany
             <a class="nav-link menu-link" href="{{ route('admin.chats.index') }}">
                 <i class="lab la-weixin"></i> <span data-key="t-authentication">Trò chuyện</span>
             </a>
