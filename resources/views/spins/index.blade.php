@@ -143,7 +143,7 @@
                                     @if (!$hasEnoughSpinConfigTypes)
                                         <li class="mb-2">
                                             <i class="bi bi-dash-circle text-danger me-2"></i>
-                                            Vòng quay chưa đủ 3 loại phần thưởng (Không trúng, Mã giảm giá, Lượt quay). Thiếu:
+                                            Vòng quay chưa đủ 3 loại phần thưởng. Thiếu:
                                             <ul class="list-group list-group-flush mt-1">
                                                 @foreach ($missingTypeNames as $typeName)
                                                     <li class="list-group-item border-0 ps-4">{{ $typeName }}</li>
@@ -412,11 +412,6 @@
                                         <option value="{{ $spinType->name }}">{{ $spinType->display_name }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-                            <div class="col-md-12">
-                                <label for="name" class="form-label">Tên</label>
-                                <input type="text" name="name" value="{{ old('name') }}" class="form-control"
-                                    placeholder="Tên ô quà" required>
                             </div>
                             <div class="col-md-12">
                                 <label for="probability" class="form-label">Tỷ lệ (%)</label>
