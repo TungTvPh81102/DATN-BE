@@ -240,6 +240,20 @@ class LearningPathController extends Controller
                     ]
                 );
 
+            $userSubmittedAnswers = null;
+
+            if ($lesson->type === 'quiz' && $lesson->lessonable) {
+                $userSubmission = UserQuizSubmission::query()
+                    ->where('user_id', $user->id)
+                    ->where('quiz_id', $lesson->lessonable->id)
+                    ->latest()
+                    ->first();
+
+                if ($userSubmission) {
+                    $userSubmittedAnswers = json_decode($userSubmission->answers, true);
+                }
+            }
+
             $dataLesson = array_merge(
                 $lesson->toArray(),
                 [
@@ -247,7 +261,10 @@ class LearningPathController extends Controller
                         ? array_merge(
                             $lesson->lessonable->toArray(),
                             $lesson->type === 'quiz'
-                                ? ['questions' => $lesson->lessonable->questions->load('answers')->toArray()]
+                                ? [
+                                    'questions' => $lesson->lessonable->questions->load('answers')->toArray(),
+                                    'user_submitted_answers' => $userSubmittedAnswers
+                                ]
                                 : []
                         )
                         : null
