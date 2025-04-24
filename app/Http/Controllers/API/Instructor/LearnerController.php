@@ -225,6 +225,8 @@ class LearnerController extends Controller
                 'name' => $learner->name,
                 'phone' => $learner->phone ?? '',
                 'email' => $learner->email,
+                'avatar' => $learner->avatar,
+                'created_at' => $learner->created_at,
                 'id' => $learner->id
             ];
 

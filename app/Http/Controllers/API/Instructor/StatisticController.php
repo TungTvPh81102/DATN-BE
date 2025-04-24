@@ -323,31 +323,29 @@ class StatisticController extends Controller
             if ($year > $yearNow) $year = $yearNow;
 
             $membershipRevenue = DB::table('invoices')
-                ->selectRaw('MONTH(invoices.created_at) as month, 
-                    SUM(CASE WHEN invoices.invoice_type = "membership" THEN invoices.final_amount *instructor_commissions ELSE 0 END) as membership_revenue,
-                    GROUP_CONCAT(DISTINCT membership_plans.name) as membership_plan_names')
-                ->leftJoin('membership_plans', 'invoices.membership_plan_id', '=', 'membership_plans.id')
-                ->whereYear('invoices.created_at', $year)
+                ->selectRaw('
+                membership_plans.id as plan_id,
+                membership_plans.name as plan_name,
+                SUM(invoices.final_amount * invoices.instructor_commissions) as membership_revenue
+            ')
+                ->join('membership_plans', 'invoices.membership_plan_id', '=', 'membership_plans.id')
+                ->where('membership_plans.instructor_id', $user->id)
                 ->where('invoices.status', 'Đã thanh toán')
-                ->groupBy('month')
+                ->where('invoices.invoice_type', 'membership')
+                ->whereYear('invoices.created_at', $year)
+                ->groupBy('membership_plans.id', 'membership_plans.name')
+                ->having('membership_revenue', '>', 0)
                 ->get();
 
-
-            $monthlyMemberships = [];
-
-            for ($i = 1; $i <= 12; $i++) {
-                $monthlyData = $membershipRevenue->firstWhere('month', $i);
-                $monthlyMemberships[] = [
-                    'id' => $i,
-                    'month' => $i,
-                    'membershipRevenue' => $monthlyData?->membership_revenue ?? 0,
-                    'membershipPlanNames' => $monthlyData && $monthlyData->membership_plan_names
-                        ? explode(',', $monthlyData->membership_plan_names)
-                        : [],
+            $membershipStats = $membershipRevenue->map(function ($item) {
+                return [
+                    'membershipPlanId' => $item->plan_id,
+                    'membershipPlanName' => $item->plan_name,
+                    'membershipRevenue' => (float) $item->membership_revenue,
                 ];
-            }
+            });
 
-            return $this->respondOk('Thống kê doanh thu gói thành viên theo tháng', $monthlyMemberships);
+            return $this->respondOk('Thống kê doanh thu theo gói thành viên', $membershipStats);
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
@@ -359,7 +357,7 @@ class StatisticController extends Controller
         try {
             $instructor = Auth::user();
 
-            if(!$instructor){
+            if (!$instructor) {
                 return $this->respondUnauthorized('Vui lòng đăng nhập và thử lại');
             }
 

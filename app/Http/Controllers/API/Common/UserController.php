@@ -231,6 +231,12 @@ class UserController extends Controller
                     'courseUsers:id,user_id,course_id,progress_percent,source',
                     'category:id,name,slug',
                     'user:id,name,avatar',
+                    'chapters' => function ($q) {
+                        $q->orderBy('order', 'asc');
+                    },
+                    'chapters.lessons' => function ($q) {
+                        $q->orderBy('order', 'asc');
+                    }
                 ])
                 ->withCount([
                     'chapters',
@@ -258,15 +264,17 @@ class UserController extends Controller
 
             $totalProgressPercent = 0;
 
+            $completedLessons = LessonProgress::where('user_id', $user->id)
+                ->where('is_completed', 1)
+                ->pluck('lesson_id')
+                ->toArray();
+
             foreach ($courses as $course) {
                 $lessonIds = $course->chapters->flatMap(function ($chapter) {
                     return $chapter->lessons->pluck('id');
                 });
 
-                $completedCount = LessonProgress::where('user_id', $user->id)
-                    ->whereIn('lesson_id', $lessonIds)
-                    ->where('is_completed', 1)
-                    ->count();
+                $completedCount = count(array_intersect($completedLessons, $lessonIds->toArray()));
 
                 $totalCompletedLessons += $completedCount;
 
@@ -282,7 +290,7 @@ class UserController extends Controller
 
             $averageProgress = $courses->count() > 0 ? $totalProgressPercent / $courses->count() : 0;
 
-            $result = $courses->map(function ($course) use ($courseRatings, $user) {
+            $result = $courses->map(function ($course) use ($courseRatings, $user, $completedLessons) {
                 $videoLessons = $course->chapters->flatMap(function ($chapter) {
                     return $chapter->lessons->where('lessonable_type', Video::class);
                 });
@@ -293,43 +301,56 @@ class UserController extends Controller
 
                 $ratingInfo = $courseRatings->get($course->id);
 
-                $lessonProgress = LessonProgress::query()
-                    ->where('user_id', $user->id)
-                    ->whereHas('lesson', function ($query) use ($course) {
-                        $lessonIds = $course->chapters->flatMap(function ($chapter) {
-                            return $chapter->lessons->pluck('id');
-                        });
+                $progress = $course->courseUsers->where('user_id', $user->id)->first();
+                $progressPercent = $progress ? $progress->progress_percent : 0;
 
-                        $query->whereIn('id', $lessonIds);
-                    })
-                    ->with('lesson:id,title')
-                    ->latest('updated_at')
-                    ->first();
+                $currentLesson = null;
 
-                if (!$lessonProgress) {
-                    $firstChapter = $course->chapters->first();
-                    $firstLesson = $firstChapter ? $firstChapter->lessons->where('is_completed', false)->first() : null;
-
-                    $currentLesson = $firstLesson ? [
-                        'id' => $firstLesson->id,
-                        'title' => $firstLesson->title
-                    ] : null;
+                if ($progressPercent == 100) {
+                    // Trường hợp 3: Đã hoàn thành khóa học - hiển thị bài học cuối cùng
+                    $lastChapter = $course->chapters->last();
+                    if ($lastChapter) {
+                        $lastLesson = $lastChapter->lessons->last();
+                        if ($lastLesson) {
+                            $currentLesson = [
+                                'id' => $lastLesson->id,
+                                'title' => $lastLesson->title
+                            ];
+                        }
+                    }
                 } else {
-                    $progress = $course->courseUsers->where('user_id', $user->id)->first();
+                    // Trường hợp 1 & 2: Mới bắt đầu hoặc đang học dở
+                    // Duyệt qua từng chương và bài học theo thứ tự
+                    $foundCurrentLesson = false;
 
-                    if ($progress && $progress->progress_percent == 100) {
-                        $lastChapter = $course->chapters->last();
-                        $lastLesson = $lastChapter ? $lastChapter->lessons->last() : null;
+                    foreach ($course->chapters as $chapter) {
+                        if ($foundCurrentLesson) break;
 
-                        $currentLesson = $lastLesson ? [
-                            'id' => $lastLesson->id,
-                            'title' => $lastLesson->title
-                        ] : null;
-                    } else {
-                        $currentLesson = [
-                            'id' => $lessonProgress->lesson->id,
-                            'title' => $lessonProgress->lesson->title,
-                        ];
+                        foreach ($chapter->lessons as $lesson) {
+                            // Nếu bài học này chưa hoàn thành, đây là bài học hiện tại
+                            if (!in_array($lesson->id, $completedLessons)) {
+                                $currentLesson = [
+                                    'id' => $lesson->id,
+                                    'title' => $lesson->title
+                                ];
+                                $foundCurrentLesson = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Nếu không tìm thấy bài học nào lấy bài đầu tiên
+                    if (!$currentLesson) {
+                        $firstChapter = $course->chapters->first();
+                        if ($firstChapter) {
+                            $firstLesson = $firstChapter->lessons->first();
+                            if ($firstLesson) {
+                                $currentLesson = [
+                                    'id' => $firstLesson->id,
+                                    'title' => $firstLesson->title
+                                ];
+                            }
+                        }
                     }
                 }
 
@@ -348,11 +369,9 @@ class UserController extends Controller
                         'average' => $ratingInfo ? $ratingInfo->average_rating : 0
                     ],
                     'total_video_duration' => $totalVideoDuration,
-                    'progress_percent' => $course->courseUsers
-                        ->where('user_id', $user->id)->first()
-                        ->progress_percent ?? 0,
+                    'progress_percent' => $progressPercent,
                     'current_lesson' => $currentLesson,
-                    'source' => $course->courseUsers->where('user_id', $user->id)->first()->source ?? null,
+                    'source' => $progress ? $progress->source : null,
                     'category' => [
                         'id' => $course->category->id ?? null,
                         'name' => $course->category->name ?? null,

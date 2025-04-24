@@ -43,12 +43,10 @@ class WithdrawalNotification extends Notification implements ShouldBroadcast, Sh
     {
         return (new MailMessage)
             ->subject('Yêu cầu rút tiền mới')
-            ->line('Giảng viên: ' . $this->instructor->name . ' đã gửi yêu cầu rút tiền.')
-            ->line('Số tiền yêu cầu: ' . number_format($this->withdrawalRequest->amount) . ' VND')
-            ->line('Ngân hàng: ' . $this->withdrawalRequest->bank_name)
-            ->line('Ngày yêu cầu: ' . $this->withdrawalRequest->request_date)
-            ->action('Xem chi tiết', url('/admin/withdrawals/' . $this->withdrawalRequest->id))
-            ->line('Cảm ơn bạn đã sử dụng hệ thống của chúng tôi!');
+            ->view('emails.withdrawl', [
+                'withdrawalRequest' => $this->withdrawalRequest,
+                'instructor' => $this->instructor
+            ]);
     }
 
     private function notificationData()

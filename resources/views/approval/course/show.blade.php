@@ -390,7 +390,14 @@
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="mb-0">Danh sách chương trình giảng dạy</h5>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">Danh sách chương trình giảng dạy</h5>
+                                    <div style="margin-top: auto; display: flex; justify-content: flex-end;">
+                                        <a class="btn btn-primary"
+                                            href="{{ config('app.fe_url') }}/draft/{{ $approval->course->slug }}">Xem
+                                            khoá học</a>
+                                    </div>
+                                </div>
                             </div>
                             <div class="card-body">
                                 <div class="accordion" id="accordionWithicon">
@@ -554,11 +561,7 @@
                                                                                 @endforeach
                                                                             </div>
                                                                         @endif
-                                                                        <div
-                                                                            style="margin-top: auto; display: flex; justify-content: flex-end;">
-                                                                            <a class="btn btn-primary" href="">Xem
-                                                                                bài học</a>
-                                                                        </div>
+
                                                                     </div>
                                                                 </div>
                                                             </div>

@@ -40,11 +40,17 @@ class CourseSubmittedNotification extends Notification implements ShouldBroadcas
      */
     public function toMail(object $notifiable): MailMessage
     {
+        $this->course
+            ->load(['instructor', 'category'])
+            ->loadCount(['chapters', 'lessons']);
+
         return (new MailMessage)
             ->subject('Yêu cầu kiểm duyệt khóa học mới')
-            ->line('Khóa học "' . $this->course->name . '" đã được gửi yêu cầu kiểm duyệt.')
-            ->action('Xem chi tiết', $this->getUrl())
-            ->line('Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi!');
+            ->view('emails.course-submitted', [
+                'admin' => $notifiable,
+                'course' => $this->course,
+                'approvalUrl' => $this->getUrl()
+            ]);
     }
 
     private function getUrl()

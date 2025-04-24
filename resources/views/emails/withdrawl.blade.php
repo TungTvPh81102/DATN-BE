@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hóa đơn mua khóa học - CourseMeLy</title>
+    <title>Yêu cầu rút tiền - CourseMeLy</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
@@ -42,13 +42,12 @@
 
                     <tr>
                         <td align="center" style="padding:40px 30px 20px;">
-                            <h2 style="color:#222; margin:0; font-size:24px; font-weight:600;">Xin chào
-                                {{ $student->name }},</h2>
+                            <h2 style="color:#222; margin:0; font-size:24px; font-weight:600;">Yêu cầu rút tiền mới</h2>
                             <p
                                 style="color:#555; font-size:16px; line-height:1.6; margin-top:16px; text-align: center;">
-                                Cảm ơn bạn đã mua khóa học trên <strong style="color:#E27447;">CourseMeLy</strong>!
-                                Đơn hàng của bạn đã được xử lý thành công. Bạn có thể bắt đầu trải nghiệm khóa học ngay
-                                từ bây giờ.
+                                Chúng tôi vừa nhận được yêu cầu rút tiền mới từ giảng viên
+                                <strong style="color:#E27447;">{{ $instructor->name }}</strong>.
+                                Vui lòng xem xét và xử lý yêu cầu này trong thời gian sớm nhất.
                             </p>
                         </td>
                     </tr>
@@ -56,7 +55,7 @@
                     <tr>
                         <td style="padding:0 30px 30px;">
                             <p style="font-size:18px; font-weight:600; color:#333; margin-bottom:20px;">
-                                <span style="color:#E27447; font-size: 16px;">🧾</span>Chi tiết hóa đơn
+                                <span style="color:#E27447; font-size: 16px;">📋</span> Chi tiết yêu cầu
                             </p>
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
@@ -78,10 +77,9 @@
                                                 </td>
                                                 <td style="padding-left:16px;">
                                                     <p style="margin:0; color:#444; font-size:15px; font-weight:500;">Mã
-                                                        đơn
-                                                        hàng:
+                                                        yêu cầu:
                                                         <strong
-                                                            style="color:#222; font-weight:600;">{{ $invoice->code }}</strong>
+                                                            style="color:#222; font-weight:600;">WD-{{ $withdrawalRequest->id }}</strong>
                                                     </p>
                                                 </td>
                                             </tr>
@@ -110,9 +108,9 @@
                                                 </td>
                                                 <td style="padding-left:16px;">
                                                     <p style="margin:0; color:#444; font-size:15px; font-weight:500;">
-                                                        Ngày đặt:
+                                                        Ngày yêu cầu:
                                                         <strong
-                                                            style="color:#222; font-weight:600;">{{ \Illuminate\Support\Carbon::parse($transaction->created_at)->locale('vi')->translatedFormat('d F Y') }}</strong>
+                                                            style="color:#222; font-weight:600;">{{ $withdrawalRequest->request_date }}</strong>
                                                     </p>
                                                 </td>
                                             </tr>
@@ -134,15 +132,17 @@
                                                         <tr>
                                                             <td
                                                                 style="width:40px; height:40px; background-color:#ffeee8; border-radius:50%; text-align:center; vertical-align:middle; line-height:0;">
-                                                                <div style="font-size:18px; line-height:40px;">💳</div>
+                                                                <div style="font-size:18px; line-height:40px;">💰</div>
                                                             </td>
                                                         </tr>
                                                     </table>
                                                 </td>
                                                 <td style="padding-left:16px;">
                                                     <p style="margin:0; color:#444; font-size:15px; font-weight:500;">
-                                                        Phương thức thanh toán:
-                                                        <strong style="color:#222; font-weight:600;">VNPAY</strong>
+                                                        Số tiền yêu cầu:
+                                                        <strong
+                                                            style="color:#222; font-weight:600;">{{ number_format($withdrawalRequest->amount, 0, ',', '.') }}
+                                                            VND</strong>
                                                     </p>
                                                 </td>
                                             </tr>
@@ -159,60 +159,82 @@
                                 style="font-size:18px; font-weight:600; color:#222; margin-bottom:16px; display: flex; align-items: center;">
                                 <span
                                     style="display: inline-block; width: 32px; height: 32px; background-color: #fff2ed; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 32px;">
-                                    <span style="color:#E27447; font-size: 16px;">🎓</span>
+                                    <span style="color:#E27447; font-size: 16px;">👨‍🏫</span>
                                 </span>
-                                Chi tiết khóa học
+                                Thông tin giảng viên
                             </p>
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
                                 style="border-collapse: collapse; border:1px solid #f0f0f0; border-radius:12px; overflow:hidden;">
                                 <tr style="background-color:#fff8f5;">
                                     <th
                                         style="padding:14px 16px; text-align:left; border-bottom:1px solid #f0f0f0; color:#444; font-weight:600; font-size: 15px;">
-                                        Tên khóa học
+                                        Họ tên
                                     </th>
                                     <th
                                         style="padding:14px 16px; text-align:center; border-bottom:1px solid #f0f0f0; color:#444; font-weight:600; font-size: 15px;">
-                                        Giảng viên
-                                    </th>
-                                    <th
-                                        style="padding:14px 16px; text-align:right; border-bottom:1px solid #f0f0f0; color:#444; font-weight:600; font-size: 15px;">
-                                        Giá
+                                        Email
                                     </th>
                                 </tr>
                                 <tr>
                                     <td style="padding:14px 16px; border-bottom:1px solid #f0f0f0; font-size: 15px;">
-                                        <strong style="color:#333;">{{ $course->name }}</strong>
+                                        <div style="display: flex; align-items: center; justify-content: center;">
+                                            <img src="{{ $instructor->avatar }}" alt="{{ $instructor->name }}"
+                                                style="width: 36px; height: 36px; border-radius: 50%; margin-right: 10px; object-fit: cover;">
+                                            <strong style="color:#333;">{{ $instructor->name }}</strong>
+                                        </div>
                                     </td>
                                     <td
                                         style="padding:14px 16px; border-bottom:1px solid #f0f0f0; font-size: 15px; text-align:center;">
                                         <span
                                             style="background-color: #ffeee8; color: #E27447; padding: 4px 10px; border-radius: 20px; font-weight: 500; display: inline-block;">
-                                            {{ $course->user->name }}
+                                            {{ $instructor->email }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:0 30px 30px;">
+                            <p
+                                style="font-size:18px; font-weight:600; color:#222; margin-bottom:16px; display: flex; align-items: center;">
+                                <span
+                                    style="display: inline-block; width: 32px; height: 32px; background-color: #fff2ed; border-radius: 50%; margin-right: 10px; text-align: center; line-height: 32px;">
+                                    <span style="color:#E27447; font-size: 16px;">🏦</span>
+                                </span>
+                                Thông tin thanh toán
+                            </p>
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0"
+                                style="border-collapse: collapse; border:1px solid #f0f0f0; border-radius:12px; overflow:hidden;">
+                                <tr style="background-color:#fff8f5;">
+                                    <th
+                                        style="padding:14px 16px; text-align:left; border-bottom:1px solid #f0f0f0; color:#444; font-weight:600; font-size: 15px;">
+                                        Ngân hàng
+                                    </th>
+                                    <th
+                                        style="padding:14px 16px; text-align:center; border-bottom:1px solid #f0f0f0; color:#444; font-weight:600; font-size: 15px;">
+                                        Số tài khoản
+                                    </th>
+                                    <th
+                                        style="padding:14px 16px; text-align:right; border-bottom:1px solid #f0f0f0; color:#444; font-weight:600; font-size: 15px;">
+                                        Chủ tài khoản
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <td style="padding:14px 16px; border-bottom:1px solid #f0f0f0; font-size: 15px;">
+                                        <strong style="color:#333;">{{ $withdrawalRequest->bank_name }}</strong>
+                                    </td>
+                                    <td
+                                        style="padding:14px 16px; border-bottom:1px solid #f0f0f0; font-size: 15px; text-align:center;">
+                                        <span
+                                            style="background-color: #ffeee8; color: #E27447; padding: 4px 10px; border-radius: 20px; font-weight: 500; display: inline-block;">
+                                            {{ $withdrawalRequest->account_number }}
                                         </span>
                                     </td>
                                     <td
                                         style="padding:14px 16px; text-align:right; border-bottom:1px solid #f0f0f0; font-size: 15px;">
-                                        {{ number_format(round($course->price_sale, 2) ?? $course->price, 0, ',', '.') }}
-                                        VND
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2"
-                                        style="padding:14px 16px; text-align:right; font-weight:500; color:#555;">
-                                        Giảm giá:
-                                    </td>
-                                    <td style="padding:14px 16px; text-align:right; font-weight:500; color:#555;">
-                                        {{ number_format($invoice->coupon_discount, 0, ',', '.') }} VND
-                                    </td>
-                                </tr>
-                                <tr style="background-color:#fff8f5;">
-                                    <td colspan="2"
-                                        style="padding:14px 16px; text-align:right; font-weight:600; color:#333; font-size: 15px;">
-                                        Tổng thanh toán:
-                                    </td>
-                                    <td
-                                        style="padding:14px 16px; text-align:right; font-weight:700; color:#E27447; font-size: 16px;">
-                                        {{ number_format($transaction->amount, 0, ',', '.') }} VND
+                                        {{ $withdrawalRequest->account_holder }}
                                     </td>
                                 </tr>
                             </table>
@@ -223,17 +245,14 @@
                         <td align="center" style="padding:10px 30px 30px;">
                             <div
                                 style="background: linear-gradient(to bottom right, #fff8f5, #ffefe9); border-radius:14px; padding:25px 20px; text-align:center; box-shadow: 0 8px 15px rgba(226,116,71,0.08);">
-                                <img src="https://res.cloudinary.com/dere3na7i/image/upload/c_thumb,w_200,g_face/v1740311681/unnamed_uigmjf.png"
-                                    alt="Khóa học" width="200" height="150"
-                                    style="border-radius:12px; box-shadow:0 6px 15px rgba(0,0,0,0.1); margin-bottom:20px; object-fit:cover;">
-                                <p style="font-size:18px; color:#E27447; font-weight:600; margin-bottom:20px;">Bạn đã
-                                    sẵn sàng để học chưa?</p>
+                                <p style="font-size:18px; color:#E27447; font-weight:600; margin-bottom:20px;">Yêu cầu
+                                    cần được xử lý</p>
                                 <p style="font-size:15px; color:#555; line-height:1.5; margin-bottom:25px;">
-                                    Hãy bắt đầu khóa học của bạn ngay hôm nay<br>và khám phá những kiến thức mới.
+                                    Vui lòng xem xét và xử lý yêu cầu rút tiền này<br>trong vòng 24 giờ làm việc.
                                 </p>
-                                <a href="#"
+                                <a href="{{ url('/admin/withdrawals/' . $withdrawalRequest->id) }}"
                                     style="display:inline-block; background: linear-gradient(to right, #E27447, #f59776); color:#fff; padding:14px 30px; font-size:16px; text-decoration:none; border-radius:10px; font-weight:600; letter-spacing:0.5px; box-shadow:0 6px 15px rgba(226,116,71,0.3); transition: all 0.3s;">
-                                    👉 BẮT ĐẦU HỌC NGAY
+                                    👉 XEM CHI TIẾT
                                 </a>
                             </div>
                         </td>
@@ -243,9 +262,8 @@
                         <td align="center" style="padding:5px 30px 30px;">
                             <div style="border-top:1px solid #eee; padding-top:20px; max-width: 90%; margin: 0 auto;">
                                 <p style="font-size:15px; color:#555; line-height: 1.6; text-align: center;">
-                                    Cảm ơn bạn đã mua khóa học trên nền tảng của chúng tôi. Chúng tôi cam kết mang lại
-                                    trải nghiệm học tập tốt nhất, giúp bạn phát triển kỹ năng và tiến xa hơn trong sự
-                                    nghiệp.
+                                    Email này được gửi tự động từ hệ thống CourseMeLy. Đây là thông báo yêu cầu rút tiền
+                                    mới cần được xử lý. Vui lòng không trả lời email này.
                                 </p>
                             </div>
                         </td>
