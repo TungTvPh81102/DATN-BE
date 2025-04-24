@@ -152,7 +152,6 @@ class LearningPathController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
-
     public function show(Request $request, $slug, $lessonId)
     {
         try {
@@ -712,10 +711,11 @@ class LearningPathController extends Controller
                 ]
             );
 
-            if ($lessonProgress->is_completed) {
-                return $this->respondOk('Bài học này đã được hoàn thành trước đó.');
-            }
+            $isAlreadyCompleted = $lessonProgress->is_completed;
 
+            // if ($lessonProgress->is_completed) {
+            //     return $this->respondOk('Bài học này đã được hoàn thành trước đó.');
+            // }
 
             $quiz = Quiz::query()
                 ->with('questions.answers')
@@ -730,66 +730,79 @@ class LearningPathController extends Controller
 
             $correctAnswersCount = 0;
             $totalQuestions = $quiz->questions->count();
-            $isCorrect = true;
+            $incorrectQuestions = [];
 
             foreach ($answers as $answer) {
                 $question = $quiz->questions()->where('id', $answer['question_id'])->first();
 
                 if (!$question) {
-                    $isCorrect = false;
-                    break;
+                    $incorrectQuestions[] = [
+                        'question_id' => $answer['question_id'],
+                        'question_text' => null,
+                    ];
+                    continue;
                 }
 
-                // Handle check answer single choice
+                $isCorrect = false;
+
                 if (is_numeric($answer['answer_id'])) {
                     $selectedAnswer = $question->answers->where('id', $answer['answer_id'])->first();
 
                     if ($selectedAnswer && $selectedAnswer->is_correct === 1) {
                         $correctAnswersCount++;
-                    } else {
-                        $isCorrect = false;
+                        $isCorrect = true;
                     }
                 }
 
-                // Handle check answer multiple choice
                 if (is_array($answer['answer_id'])) {
                     $correctAnswers = $question->answers->where('is_correct', true)->pluck('id')->toArray();
 
                     if (!array_diff($answer['answer_id'], $correctAnswers) && !array_diff($correctAnswers, $answer['answer_id'])) {
                         $correctAnswersCount++;
-                    } else {
-                        $isCorrect = false;
+                        $isCorrect = true;
                     }
+                }
+
+                if (!$isCorrect) {
+                    $incorrectQuestions[] = [
+                        'question_id' => $question->id,
+                        'question_text' => $question->question,
+                        'question_index' => array_search($question->id, $quiz->questions->pluck('id')->toArray()),
+                    ];
                 }
             }
 
-            if ($correctAnswersCount < $totalQuestions) {
-                DB::rollBack();
-                return $this->respondOk('Bạn cần trả lời chính xác tất cả các câu hỏi.', [
-                    'correct_answer' => $correctAnswersCount,
-                    'total_question' => $totalQuestions,
-                ]);
+            $isAllCorrect = $correctAnswersCount === $totalQuestions;
+
+            if ($isAllCorrect && !$isAlreadyCompleted) {
+                UserQuizSubmission::query()->updateOrCreate(
+                    [
+                        'user_id' => $user->id,
+                        'quiz_id' => $lessonable->id,
+                    ],
+                    [
+                        'answers' => json_encode($answers),
+                    ]
+                );
+
+                if (!$isAlreadyCompleted) {
+                    $lessonProgress->update([
+                        'is_completed' => true
+                    ]);
+
+                    $this->updateCourseProgress($course->id, $user->id);
+                }
             }
-
-            $lessonProgress->is_completed = true;
-
-            UserQuizSubmission::query()->create([
-                'user_id' => $user->id,
-                'quiz_id' => $lessonable->id,
-                'answers' => json_encode($answers)
-            ]);
-
-            $lessonProgress->update([
-                'is_completed' => true
-            ]);
-
-            $this->updateCourseProgress($course->id, $user->id);
 
             DB::commit();
 
-            return $this->respondOk('Nộp bài thành công', [
+            return $this->respondOk($isAllCorrect
+                ? ($isAlreadyCompleted ? 'Bạn đã hoàn thành bài này rồi. Đây là lần làm lại.' : 'Nộp bài thành công')
+                : 'Bạn cần cải thiện điểm số của mình', [
                 'correct_answer' => $correctAnswersCount,
                 'total_question' => $totalQuestions,
+                'incorrect_questions' => $incorrectQuestions,
+                'is_completed' => $isAllCorrect,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -911,13 +924,16 @@ class LearningPathController extends Controller
         try {
             $user = Auth::user();
 
-            if (!$user || !$user->hasRole('instructor')) {
+            if (!$user || !$user->hasRole([
+                'instructor',
+                'admin'
+            ])) {
                 return $this->respondForbidden('Bạn không có quyền truy câp');
             }
 
             $course = Course::query()
                 ->where('slug', $slug)
-                ->where('status', '=', 'draft')
+             ->whereIn('status', ['draft', 'approved'])
                 ->first();
 
             if (!$course) {
@@ -1054,8 +1070,9 @@ class LearningPathController extends Controller
             $courseUser->progress_percent = round($progressPercent, 2);
 
             if ($progressPercent >= 80) {
-                if (Certificate::where(['user_id' => $userId, 'course_id' => $courseId])->exists()) return;
-                CreateCertificateJob::dispatch($userId, $courseId);
+                if (!Certificate::where(['user_id' => $userId, 'course_id' => $courseId])->exists()) {
+                    CreateCertificateJob::dispatch($userId, $courseId);
+                }
             }
 
             if ($progressPercent == 100) {

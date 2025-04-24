@@ -193,7 +193,7 @@
 
                             <a class="btn btn-sm btn-success h-75" href="{{ route('admin.courses.exportFile') }}">Export dữ
                                 liệu</a>
-                                
+
 
                             <button class="btn btn-sm btn-primary h-75" id="toggleAdvancedSearch">
                                 Tìm kiếm nâng cao
@@ -211,14 +211,14 @@
                                 <div class="col-md-3">
                                     <label class="form-label">Mã giảng viên</label>
                                     <input class="form-control form-control-sm" name="instructor_code" type="text"
-                                        value="{{ request()->input('instructor_code') ?? '' }}" placeholder="Nhập mã giảng viên..."
-                                        data-advanced-filter>
+                                        value="{{ request()->input('instructor_code') ?? '' }}"
+                                        placeholder="Nhập mã giảng viên..." data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Tên giảng viên</label>
                                     <input class="form-control form-control-sm" name="instructor_name" type="text"
-                                        value="{{ request()->input('instructor_name') ?? '' }}" placeholder="Nhập tên giảng viên..."
-                                        data-advanced-filter>
+                                        value="{{ request()->input('instructor_name') ?? '' }}"
+                                        placeholder="Nhập tên giảng viên..." data-advanced-filter>
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label">Email</label>
@@ -229,16 +229,15 @@
                                 <div class="col-md-3">
                                     <label class="form-label">Lợi nhuận</label>
                                     <input class="form-control form-control-sm" name="commission_amount" type="text"
-                                        value="{{ request()->input('commission_amount') ?? '' }}" placeholder="Nhập lợi nhuận..."
-                                        data-advanced-filter>
+                                        value="{{ request()->input('commission_amount') ?? '' }}"
+                                        placeholder="Nhập lợi nhuận..." data-advanced-filter>
                                 </div>
                                 <div class="col-md-3 mt-2">
                                     <label class="form-label">Ngày tham gia</label>
-                                    <input type="date" class="form-control form-control-sm"
-                                        name="start_date" value="{{ request()->input('start_date') ?? '' }}" 
-                                        data-advanced-filter>
+                                    <input type="date" class="form-control form-control-sm" name="start_date"
+                                        value="{{ request()->input('start_date') ?? '' }}" data-advanced-filter>
                                 </div>
-                                
+
                                 <div class="mt-3 text-end">
                                     <button class="btn btn-sm btn-success" type="reset" id="resetFilter">Reset</button>
                                     <button class="btn btn-sm btn-primary" id="applyAdvancedFilter">Áp dụng</button>
@@ -334,9 +333,117 @@
 
                                                 </td>
 
-                                               
-                                            
+
+
                                             </tr>
+
+
+                                            <div class="modal fade" id="modalLog_{{ $instructorCommission->id }}"
+                                                tabindex="-1"
+                                                aria-labelledby="modalLogLabel_{{ $instructorCommission->id }}"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-scrollable modal-md">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title"
+                                                                id="modalLogLabel_{{ $instructorCommission->id }}">
+                                                                Lịch sử thao tác
+                                                            </h5>
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal" aria-label="Đóng"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            @if ($logs)
+                                                                @php
+                                                                    usort($logs, function ($a, $b) {
+                                                                        return strtotime($b['changed_at']) <=>
+                                                                            strtotime($a['changed_at']);
+                                                                    });
+                                                                @endphp
+                                                                <ul class="list-unstyled mb-0 small history-log-list">
+                                                                    @foreach ($logs as $log)
+                                                                        @php
+                                                                            $formattedOldRate = isset($log['old_rate'])
+                                                                                ? (fmod($log['old_rate'] * 100, 1) == 0
+                                                                                    ? number_format(
+                                                                                        $log['old_rate'] * 100,
+                                                                                        0,
+                                                                                    )
+                                                                                    : number_format(
+                                                                                        $log['old_rate'] * 100,
+                                                                                        2,
+                                                                                    ))
+                                                                                : 'N/A';
+
+                                                                            $formattedNewRate = isset($log['new_rate'])
+                                                                                ? (fmod($log['new_rate'] * 100, 1) == 0
+                                                                                    ? number_format(
+                                                                                        $log['new_rate'] * 100,
+                                                                                        0,
+                                                                                    )
+                                                                                    : number_format(
+                                                                                        $log['new_rate'] * 100,
+                                                                                        2,
+                                                                                    ))
+                                                                                : 'N/A';
+
+                                                                            $noteClass = '';
+                                                                            if (isset($log['note'])) {
+                                                                                if (
+                                                                                    strpos($log['note'], 'Tăng') !==
+                                                                                    false
+                                                                                ) {
+                                                                                    $noteClass = 'text-success';
+                                                                                } elseif (
+                                                                                    strpos($log['note'], 'Giảm') !==
+                                                                                    false
+                                                                                ) {
+                                                                                    $noteClass = 'text-danger';
+                                                                                } else {
+                                                                                    $noteClass = 'text-muted';
+                                                                                }
+                                                                            }
+                                                                        @endphp
+                                                                        <li>
+                                                                            <div
+                                                                                class="d-flex justify-content-between align-items-center mb-2">
+                                                                                <span class="badge bg-light text-dark">
+                                                                                    <i class="ri-calendar-line me-1"></i>
+                                                                                    {{ \Carbon\Carbon::parse($log['changed_at'])->format('d/m/Y H:i') }}
+                                                                                </span>
+                                                                                <span
+                                                                                    class="{{ $noteClass }} fw-medium">{{ $log['note'] ?? 'Thay đổi tỷ lệ' }}</span>
+                                                                            </div>
+                                                                            <div
+                                                                                class="d-flex justify-content-between align-items-center">
+                                                                                @if (isset($log['old_rate']))
+                                                                                    <div class="d-flex align-items-center">
+                                                                                        <span
+                                                                                            class="text-muted">{{ $formattedOldRate }}%</span>
+                                                                                        <i
+                                                                                            class="ri-arrow-right-line mx-2"></i>
+                                                                                        <span
+                                                                                            class="badge bg-primary">{{ $formattedNewRate }}%</span>
+                                                                                    </div>
+                                                                                @else
+                                                                                    <span
+                                                                                        class="badge bg-primary">{{ $formattedNewRate }}%</span>
+                                                                                @endif
+                                                                                <span class="text-muted small">
+                                                                                    <i class="ri-user-line me-1"></i>
+                                                                                    {{ $log['user_name'] ?? 'Hệ thống tự động đánh giá' }}
+                                                                                </span>
+                                                                            </div>
+                                                                        </li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            @else
+                                                                <em>Không có lịch sử thay đổi</em>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @endforeach
                                     </tbody>
                                 </table>
@@ -345,84 +452,6 @@
                             {{ $instructorCommissions->appends(request()->query())->links() }}
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalLog_{{ $instructorCommission->id }}" tabindex="-1"
-        aria-labelledby="modalLogLabel_{{ $instructorCommission->id }}" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable modal-md">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalLogLabel_{{ $instructorCommission->id }}">
-                        Lịch sử thao tác
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
-                </div>
-                <div class="modal-body">
-                    @if ($logs)
-                        @php
-                            usort($logs, function ($a, $b) {
-                                return strtotime($b['changed_at']) <=> strtotime($a['changed_at']);
-                            });
-                        @endphp
-                        <ul class="list-unstyled mb-0 small history-log-list">
-                            @foreach ($logs as $log)
-                                @php
-                                    $formattedOldRate = isset($log['old_rate'])
-                                        ? (fmod($log['old_rate'] * 100, 1) == 0
-                                            ? number_format($log['old_rate'] * 100, 0)
-                                            : number_format($log['old_rate'] * 100, 2))
-                                        : 'N/A';
-
-                                    $formattedNewRate = isset($log['new_rate'])
-                                        ? fmod($log['new_rate'] * 100, 1) == 0
-                                            ? number_format($log['new_rate'] * 100, 0)
-                                            : number_format($log['new_rate'] * 100, 2)
-                                        : 'N/A';
-
-                                    $noteClass = '';
-                                    if (isset($log['note'])) {
-                                        if (strpos($log['note'], 'Tăng') !== false) {
-                                            $noteClass = 'text-success';
-                                        } elseif (strpos($log['note'], 'Giảm') !== false) {
-                                            $noteClass = 'text-danger';
-                                        } else {
-                                            $noteClass = 'text-muted';
-                                        }
-                                    }
-                                @endphp
-                                <li>
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="badge bg-light text-dark">
-                                            <i class="ri-calendar-line me-1"></i>
-                                            {{ \Carbon\Carbon::parse($log['changed_at'])->format('d/m/Y H:i') }}
-                                        </span>
-                                        <span
-                                            class="{{ $noteClass }} fw-medium">{{ $log['note'] ?? 'Thay đổi tỷ lệ' }}</span>
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        @if (isset($log['old_rate']))
-                                            <div class="d-flex align-items-center">
-                                                <span class="text-muted">{{ $formattedOldRate }}%</span>
-                                                <i class="ri-arrow-right-line mx-2"></i>
-                                                <span class="badge bg-primary">{{ $formattedNewRate }}%</span>
-                                            </div>
-                                        @else
-                                            <span class="badge bg-primary">{{ $formattedNewRate }}%</span>
-                                        @endif
-                                        <span class="text-muted small">
-                                            <i class="ri-user-line me-1"></i>
-                                            {{ $log['user_name'] ?? 'Hệ thống tự động đánh giá' }}
-                                        </span>
-                                    </div>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @else
-                        <em>Không có lịch sử thay đổi</em>
-                    @endif
                 </div>
             </div>
         </div>
