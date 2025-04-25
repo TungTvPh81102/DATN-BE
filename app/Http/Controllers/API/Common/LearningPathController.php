@@ -593,11 +593,15 @@ class LearningPathController extends Controller
 
                     $lessonProgress->is_completed = true;
 
-                    UserQuizSubmission::query()->create([
-                        'user_id' => $user->id,
-                        'quiz_id' => $lessonable->id,
-                        'answers' => json_encode($answers)
-                    ]);
+                    UserQuizSubmission::query()->updateOrCreate(
+                        [
+                            'user_id' => $user->id,
+                            'quiz_id' => $lessonable->id
+                        ],
+                        [
+                            'answers' => json_encode($answers)
+                        ]
+                    );
 
                     break;
 
@@ -933,7 +937,7 @@ class LearningPathController extends Controller
 
             $course = Course::query()
                 ->where('slug', $slug)
-             ->whereIn('status', ['draft', 'approved'])
+                ->whereIn('status', ['draft', 'approved'])
                 ->first();
 
             if (!$course) {
