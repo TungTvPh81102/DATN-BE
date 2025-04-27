@@ -22,6 +22,7 @@ use App\Http\Controllers\API\Instructor\ChapterController;
 use App\Http\Controllers\API\Instructor\CouponController as InstructorCouponController;
 use App\Http\Controllers\API\Instructor\CourseController;
 use App\Http\Controllers\API\Instructor\DocumentController;
+use App\Http\Controllers\API\Instructor\LearnerController;
 use App\Http\Controllers\API\Instructor\LessonController;
 use App\Http\Controllers\API\Instructor\LivestreamController;
 use App\Http\Controllers\API\Instructor\PostController;
@@ -333,6 +334,7 @@ Route::middleware('auth:sanctum')->group(function () {
                         ->group(function () {
                             Route::get('/', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'index']);
                             Route::get('/{learner}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'getLearnerProgress']);
+                            Route::get('/{learner}/weekly-study-time', [LearnerController::class, 'getWeeklyStudyTime']);
                         });
 
                     #============================== ROUTE COURSE =============================

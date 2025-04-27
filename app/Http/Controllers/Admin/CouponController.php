@@ -77,6 +77,7 @@ class CouponController extends Controller
     public function store(StoreCouponRequest $request)
     {
         try {
+            // dd($request->all());
             DB::beginTransaction();
 
             $user = Auth::user();
@@ -127,7 +128,7 @@ class CouponController extends Controller
     {
         $coupon = Coupon::query()
             ->with(['couponUses' => function ($query) {
-                $query->select('id', 'coupon_id', 'user_id');
+                $query->select('id', 'coupon_id', 'user_id', 'status');
             }, 'couponUses.user:id,name,email,avatar'])
             ->findOrFail($id);
 
@@ -142,20 +143,64 @@ class CouponController extends Controller
     public function update(UpdateCouponRequest $request, string $id)
     {
         try {
+            // dd($request->all());
             DB::beginTransaction();
+
             $coupon = Coupon::findOrFail($id);
             $data = $request->validated();
+
             $data['discount_max_value'] = (empty($data['discount_max_value']) || $data['discount_type'] == 'fixed') ? 0 : $data['discount_max_value'];
             $coupon->update($data);
 
+            // Lấy danh sách user mới được chọn
+            $newUserIds = $request->selected_users;
+            // dd($newUserIds);
+            // dd($request->selected_users);
+            // Lấy danh sách user hiện tại trong coupon_uses
+            $existingUserIds = $coupon->couponUses()->pluck('user_id')->toArray();
+            // dd($newUserIds, $existingUserIds);
+            // Tìm user cần thêm mới
+            $usersToAdd = array_diff($newUserIds, $existingUserIds);
+                // dd($usersToAdd);
+            // Tìm user cần xoá
+            $usersToDelete = array_diff($existingUserIds, $newUserIds);
+
+            // Xoá user không còn trong danh sách
+            if (!empty($usersToDelete)) {
+                $coupon->couponUses()->whereIn('user_id', $usersToDelete)->delete();
+            }
+
+            // Thêm user mới vào
+            if (!empty($usersToAdd)) {
+                $now = now();
+                $batchData = collect($usersToAdd)->map(function ($userId) use ($coupon, $now) {
+                    return [
+                        'user_id' => $userId,
+                        'coupon_id' => $coupon->id,
+                        'status' => 'unused',
+                        'expired_at' => $now->clone()->addDays(7),
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ];
+                })->filter()->toArray(); // Đảm bảo chỉ có các user hợp lệ
+
+                if (!empty($batchData)) {
+                    DB::table('coupon_uses')->insert($batchData);
+                }
+            }
+
             DB::commit();
+
             return redirect()->route('admin.coupons.edit', $coupon->id)->with('success', 'Cập nhật thành công');
         } catch (\Exception $e) {
             DB::rollBack();
             $this->logError($e);
+
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
+
+
     public function exportCoupon()
     {
         try {
@@ -171,10 +216,9 @@ class CouponController extends Controller
     {
         try {
 
-        Excel::import(new CouponsImport, $request->file('file'));
+            Excel::import(new CouponsImport, $request->file('file'));
 
-        return redirect()->route('admin.coupons.index')->with('success', 'Import dữ liệu thành công');
-
+            return redirect()->route('admin.coupons.index')->with('success', 'Import dữ liệu thành công');
         } catch (\Exception $e) {
 
             $this->logError($e);

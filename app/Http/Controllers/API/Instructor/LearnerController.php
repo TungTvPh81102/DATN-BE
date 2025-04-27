@@ -350,4 +350,44 @@ class LearnerController extends Controller
             'weeklyData' => $weeklyStudyTime->values()->all()
         ];
     }
+    public function getWeeklyStudyTime(Request $request, string $code)
+    {
+        try {
+            $instructor = Auth::user();
+    
+            if (!$instructor || !$instructor->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+    
+            $learner = User::where('code', $code)->first();
+    
+            if (!$learner) {
+                return $this->respondNotFound('Không tìm thấy học viên');
+            }
+    
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+    
+            if (!$startDate || !$endDate) {
+                $request->merge([
+                    'start_date' => now()->subYear()->startOfDay()->toDateTimeString(),
+                    'end_date' => now()->endOfDay()->toDateTimeString(),
+                ]);
+            } else {
+                $request->merge([
+                    'start_date' => Carbon::parse($startDate)->startOfDay()->toDateTimeString(),
+                    'end_date' => Carbon::parse($endDate)->endOfDay()->toDateTimeString(),
+                ]);
+            }
+    
+            $studyTime = $this->calculateWeeklyStudyTime($learner->id, $request);
+    
+            return $this->respondOk('Thời gian học hàng tuần của học viên: ' . $learner->name, $studyTime);
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError();
+        }
+    }
+    
+
 }
