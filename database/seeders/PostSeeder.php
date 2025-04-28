@@ -85,7 +85,7 @@ Tuy nhiên, việc chuyển đổi sang đám mây cũng đặt ra những thác
             ],
         ];
 
-        $user = User::query()->where('email', 'quaixe121811@gmail.com')->first();
+        $user = User::query()->where('email', 'coursemely@gmail.com')->first();
 
         foreach ($techPosts as $post) {
             Post::create([

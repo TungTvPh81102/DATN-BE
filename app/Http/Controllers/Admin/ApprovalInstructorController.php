@@ -197,6 +197,7 @@ class ApprovalInstructorController extends Controller
             $approval->note = $note;
             $approval->{$status . '_at'} = now();
             $approval->approver_id = auth()->id();
+            $approval->logApprovalAction($status, auth()->user(), $note);
             $approval->save();
 
             $user->syncRoles([$newRole]);

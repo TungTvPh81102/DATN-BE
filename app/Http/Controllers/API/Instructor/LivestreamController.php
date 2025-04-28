@@ -5,23 +5,30 @@ namespace App\Http\Controllers\API\Instructor;
 use App\Events\LiveChatMessageSent;
 use App\Events\UserJoinedLiveSession;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\LiveStream\StoreLiveSchedule;
 use App\Models\Conversation;
 use App\Models\ConversationUser;
 use App\Models\LiveSession;
 use App\Models\LiveSessionParticipant;
+use App\Models\LiveStreamCredential;
 use App\Models\Message;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
+use App\Traits\UploadToLocalTrait;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class LivestreamController extends Controller
 {
-    use LoggableTrait, ApiResponseTrait;
+    use LoggableTrait, ApiResponseTrait, UploadToLocalTrait;
+
+    const FOLDER = 'live-schedules';
 
     public function index()
     {
@@ -194,6 +201,77 @@ class LivestreamController extends Controller
         }
     }
 
+    public function getStreamKey()
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $liveStreamCredential = LiveStreamCredential::query()
+                ->where('instructor_id', $user->id)
+                ->first();
+
+            if (empty($liveStreamCredential)) {
+                return $this->respondNotFound('Không tìm thấy mã sự kiện phát sóng');
+            }
+
+            return $this->respondOk('Mã sự kiện phát sóng', $liveStreamCredential);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau!');
+        }
+    }
+
+    public function generateStreamKey(Request $request)
+    {
+        try {
+            DB::beginTransaction();
+
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+
+            $existing = LiveStreamCredential::query()->where('instructor_id', $user->id)->first();
+
+            if ($existing) {
+                return $this->respondError('Bạn đã có mã sự kiện trực tiếp');
+            }
+
+            $stream = $this->liveStream('Mã sự kiện phát sóng của giảng viên ' . $user->name);
+
+            Log::info('Stream key generated: ' . json_encode($stream));
+
+            if (empty($stream)) {
+                return $this->respondError('Không tìm thấy nã sự kiện phát sống');
+            }
+
+            $data = [
+                'instructor_id' => $user->id,
+                'stream_key' => $stream['stream_key'],
+                'mux_playback_id' => $stream['playback_id'],
+                'mux_stream_id' => $stream['stream_id'],
+            ];
+
+            $liveStreamCredential = LiveStreamCredential::query()->create($data);
+
+            DB::commit();
+            return $this->respondCreated('Tạo phiên live thành công',   $liveStreamCredential);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau!');
+        }
+    }
+
     public function joinLiveSession($liveSessionId)
     {
         try {
@@ -262,7 +340,6 @@ class LivestreamController extends Controller
                     'name' => $user->name,
                 ] : null
             ]);
-
         } catch (\Exception $e) {
             $this->logError($e);
 
@@ -311,7 +388,6 @@ class LivestreamController extends Controller
                 ]
             );
 
-
             $message = Message::query()->create([
                 'conversation_id' => $conversation->id,
                 'sender_id' => $user->id,
@@ -349,8 +425,112 @@ class LivestreamController extends Controller
 
         return [
             'stream_key' => $data['data']['stream_key'],
+            'stream_id' => $data['data']['id'],
             'playback_id' => $data['data']['playback_ids'][0]['id'],
         ];
+    }
+
+    public function getLiveSchedules(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $liveSchedules = LiveSession::query()
+                ->where('instructor_id', $user->id)
+                ->orderBy('starts_at', 'desc')
+                ->get()->map(function ($schedule) {
+                    if ($schedule->thumbnail) {
+                        $schedule->thumbnail = Storage::url($schedule->thumbnail);
+                    }
+                    return $schedule;
+                });
+
+            if ($liveSchedules->isEmpty()) {
+                return $this->respondNotFound('Không tìm thấy lịch phát sóng');
+            }
+
+            return $this->respondOk('Danh sách lịch phát sóng', $liveSchedules);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau!');
+        }
+    }
+
+    public function getLiveSchedule(string $code)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $liveSchedule = LiveSession::query()
+                ->with([
+                    'instructor',
+                    'liveStreamCredential',
+                ])
+                ->where('instructor_id', $user->id)
+                ->where('code', $code)
+                ->first();
+
+            if (empty($liveSchedule)) {
+                return $this->respondNotFound('Không tìm thấy lịch phát sóng');
+            }
+
+            if ($liveSchedule->thumbnail) {
+                $liveSchedule->thumbnail = Storage::url($liveSchedule->thumbnail);
+            }
+
+            return $this->respondOk('Thông tin lịch phát sóng', $liveSchedule);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau!');
+        }
+    }
+
+    public function createLiveSchedule(StoreLiveSchedule $request)
+    {
+        try {
+            $data = $request->validated();
+
+            $user = Auth::user();
+
+            if (!$user || !$user->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+
+            $liveStreamCredential = LiveStreamCredential::query()
+                ->where('instructor_id', $user->id)
+                ->first();
+
+            if (empty($liveStreamCredential)) {
+                return $this->respondNotFound('Không tìm thấy mã sự kiện phát sóng');
+            }
+
+            $data['code'] = Str::uuid()->toString();
+            $data['instructor_id'] = $user->id;
+            $data['starts_at'] = Carbon::parse($data['starts_at'])->tz('Asia/Ho_Chi_Minh')->format('Y-m-d H:i:s');
+            $data['live_stream_credential_id'] = $liveStreamCredential->id;
+
+            if ($request->hasFile('thumbnail')) {
+                $data['thumbnail'] = $this->uploadToLocal($request->file('thumbnail'), self::FOLDER);
+            }
+
+            $liveSession = LiveSession::create($data);
+
+            return $this->respondOk('Tạo lịch phát sóng thành công', $liveSession);
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau!');
+        }
     }
 
     protected function createTemporaryUser($liveSessionId)

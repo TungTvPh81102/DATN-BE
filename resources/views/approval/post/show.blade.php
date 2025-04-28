@@ -215,7 +215,7 @@
                             </div>
                             <div class="card-body">
                                 @php
-                                    $approval_logs = collect(json_decode($approval->approval_logs, true))
+                                    $approval_logs = collect($approval->approval_logs)
                                         ->sortByDesc('action_at')
                                         ->values()
                                         ->all();

@@ -138,7 +138,7 @@ class WalletController extends Controller
                 ->with('role', function ($query) {
                     $query->where('name', 'admin');
                 })
-                ->where('email', 'quaixe121811@gmail.com')
+                ->where('email', 'coursemely@gmail.com')
                 ->first();
 
             $managers->notify(new WithdrawalNotification($withdrawalRequest, $user));

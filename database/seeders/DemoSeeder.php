@@ -99,7 +99,7 @@ class DemoSeeder extends Seeder
 
                         Follow::createOrFirst([
                             'follower_id' => $userId,
-                            'instructor_id' => $instructor->id, 
+                            'instructor_id' => $instructor->id,
                         ]);
 
                         $chapterIds = Chapter::where('course_id', $course['id'])->pluck('id');

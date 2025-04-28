@@ -156,7 +156,7 @@ class SendRequestController extends Controller
             $approvable->save();
 
             $manager = User::query()
-                ->where('email', 'quaixe121811@gmail.com')
+                ->where('email', 'coursemely@gmail.com')
                 ->first();
 
             $manager->notify(new CourseRequestToModifyContentNotification($course));
