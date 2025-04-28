@@ -58,6 +58,7 @@ class Approvable extends Model
     {
         return $this->belongsTo(Post::class, 'approvable_id');
     }
+
     public function logApprovalAction($status, $approverId, $note = null, $reason = null)
     {
         $logs = $this->approval_logs ?? [];
@@ -74,6 +75,6 @@ class Approvable extends Model
             'action_at' => now()->toDateTimeString(),
         ];
 
-        $this->update(['approval_logs' => json_encode($logs)]);
+        $this->update(['approval_logs' => $logs]);
     }
 }

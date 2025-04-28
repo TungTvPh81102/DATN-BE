@@ -44,7 +44,7 @@ use PhpParser\Node\Stmt\Return_;
 class TransactionController extends Controller
 {
     use LoggableTrait, ApiResponseTrait;
-    const walletMail = 'quaixe121811@gmail.com';
+    const walletMail = 'coursemely@gmail.com';
 
     public function index()
     {

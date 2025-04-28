@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignIdFor(\App\Models\User::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(\App\Models\LiveSession::class)->constrained()->cascadeOnDelete();
-            $table->string('role')->nullable();
+            $table->enum('role', ['viewer', 'moderator'])->default('viewer');
             $table->timestamp('joined_at')->nullable();
             $table->timestamps();
         });

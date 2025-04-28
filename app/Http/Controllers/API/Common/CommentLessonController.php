@@ -183,9 +183,11 @@ class CommentLessonController extends Controller
             }
 
             $customCheck = function ($text, $profanities) {
-                $text = strtolower($text);
+                $plainText = strip_tags($text);
+                $plainText = strtolower($plainText);
+                $plainText = preg_replace('/[^a-z0-9\s]/', '', $plainText);
                 foreach ($profanities as $word) {
-                    if (stripos($text, strtolower($word)) !== false) {
+                    if (stripos( $plainText, strtolower($word)) !== false) {
                         return true;
                     }
                 }
@@ -364,7 +366,9 @@ class CommentLessonController extends Controller
         }
 
         $profanities = config('blasp.profanities', []);
-        $content = strtolower($text);
+        $content = strip_tags($text); 
+        $content = strtolower($content); 
+        $content = preg_replace('/[^a-z0-9\s]/', '', $content);
 
         foreach ($profanities as $word) {
             if (stripos($content, strtolower($word)) !== false) {

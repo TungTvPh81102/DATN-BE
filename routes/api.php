@@ -77,6 +77,8 @@ Route::get('/reset-password/{token}', function ($token) {
     return view('emails.auth.reset-password', ['token' => $token]);
 })->middleware('guest')->name('password.reset');
 
+Route::post('/webhooks/mux', [App\Http\Controllers\API\Common\MuxWebhookController::class, 'handleWebhook']);
+
 #============================== ROUTE SEARCH =============================
 Route::prefix('search')
     ->group(function () {
@@ -102,6 +104,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/generate-lesson-content', [AICourseController::class, 'generateLessonContent']);
     });
 
+    Route::post('/check-password', [CommonController::class, 'checkPassword']);
 
     Route::post('/chat-box', [CommonController::class, 'chatBox']);
     Route::delete('/chat-box/clear', [CommonController::class, 'clearChatHistory']);
@@ -313,6 +316,12 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->group(function () {
                     Route::get('/', [LivestreamController::class, 'getLivestreams']);
                     Route::post('/', [LivestreamController::class, 'startLivestream']);
+                    Route::get('get-stream-key', [LivestreamController::class, 'getStreamKey']);
+                    Route::post('generate-stream-key', [LivestreamController::class, 'generateStreamKey']);
+
+                    Route::get('/schedule', [LivestreamController::class, 'getLiveSchedules']);  
+                    Route::get('/schedule/{livestream}', [LivestreamController::class, 'getLiveSchedule']);                  
+                    Route::post('/schedule', [LivestreamController::class, 'createLiveSchedule']);
                 });
 
             #============================== ROUTE FEEDBACK =============================

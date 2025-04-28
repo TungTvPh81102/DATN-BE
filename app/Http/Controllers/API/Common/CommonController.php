@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -459,5 +460,32 @@ class CommonController extends Controller
     {
         Session::forget('chat_history');
         return $this->respondNoContent();
+    }
+
+    public function checkPassword(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondUnauthorized('Vui lòng đăng nhập');
+            }
+
+            $password = $request->input('password');
+
+            if (empty($password)) {
+                return $this->respondError('Vui lòng nhập mật khẩu');
+            }
+
+            if (!Hash::check($password, $user->password)) {
+                return $this->respondError('Mật khẩu không chính xác');
+            }
+
+            return $this->respondOk('Mật khẩu chính xác');
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
     }
 }
