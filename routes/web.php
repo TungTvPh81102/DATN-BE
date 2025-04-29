@@ -136,6 +136,7 @@ Route::prefix('admin')->as('admin.')
                 ->can('permission.read');
             Route::get('/create', [PermissionController::class, 'create'])->name('create')
                 ->can('permission.create');
+            Route::get('/export', [PermissionController::class, 'export'])->name('export');
             Route::post('/', [PermissionController::class, 'store'])->name('store');
             Route::get('/edit/{permission}', [PermissionController::class, 'edit'])->name('edit');
             Route::put('/{permission}', [PermissionController::class, 'update'])->name('update')->can('permission.update');
