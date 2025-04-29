@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\PermissionExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Permissions\StorePermissionRequest;
 use App\Http\Requests\Admin\Permissions\UpdatePermissionRequest;
@@ -10,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PermissionController extends Controller
 {
@@ -178,5 +180,17 @@ class PermissionController extends Controller
         }
 
         return $query;
+    }
+    public function export()
+    {
+        try {
+
+            return Excel::download(new PermissionExport, 'Permissions.xlsx');
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
     }
 }
