@@ -9,6 +9,7 @@ use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
 use App\Http\Controllers\API\Common\FilterController;
 use App\Http\Controllers\API\Common\FollowController;
+use App\Http\Controllers\API\Common\LiveSessionController;
 use App\Http\Controllers\API\Common\RatingController;
 use App\Http\Controllers\API\Common\ReactionController;
 use App\Http\Controllers\API\Common\SearchController;
@@ -67,11 +68,10 @@ Route::get('/vnpay-callback', [TransactionController::class, 'vnpayCallback']);
 Route::get('/momo-callback', [TransactionController::class, 'momoCallback']);
 
 Route::prefix('livestreams')->group(function () {
-    Route::get('/', [LivestreamController::class, 'index']);
-    Route::get('/{livestream}', [LivestreamController::class, 'show']);
-    Route::post('/{livestream}/join', [LivestreamController::class, 'joinLiveSession'])
+    Route::get('/', [LiveSessionController::class, 'getLiveSessions']);
+    Route::get('/{livestream}', [LiveSessionController::class, 'show']) ->middleware('optionalAuth');
+    Route::post('/{livestream}/join', [LiveSessionController::class, 'joinLiveSession'])
         ->middleware('optionalAuth');
-    Route::post('/{livestream}/leave', [LivestreamController::class, 'leave']);
 });
 
 Route::get('/reset-password/{token}', function ($token) {
@@ -98,6 +98,9 @@ Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'get
 Route::get('/{{ Auth::user()->code }}/get-validate-instructor');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('livestreams')->group(function () {
+        Route::post('/{livestream}/send-message', [LiveSessionController::class, 'sendMessage']);
+    });
 
     Route::prefix('ai')->group(function () {
         Route::post('/course-planning', [AICourseController::class, 'generateContent']);
@@ -129,10 +132,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('user', function (Request $request) {
         return $request->user();
-    });
-
-    Route::prefix('livestreams')->group(function () {
-        Route::post('/{livestream}/send-message', [LivestreamController::class, 'sendMessage']);
     });
 
     Route::get('/instructors/{code}/follow-status', [FollowController::class, 'checkUserFollower']);
@@ -320,8 +319,8 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::get('get-stream-key', [LivestreamController::class, 'getStreamKey']);
                     Route::post('generate-stream-key', [LivestreamController::class, 'generateStreamKey']);
 
-                    Route::get('/schedule', [LivestreamController::class, 'getLiveSchedules']);  
-                    Route::get('/schedule/{livestream}', [LivestreamController::class, 'getLiveSchedule']);                  
+                    Route::get('/schedule', [LivestreamController::class, 'getLiveSchedules']);
+                    Route::get('/schedule/{livestream}', [LivestreamController::class, 'getLiveSchedule']);
                     Route::post('/schedule', [LivestreamController::class, 'createLiveSchedule']);
                 });
 

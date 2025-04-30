@@ -5,7 +5,10 @@ namespace App\Http\Controllers\API\Common;
 use App\Events\AlreadyLiveEvent;
 use App\Events\LiveSessionStatusChanged;
 use App\Http\Controllers\Controller;
+use App\Models\Conversation;
+use App\Models\ConversationUser;
 use App\Models\LiveSession;
+use App\Models\LiveSessionParticipant;
 use App\Models\LiveStreamCredential;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
@@ -87,7 +90,7 @@ class MuxWebhookController extends Controller
 
             $scheduledSession = LiveSession::where('instructor_id', $instructorId)
                 ->where('status', 'upcoming')
-                ->where('starts_at', '>=', Carbon::now()) 
+                ->where('starts_at', '>=', Carbon::now())
                 ->orderBy('starts_at', 'asc')
                 ->first();
 
@@ -96,6 +99,43 @@ class MuxWebhookController extends Controller
                     'status' => 'live',
                     'actual_start_time' => Carbon::now(),
                 ]);
+
+                $conversation = Conversation::query()->firstOrCreate([
+                    'owner_id' =>  $instructorId,
+                    'name' => $scheduledSession->title ?? 'Buổi học trực tuyến của giảng viên ' . $instructorId . ' - ' . Carbon::now()->format('d/m/Y H:i'),
+                    'type' => 'group',
+                    'status' => 1,
+                    'conversationable_type' => LiveSession::class,
+                    'conversationable_id' => $scheduledSession->id,
+                ]);
+
+                $existingParticipant = LiveSessionParticipant::query()->where([
+                    'user_id' => $instructorId,
+                    'live_session_id' =>    $scheduledSession->id,
+                ])->first();
+
+                if (!$existingParticipant) {
+                    LiveSessionParticipant::query()->create([
+                        'user_id' => $instructorId,
+                        'live_session_id' =>    $scheduledSession->id,
+                        'role' => 'moderator',
+                        'joined_at' => now()
+                    ]);
+                }
+                
+                $conversationUser = ConversationUser::query()->where([
+                    'conversation_id' => $conversation->id,
+                    'user_id' => $instructorId,
+                ])->first();
+
+                if (!$conversationUser) {
+                    ConversationUser::query()->create([
+                        'conversation_id' => $conversation->id,
+                        'user_id' => $instructorId,
+                        'is_blocked' => false,
+                        'last_read_at' => now()
+                    ]);
+                }
 
                 event(new LiveSessionStatusChanged($scheduledSession->id, 'live', [
                     'session' => $scheduledSession->toArray(),

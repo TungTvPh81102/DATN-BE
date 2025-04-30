@@ -146,8 +146,12 @@ class AuthController extends Controller
             DB::beginTransaction();
 
             $data = $request->only(['name', 'email', 'password', 'repassword']);
-            $data['avatar'] = 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png';
+            $defaultAvatars = [
+                'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png',
+                'https://res.cloudinary.com/dvrexlsgx/image/upload/v1743316311/users/34wNL3FsA1.png',
+            ];
 
+            $data['avatar'] =  $defaultAvatars[array_rand($defaultAvatars)];
             $data['verification_token'] = Str::random(60);
 
             do {
