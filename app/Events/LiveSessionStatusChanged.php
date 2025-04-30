@@ -27,7 +27,7 @@ class LiveSessionStatusChanged implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new Channel('live-sessions.'  . $this->sessionId);
+        return new Channel('live-session.'  . $this->sessionId);
     }
 
     public function broadcastAs()
