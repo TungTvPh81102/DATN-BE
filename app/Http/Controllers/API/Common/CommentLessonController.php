@@ -449,6 +449,7 @@ class CommentLessonController extends Controller
             return $this->respondServerError();
         }
     }
+    
     public function reportCommentLesson(ReportCommentRequest $request, $chapter_id, $lesson_id)
     {
         try {
@@ -490,6 +491,5 @@ class CommentLessonController extends Controller
             $this->logError($e);
             return $this->respondServerError();
         }
-    }
-    
+    } 
 }

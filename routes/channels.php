@@ -28,8 +28,8 @@ Broadcast::channel('notification.{id}', function ($user, $id) {
 
 Broadcast::channel('conversation.{conversationId}', function ($user, $conversationId) {
     $conversationUser = ConversationUser::where('conversation_id', $conversationId)
-    ->where('user_id', $user->id)
-    ->first();
+        ->where('user_id', $user->id)
+        ->first();
 
     if ($conversationUser) {
         return ['id' => $user->id, 'name' => $user->name];
@@ -40,8 +40,8 @@ Broadcast::channel('conversation.{conversationId}', function ($user, $conversati
 
 Broadcast::channel('private-chat.{conversationId}', function ($user, $conversationId) {
     $conversationUser = ConversationUser::where('conversation_id', $conversationId)
-    ->where('user_id', $user->id)
-    ->first();
+        ->where('user_id', $user->id)
+        ->first();
 
     if ($conversationUser) {
         return ['id' => $user->id, 'name' => $user->name];
@@ -52,4 +52,12 @@ Broadcast::channel('private-chat.{conversationId}', function ($user, $conversati
 
 Broadcast::channel('user-status', function ($user) {
     return $user ? ['id' => $user->id, 'name' => $user->name] : null;
+});
+
+Broadcast::channel('presence-live-session.{id}', function ($user, $id) {
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'avatar' => $user->avatar
+    ];
 });

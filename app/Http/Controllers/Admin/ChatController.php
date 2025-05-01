@@ -215,7 +215,7 @@ class ChatController extends Controller
 
             $message->update(['meta_data' => $mediaData]);
 
-            $message->load(['sender', 'media']);
+            $message->load(['sender']);
 
             DB::commit();
 
@@ -382,7 +382,7 @@ class ChatController extends Controller
     {
         $userId = Auth::id();
         $messages = Message::where('conversation_id', $conversationId)
-            ->with('sender', 'media')
+            ->with('sender')
             ->latest()
             ->limit(80)->get()->sortBy('created_at')->values()->toArray();
 

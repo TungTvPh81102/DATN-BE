@@ -726,6 +726,67 @@ class ChatController extends Controller
         }
     }
 
+    public function apiStartChatWithSystem(Request $request)
+    {
+        try {
+            $validator = $request->validate([
+                'reason' => 'required|string',
+                'details' => 'required|string',
+                'description' => 'nullable|string',
+            ]);
+
+            if (!isset($validator['reason']) || !isset($validator['details'])) {
+                return $this->respondError('Lý do và chi tiết không được để trống');
+            }
+
+            $userId = Auth::id();
+            $reason = $request->input('reason');
+            $details = $request->input('details');
+            $additionalDescription = $request->input('description', '');
+            $admin = User::whereHas('roles', function ($q) {
+                $q->where('name', 'admin');
+            })
+                ->first();
+
+            $conversation = Conversation::query()
+                ->where('type', 'direct')
+                ->where('owner_id', $admin->id)
+                ->where('name', 'Cuộc trò chuyện với hệ thống')
+                ->first();
+
+            if (!$conversation) {
+                $conversation = Conversation::create([
+                    'type' => 'direct',
+                    'owner_id' => $userId,
+                    'name' => 'Cuộc trò chuyện với hệ thống'
+                ]);
+
+                $conversation->users()->attach([$userId, $admin->id]);
+            }
+
+            $messageContent = "Yêu cầu hỗ trợ:\n";
+            $messageContent .= "Loại vấn đề: {$reason}\n";
+            $messageContent .= "Chi tiết: {$details}";
+
+            if (!empty($additionalDescription)) {
+                $messageContent .= "\n\nMô tả thêm: {$additionalDescription}";
+            }
+
+            Message::create([
+                'conversation_id' => $conversation->id,
+                'sender_id' => $userId,
+                'content' => $messageContent,
+                'type' => 'text',
+            ]);
+
+            return $this->respondOk('Tạo trò chuyện thành công', $conversation->load('users'));
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+
     public function apiToggleBlockUserInChat(Request $request, string $conversationId, string $action, string $userId)
     {
         try {

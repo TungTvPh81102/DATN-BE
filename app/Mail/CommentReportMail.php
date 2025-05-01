@@ -13,17 +13,12 @@ class CommentReportMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
     public $data;
-    /**
-     * Create a new message instance.
-     */
+   
     public function __construct($data)
     {
         $this->data = $data;
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function build()
     {
         return $this->subject('Báo cáo bình luận trong bài học')
@@ -31,11 +26,6 @@ class CommentReportMail extends Mailable implements ShouldQueue
                     ->with(['data' => $this->data]); 
     }
 
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
     public function attachments(): array
     {
         return [];
