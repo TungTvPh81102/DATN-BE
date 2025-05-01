@@ -160,19 +160,16 @@ class LiveSessionController extends Controller
                             $query->where('user_id', $liveSession->instructor->id);
                         })
                         ->exists();
-                   
+
                     if (!$hasAccess) {
                         $liveSession->can_access = false;
                     }
                 }
             }
 
-            if ($liveSession->can_access) {
-                if (!$user) {
-                    broadcast(new UserJoinedLiveSession($liveSession->id, null));
-                } else {
-                    broadcast(new UserJoinedLiveSession($liveSession->id, $user));
-                }
+            if ($liveSession->can_access && $liveSession->status === 'live') {
+                $liveSession->increment('viewers_count');
+                broadcast(new UserJoinedLiveSession($liveSession->id, $user));
             }
 
             return $this->respondOk('Thông tin phiên live', $liveSession);

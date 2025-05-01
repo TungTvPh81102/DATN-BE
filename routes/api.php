@@ -70,7 +70,7 @@ Route::get('/momo-callback', [TransactionController::class, 'momoCallback']);
 
 Route::prefix('livestreams')->group(function () {
     Route::get('/', [LiveSessionController::class, 'getLiveSessions']);
-    Route::get('/{livestream}', [LiveSessionController::class, 'show']) ->middleware('optionalAuth');
+    Route::get('/{livestream}', [LiveSessionController::class, 'show'])->middleware('optionalAuth');
     Route::post('/{livestream}/join', [LiveSessionController::class, 'joinLiveSession'])
         ->middleware('optionalAuth');
 });
@@ -497,6 +497,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->group(function () {
                     Route::get('/get-direct-chats', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetDirectChats']);
                     Route::post('/start-direct-chat', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiStartDirectChat']);
+                    Route::post('/start-chat-with-system', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiStartChatWithSystem']);
                 });
 
             Route::get('/get-message/{conversationId}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetMessage']);

@@ -286,7 +286,7 @@ class CourseController extends Controller
                 'code' => $data['code'],
                 'name' => $data['name'],
                 'slug' => $data['slug'],
-                'thumbnail' => null,
+                'thumbnail' => self::THUMBNAIL_DEFAULT ?? null,
                 'benefits' => json_encode([]),
                 'requirements' => json_encode([]),
                 'qa' => json_encode([]),
@@ -859,6 +859,10 @@ class CourseController extends Controller
             foreach ($lessons as $lesson) {
                 if (empty($lesson->title)) {
                     $errors[] = "Bài kiểm tra ID {$lesson->id} không có tiêu đề";
+                } elseif (strlen($lesson->title) < 5) {
+                    $errors[] = "Bài kiểm tra ID {$lesson->id} có tiêu đề quá ngắn";
+                } else {
+                    $pass[] = "Bài kiểm tra có tiêu đề hợp lệ";
                 }
 
                 if ($lesson->lessonable_type === Quiz::class) {
@@ -901,7 +905,7 @@ class CourseController extends Controller
         $pass = [];
 
         if ($chapters->count() > 0) {
-            if ( $chapters->count() > 0 && $chapters->count() < 3) {
+            if ($chapters->count() > 0 && $chapters->count() < 3) {
                 $errors[] = "Khóa học phải có ít nhất 3 chương học. Hiện tại có {$chapters->count()} chương.";
             } else {
                 $pass[] = "Khóa học phải có ít nhất 3 chương học.";

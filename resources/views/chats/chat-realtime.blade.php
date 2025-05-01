@@ -1510,11 +1510,6 @@
                         const messageClass = message.sender.id == userId ? 'sender' : 'received';
                         const time = formatTime(message.created_at);
                         const messageContent = `<p>${message.content || ''}</p>`;
-                        if (typeof message?.meta_data === 'object' &&
-                            'read' in message.meta_data &&
-                            'send_at' in message.meta_data) {
-                            message.meta_data = [];
-                        }
                         const mediaPreview = (message?.meta_data || []).map(media => {
                             const {
                                 file_name: fileName,

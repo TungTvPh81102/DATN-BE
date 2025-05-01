@@ -39,9 +39,13 @@ class UserJoinedLiveSession implements ShouldBroadcast
         ];
     }
 
-
     public function broadcastOn()
     {
         return new Channel('live-session.' . $this->liveSessionId);
+    }
+
+    public function broadcastAs()
+    {
+        return 'user-joined';
     }
 }

@@ -741,37 +741,37 @@ class LearningPathController extends Controller
 
                 if (!$question) {
                     $incorrectQuestions[] = [
-                        'question_id' => $answer['question_id'],
-                        'question_text' => null,
+                        'question_id' => $question->id,
+                        'question' => $question->question,
+                        'question_index' => array_search($question->id, $quiz->questions->pluck('id')->toArray()),
+                        'user_answer' => null,
                     ];
                     continue;
                 }
 
-                $isCorrect = false;
+                $isCorrect = $this->isAnswerCorrect($question, $answer['answer_id']);
 
-                if (is_numeric($answer['answer_id'])) {
-                    $selectedAnswer = $question->answers->where('id', $answer['answer_id'])->first();
-
-                    if ($selectedAnswer && $selectedAnswer->is_correct === 1) {
-                        $correctAnswersCount++;
-                        $isCorrect = true;
+                if ($isCorrect) {
+                    $correctAnswersCount++;
+                } else {
+                    $userAnswerText = [];
+                    if (is_numeric($answer['answer_id'])) {
+                        $selectedAnswer = $question->answers->where('id', $answer['answer_id'])->first();
+                        if ($selectedAnswer) {
+                            $userAnswerText = $selectedAnswer->answer;
+                        }
+                    } elseif (is_array($answer['answer_id'])) {
+                        $userAnswerText = $question->answers
+                            ->whereIn('id', $answer['answer_id'])
+                            ->pluck('answer')
+                            ->toArray();
                     }
-                }
 
-                if (is_array($answer['answer_id'])) {
-                    $correctAnswers = $question->answers->where('is_correct', true)->pluck('id')->toArray();
-
-                    if (!array_diff($answer['answer_id'], $correctAnswers) && !array_diff($correctAnswers, $answer['answer_id'])) {
-                        $correctAnswersCount++;
-                        $isCorrect = true;
-                    }
-                }
-
-                if (!$isCorrect) {
                     $incorrectQuestions[] = [
                         'question_id' => $question->id,
-                        'question_text' => $question->question,
+                        'question' => $question->question,
                         'question_index' => array_search($question->id, $quiz->questions->pluck('id')->toArray()),
+                        'user_answer' => $userAnswerText,
                     ];
                 }
             }
@@ -1033,6 +1033,19 @@ class LearningPathController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError();
+        }
+    }
+
+    private function isAnswerCorrect($question, $answerId)
+    {
+        $correctAnswerIds = $question->answers()->where('is_correct', true)->pluck('id')->toArray();
+
+        if (is_array($answerId)) {
+            sort($answerId);
+            sort($correctAnswerIds);
+            return $answerId == $correctAnswerIds;
+        } else {
+            return in_array($answerId, $correctAnswerIds);
         }
     }
 

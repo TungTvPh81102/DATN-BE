@@ -149,6 +149,8 @@ class AuthController extends Controller
             $defaultAvatars = [
                 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png',
                 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1743316311/users/34wNL3FsA1.png',
+                'https://res.cloudinary.com/dvrexlsgx/image/upload/v1746133764/Gemini_Generated_Image_hxv7ekhxv7ekhxv7_tewrs4.jpg',
+                'https://res.cloudinary.com/dvrexlsgx/image/upload/v1746133764/Gemini_Generated_Image_ro99zlro99zlro99_jglbea.jpg'
             ];
 
             $data['avatar'] =  $defaultAvatars[array_rand($defaultAvatars)];
