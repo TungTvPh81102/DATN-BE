@@ -4,6 +4,7 @@ use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
 use App\Http\Controllers\API\Common\BlogController;
+use App\Http\Controllers\API\Common\CommentLessonController;
 use App\Http\Controllers\API\Common\CommonController;
 use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
@@ -210,6 +211,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'deleteComment']);
                     Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getReplies']);
                     Route::get('/comment-block-time', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getCommentBlockTime']);
+                    Route::post('/report-comment/{chapter_id}/{lesson_id}', [CommentLessonController::class, 'reportCommentLesson']);
                     Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'reply']);
                 });
         });

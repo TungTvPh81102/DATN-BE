@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Comments\ReportCommentRequest;
 use App\Http\Requests\API\Lessons\ReplyCommentLessonRequest;
 use App\Http\Requests\API\Lessons\StoreCommentLessonRequest;
+use App\Mail\CommentReportMail;
 use App\Models\Chapter;
 use App\Models\Comment;
 use App\Models\Lesson;
 use App\Models\Reaction;
+use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Blaspsoft\Blasp\Facades\Blasp;
@@ -16,6 +19,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
 
 class CommentLessonController extends Controller
@@ -179,7 +183,7 @@ class CommentLessonController extends Controller
             $lessons = Lesson::query()->find($data['lesson_id']);
 
             if (!$lessons) {
-                return $this->respondNotFound('Không tìm thấy lớp học');
+                return $this->respondNotFound('Không tìm thấy bài học');
             }
 
             $customCheck = function ($text, $profanities) {
@@ -187,7 +191,7 @@ class CommentLessonController extends Controller
                 $plainText = strtolower($plainText);
                 $plainText = preg_replace('/[^a-z0-9\s]/', '', $plainText);
                 foreach ($profanities as $word) {
-                    if (stripos( $plainText, strtolower($word)) !== false) {
+                    if (stripos($plainText, strtolower($word)) !== false) {
                         return true;
                     }
                 }
@@ -205,12 +209,12 @@ class CommentLessonController extends Controller
                 }
 
                 if ($violations > config('comments.max_violations')) {
-                    Redis::setex($blockKey,config('comments.block_duration'), true);
+                    Redis::setex($blockKey, config('comments.block_duration'), true);
                     Redis::del($violationKey);
                     return response()->json([
                         'status' => 'error',
                         'message' => 'Bạn đã bị cấm bình luận trong 1 tiếng do sử dụng từ ngữ không phù hợp quá nhiều lần.',
-                        'countdown' => 3600 
+                        'countdown' => 3600
                     ], 400);
                 }
 
@@ -366,8 +370,8 @@ class CommentLessonController extends Controller
         }
 
         $profanities = config('blasp.profanities', []);
-        $content = strip_tags($text); 
-        $content = strtolower($content); 
+        $content = strip_tags($text);
+        $content = strtolower($content);
         $content = preg_replace('/[^a-z0-9\s]/', '', $content);
 
         foreach ($profanities as $word) {
@@ -376,11 +380,11 @@ class CommentLessonController extends Controller
                 $violations = Redis::incr($violationKey);
 
                 if ($violations === 1) {
-                    Redis::expire($violationKey, 3600); 
+                    Redis::expire($violationKey, 3600);
                 }
 
                 if ($violations > config('comments.max_violations')) {
-                    Redis::setex($blockKey, 3600, true); 
+                    Redis::setex($blockKey, 3600, true);
                     Redis::del($violationKey);
 
                     return $this->respondError('Bạn đã bị cấm bình luận trong 1 tiếng do sử dụng từ ngữ không phù hợp quá nhiều lần', [
@@ -445,4 +449,47 @@ class CommentLessonController extends Controller
             return $this->respondServerError();
         }
     }
+    public function reportCommentLesson(ReportCommentRequest $request, $chapter_id, $lesson_id)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+    
+            $request->validated();
+    
+            $lesson = Lesson::with('chapter.course')->findOrFail($lesson_id);
+    
+            if ($lesson->chapter_id != $chapter_id) {
+                return response()->json(['message' => 'Chương hoặc bài học không hợp lệ.'], 404);
+            }
+    
+            $comment = Comment::with('user')->findOrFail($request->comment_id);
+    
+            $data = [
+                'course_name'     => $lesson->chapter->course->name,
+                'chapter_name'    => $lesson->chapter->title,
+                'lesson_name'     => $lesson->title,
+                'comment_author'  => $comment->user->name ?? 'Không rõ',
+                'comment_content' => $comment->content,
+                'reporter_name'   => $user->name,
+                'report_content'  => $request->report_content,
+            ];
+    
+            $admin = User::whereHas('roles', function ($query) {
+                $query->where('name', 'admin');
+            })->first();
+            if ($admin) {
+                Mail::to($admin->email)->queue(new CommentReportMail($data));
+            }
+    
+            return response()->json(['message' => 'Báo cáo đã được gửi thành công.'], 200);
+    
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError();
+        }
+    }
+    
 }
