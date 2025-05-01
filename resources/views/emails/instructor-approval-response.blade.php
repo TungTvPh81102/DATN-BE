@@ -192,7 +192,7 @@
                     <td align="center">
                         <p style="font-size:13px; color:#aaa; margin-top:20px;">
                             Email này được gửi tự động, vui lòng không trả lời. Nếu bạn cần hỗ trợ, vui lòng liên hệ <a
-                                href="mailto:support@coursemely.com" style="color:#E27447; text-decoration:none;">support@coursemely.com</a>
+                                href="mailto:coursemely@gmail.com" style="color:#E27447; text-decoration:none;">coursemely@gmail.com</a>
                         </p>
                     </td>
                 </tr>

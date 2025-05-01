@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yêu Cầu Kiểm Duyệt Khóa Học - CourseMeLy</title>
+    <title>Thông Báo Buổi Live Sắp Diễn Ra - CourseMeLy</title>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 
@@ -34,49 +34,20 @@
 
                     <tr>
                         <td align="center" style="padding:40px 40px 20px;">
-                            <h2 style="color:#333; margin:0; font-size:24px; font-weight:600;">Xin
-                                chào {{ $admin->name ?? 'Quản trị viên' }},</h2>
+                            <h2 style="color:#333; margin:0; font-size:24px; font-weight:600;">Xin chào
+                                {{ $notifiable->name ?? 'Giảng viên' }},</h2>
                             <p style="color:#666; font-size:16px; line-height:1.6; margin-top:15px;">
-                                Một <strong style="color:#E27447;">yêu cầu kiểm duyệt khóa học mới</strong> vừa được gửi
-                                đến hệ thống và đang chờ bạn xem xét.
+                                Buổi phát sóng trực tiếp của bạn sắp diễn ra trên <strong
+                                    style="color:#E27447;">CourseMeLy</strong>!
+                                Đây là nhắc nhở để bạn chuẩn bị cho buổi giảng dạy sắp tới.
                             </p>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td align="center" style="padding:10px 40px 30px;">
-                            <div
-                                style="background-color:#fff8f5; border-radius:10px; padding:25px; text-align:left; border:1px solid #fce1d6;">
-                                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                                    <tr>
-                                        <td width="100" valign="top">
-                                            <img src="{{ $course->thumbnail }}" alt="Thumbnail khóa học"
-                                                style="width:100px; height:100px; object-fit:cover; border-radius:8px; border:1px solid #eee;">
-                                        </td>
-                                        <td style="padding-left:20px;">
-                                            <h3 style="margin:0 0 10px; color:#333; font-size:18px; font-weight:600;">
-                                                {{ $course->name }}</h3>
-                                            <p style="font-size:14px; color:#666; margin:0 0 8px;">
-                                                <strong>Giảng viên:</strong> {{ $course->instructor->name }}
-                                            </p>
-                                            <p style="font-size:14px; color:#666; margin:0 0 8px;">
-                                                <strong>Danh mục:</strong> {{ $course->category->name }}
-                                            </p>
-                                            <p style="font-size:14px; color:#666; margin:0;">
-                                                <strong>Ngày gửi:</strong>
-                                                {{ now()->format('d/m/Y H:i') }}
-                                            </p>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
                         </td>
                     </tr>
 
                     <tr>
                         <td style="padding:0 40px 30px;">
                             <p style="font-size:18px; font-weight:600; color:#333; margin-bottom:20px;">
-                                <span style="color:#E27447;">📋</span> Thông tin chi tiết:
+                                <span style="color:#E27447;">🎬</span> Thông tin buổi phát sóng:
                             </p>
                             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                                 <tr>
@@ -87,15 +58,13 @@
                                                 <td width="40" valign="top">
                                                     <div
                                                         style="width:40px; height:40px; background-color:#ffeee8; border-radius:50%; display:inline-block; text-align:center; line-height:40px; font-size:18px; color:#E27447;">
-                                                        📖
+                                                        📺
                                                     </div>
                                                 </td>
                                                 <td style="padding-left:15px;">
-                                                    <p
-                                                        style="margin:0 0 5px; color:#444; font-size:16px; font-weight:500;">
-                                                        Số chương: <span
-                                                            style="font-weight:400;">{{ $course->chapters_count ?? '0' }}
-                                                            chương</span>
+                                                    <p style="margin:0; color:#444; font-size:16px; font-weight:500;">
+                                                        Tiêu đề:
+                                                        <strong>{{ $liveSession->title }}</strong>
                                                     </p>
                                                 </td>
                                             </tr>
@@ -113,15 +82,14 @@
                                                 <td width="40" valign="top">
                                                     <div
                                                         style="width:40px; height:40px; background-color:#ffeee8; border-radius:50%; display:inline-block; text-align:center; line-height:40px; font-size:18px; color:#E27447;">
-                                                        📚
+                                                        ⏰
                                                     </div>
                                                 </td>
                                                 <td style="padding-left:15px;">
-                                                    <p
-                                                        style="margin:0 0 5px; color:#444; font-size:16px; font-weight:500;">
-                                                        Số bài học: <span
-                                                            style="font-weight:400;">{{ $course->lessons_count ?? '0' }}
-                                                            bài học</span>
+                                                    <p style="margin:0; color:#444; font-size:16px; font-weight:500;">
+                                                        Thời gian:
+                                                        <strong>{{ $liveSession->starts_at->format('H:i') }},
+                                                            {{ $liveSession->starts_at->format('d/m/Y') }}</strong>
                                                     </p>
                                                 </td>
                                             </tr>
@@ -139,22 +107,13 @@
                                                 <td width="40" valign="top">
                                                     <div
                                                         style="width:40px; height:40px; background-color:#ffeee8; border-radius:50%; display:inline-block; text-align:center; line-height:40px; font-size:18px; color:#E27447;">
-                                                        💰
+                                                        🔗
                                                     </div>
                                                 </td>
                                                 <td style="padding-left:15px;">
-                                                    <p
-                                                        style="margin:0 0 5px; color:#444; font-size:16px; font-weight:500;">
-                                                        Giá khóa học:
-                                                        <span style="font-weight:400;">
-                                                            @if ($course->is_free)
-                                                                Miễn phí
-                                                            @elseif ($course->price_sale)
-                                                                {{ number_format($course->price_sale, 0, ',', '.') }} đ
-                                                            @else
-                                                                {{ number_format($course->price, 0, ',', '.') }} đ
-                                                            @endif
-                                                        </span>
+                                                    <p style="margin:0; color:#444; font-size:16px; font-weight:500;">Mã
+                                                        buổi học:
+                                                        <strong>{{ $liveSession->code }}</strong>
                                                     </p>
                                                 </td>
                                             </tr>
@@ -166,43 +125,43 @@
                     </tr>
 
                     <tr>
-                        <td style="padding:0 40px 30px;">
-                            <div style="background-color:#f7f8fa; border-radius:10px; padding:20px;">
-                                <p style="font-size:15px; line-height:1.5; color:#555; margin:0 0 15px;">
-                                    <strong>Mô tả khóa học:</strong>
-                                </p>
-                                <p style="font-size:14px; line-height:1.6; color:#666; margin:0;">
-                                    {{ $course->description }}
-                                </p>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <tr>
                         <td align="center" style="padding:10px 40px 40px;">
-                            <a href="{{ $approvalUrl }}"
-                                style="display:inline-block; background: linear-gradient(to right, #E27447, #f59776); color:#fff; padding:15px 35px; font-size:16px; text-decoration:none; border-radius:8px; font-weight:600; letter-spacing:0.5px; box-shadow:0 4px 10px rgba(226,116,71,0.3); transition: all 0.3s;">
-                                🔍 XEM XÉT YÊU CẦU KIỂM DUYỆT
-                            </a>
+                            <div style="background-color:#fff8f5; border-radius:10px; padding:25px; text-align:center;">
+                                <p style="font-size:16px; color:#555; margin-bottom:20px;">Vui lòng đăng nhập trước thời
+                                    gian bắt đầu
+                                    15-30 phút để kiểm tra kết nối và chuẩn bị:</p>
+                                <a href="{{ config('app.fe_url') . '/live-streaming/' . $liveSession->code }}"
+                                    style="display:inline-block; background: linear-gradient(to right, #E27447, #f59776); color:#fff; padding:15px 35px; font-size:16px; text-decoration:none; border-radius:8px; font-weight:600; letter-spacing:0.5px; box-shadow:0 4px 10px rgba(226,116,71,0.3); transition: all 0.3s;">
+                                    👉 VÀO PHÒNG PHÁT SÓNG
+                                </a>
+                                <p style="font-size:14px; color:#999; margin-top:25px; font-style:italic;">
+                                    Học viên đã được thông báo và đang chờ đợi buổi học của bạn!
+                                </p>
+                            </div>
                         </td>
                     </tr>
 
                     <tr>
                         <td style="padding:0 40px 30px;">
-                            <div
-                                style="background-color:#fff8f5; border-radius:10px; padding:20px; border-left:4px solid #E27447;">
-                                <p style="font-size:15px; line-height:1.5; color:#825144; margin:0;">
-                                    <strong>Lưu ý:</strong> Vui lòng kiểm tra nội dung khóa học đảm bảo tuân thủ các quy
-                                    định và tiêu chuẩn chất lượng của CourseMeLy trước khi phê duyệt.
-                                </p>
-                            </div>
+                            <p style="font-size:18px; font-weight:600; color:#333; margin-bottom:20px;">
+                                <span style="color:#E27447;">⚡</span> Danh sách kiểm tra trước khi phát sóng:
+                            </p>
+                            <ol style="color:#555; font-size:15px; line-height:1.6; margin:0; padding-left:25px;">
+                                <li style="margin-bottom:10px;">Đảm bảo kết nối internet ổn định và mạnh</li>
+                                <li style="margin-bottom:10px;">Kiểm tra webcam và microphone hoạt động tốt</li>
+                                <li style="margin-bottom:10px;">Chuẩn bị môi trường yên tĩnh, ánh sáng tốt</li>
+                                <li style="margin-bottom:10px;">Sẵn sàng tài liệu giảng dạy và nội dung trình chiếu</li>
+                                <li>Đăng nhập trước 15-30 phút để kiểm tra kỹ thuật</li>
+                            </ol>
                         </td>
                     </tr>
 
                     <tr>
                         <td align="center" style="padding:0 40px 20px;">
                             <p style="font-size:14px; color:#777; border-top:1px solid #eee; padding-top:20px;">
-                                Email này được gửi tự động từ hệ thống CourseMeLy.
+                                Email này được gửi tự động từ hệ thống. Nếu bạn cần hỗ trợ kỹ thuật, hãy <a
+                                    href="#" style="color:#E27447; text-decoration:none;">liên
+                                    hệ với đội ngũ kỹ thuật</a>.
                             </p>
                         </td>
                     </tr>

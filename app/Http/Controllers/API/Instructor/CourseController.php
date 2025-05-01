@@ -286,7 +286,7 @@ class CourseController extends Controller
                 'code' => $data['code'],
                 'name' => $data['name'],
                 'slug' => $data['slug'],
-                'thumbnail' => self::THUMBNAIL_DEFAULT ?? '',
+                'thumbnail' => null,
                 'benefits' => json_encode([]),
                 'requirements' => json_encode([]),
                 'qa' => json_encode([]),

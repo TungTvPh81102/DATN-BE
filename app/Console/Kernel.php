@@ -18,6 +18,8 @@ class Kernel extends ConsoleKernel
         $schedule->command('user:check-activity')->everyMinute();
         $schedule->command('coupons:update-expired-coupons')->everyMinute();
         $schedule->command('posts:publish-scheduled')->everyMinute();
+        $schedule->command('live-session:check-overdue')->everyMinute();
+        $schedule->command('live-session:notify-upcoming')->everyMinute();
     }
 
     /**

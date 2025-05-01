@@ -130,8 +130,8 @@
                         <td align="center">
                             <p style="font-size:13px; color:#aaa; margin-top:20px;">
                                 Email này được gửi tự động, vui lòng không trả lời. Cần hỗ trợ? Liên hệ <a
-                                    href="mailto:support@coursemely.com"
-                                    style="color:#E27447;">support@coursemely.com</a>
+                                    href="mailto:coursemely@gmail.com"
+                                    style="color:#E27447;">coursemely@gmail.com</a>
                             </p>
                         </td>
                     </tr>

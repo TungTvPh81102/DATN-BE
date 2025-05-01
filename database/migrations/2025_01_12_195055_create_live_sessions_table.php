@@ -20,7 +20,7 @@ return new class extends Migration {
             $table->string('thumbnail')->nullable();
             $table->text('description')->nullable();
             $table->enum('visibility', ['public', 'private'])->default('public');
-            $table->enum('status', ['upcoming', 'live', 'ended'])->default('upcoming');
+            $table->enum('status', ['upcoming', 'live', 'ended', 'overdue'])->default('upcoming');
             $table->dateTime('starts_at')->nullable();
             $table->dateTime('actual_start_time')->nullable();
             $table->dateTime('actual_end_time')->nullable();
@@ -29,6 +29,7 @@ return new class extends Migration {
             $table->string('duration')->nullable();
             $table->string('recording_url')->nullable();
             $table->integer('viewers_count')->nullable()->default(0);
+            $table->timestamp('notified_at')->nullable();
             $table->timestamps();
         });
     }

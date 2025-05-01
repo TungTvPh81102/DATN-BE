@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -89,35 +90,53 @@ class UserSeeder extends Seeder
 
     public function run(): void
     {
-        $avatarUrl = 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1743316311/users/34wNL3FsA1.png';
+        DB::transaction(function () {
+            $avatarUrl = 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1743316311/users/34wNL3FsA1.png';
 
-        for ($i = 0; $i < 500; $i++) {
-            do {
-                $uuid = strtolower(str_replace('-', '', Str::uuid()->toString()));
-                $code = substr($uuid, 0, 10);
-            } while (User::query()->where('code', $code)->exists());
+            $total = 500;
+            $start = \Carbon\Carbon::create(2024, 1, 1);
+            $months = \Carbon\Carbon::now()->diffInMonths($start) + 1;
+            $usersPerMonth = intdiv($total, $months);
+            $remainder = $total % $months;
 
-            $name = $this->generateVietnameseName();
-            $email = Str::slug($name, '.') . $i . '@example.com';
+            $index = 0;
 
-            $createdAt = $this->randomDate('2024-01-01', now()->toDateString());
+            for ($m = 0; $m < $months; $m++) {
+                $month = $start->copy()->addMonths($m);
+                $countThisMonth = $usersPerMonth + ($m < $remainder ? 1 : 0); 
 
-            $user = User::create([
-                'code' => $code,
-                'name' => $name,
-                'email' => $email,
-                'password' => Hash::make('Password123'),
-                'avatar' => $avatarUrl,
-                'email_verified_at' => $createdAt,
-                'status' => User::STATUS_ACTIVE,
-                'is_temporary' => false,
-                'created_at' => $createdAt,
-                'updated_at' => $createdAt,
-            ]);
+                for ($i = 0; $i < $countThisMonth; $i++) {
+                    do {
+                        $uuid = strtolower(str_replace('-', '', Str::uuid()->toString()));
+                        $code = substr($uuid, 0, 10);
+                    } while (User::query()->where('code', $code)->exists());
 
-            $user->assignRole('member');
-        }
+                    $name = $this->generateVietnameseName();
+                    $email = Str::slug($name, '.') . $index . '@example.com';
+
+                    $createdAt = $this->randomDate($month->copy()->startOfMonth()->toDateString(), $month->copy()->endOfMonth()->toDateString());
+
+                    $user = User::create([
+                        'code' => $code,
+                        'name' => $name,
+                        'email' => $email,
+                        'password' => Hash::make('Password123'),
+                        'avatar' => $avatarUrl,
+                        'email_verified_at' => $createdAt,
+                        'status' => User::STATUS_ACTIVE,
+                        'is_temporary' => false,
+                        'created_at' => $createdAt,
+                        'updated_at' => $createdAt,
+                    ]);
+
+                    $user->assignRole('member');
+
+                    $index++;
+                }
+            }
+        });
     }
+
 
     private function generateVietnameseName()
     {

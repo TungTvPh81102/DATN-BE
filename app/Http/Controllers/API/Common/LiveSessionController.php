@@ -7,6 +7,7 @@ use App\Events\UserJoinedLiveSession;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
 use App\Models\ConversationUser;
+use App\Models\CourseUser;
 use App\Models\LiveSession;
 use App\Models\LiveSessionParticipant;
 use App\Models\Message;
@@ -27,6 +28,7 @@ class LiveSessionController extends Controller
             $status = $request->query('status', 'live');
 
             $query = LiveSession::query();
+            $query->where('status', '!=', 'overdue');
 
             if ($status === 'upcoming') {
                 $query->where('starts_at', '>', now())
@@ -80,11 +82,13 @@ class LiveSessionController extends Controller
             ];
 
             $countUpcoming = LiveSession::where('starts_at', '>', now())
+                ->where('status', 'upcoming')
                 ->where(function ($subQuery) {
                     $subQuery->whereNull('actual_end_time')
                         ->orWhere('actual_end_time', '>', now());
                 })->count();
             $countLive = LiveSession::where('starts_at', '<=', now())
+                ->where('status', 'live')
                 ->where('actual_start_time', null)
                 ->count();
 
@@ -144,12 +148,32 @@ class LiveSessionController extends Controller
                 return $this->respondNotFound('Không tìm thấy phiên live');
             }
 
+            $liveSession->can_access = true;
 
-            if (!$user) {
-                broadcast(new UserJoinedLiveSession($liveSession->id, null));
+            if ($liveSession->visibility === 'private') {
+                if (!$user) {
+                    $liveSession->can_access = false;
+                } else {
+                    $hasAccess = CourseUser::query()
+                        ->where('user_id', $user->id)
+                        ->whereHas('course', function ($query) use ($liveSession) {
+                            $query->where('user_id', $liveSession->instructor->id);
+                        })
+                        ->exists();
+                   
+                    if (!$hasAccess) {
+                        $liveSession->can_access = false;
+                    }
+                }
             }
 
-            broadcast(new UserJoinedLiveSession($liveSession->id, $user));
+            if ($liveSession->can_access) {
+                if (!$user) {
+                    broadcast(new UserJoinedLiveSession($liveSession->id, null));
+                } else {
+                    broadcast(new UserJoinedLiveSession($liveSession->id, $user));
+                }
+            }
 
             return $this->respondOk('Thông tin phiên live', $liveSession);
         } catch (\Exception $e) {
