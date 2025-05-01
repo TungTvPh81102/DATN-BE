@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -40,5 +41,10 @@ class NewFollowNotification extends Notification implements ShouldBroadcast, Sho
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         return new BroadcastMessage($this->notificationData());
+    }
+
+    public function broadcastOn()
+    {
+        return new PrivateChannel('notification.' . $this->follower->id);
     }
 }

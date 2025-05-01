@@ -438,10 +438,7 @@ class LessonController extends Controller
 
     private function deleteLessonable($lessonable)
     {
-        if ($lessonable instanceof Video) {
-            $this->deleteVideo($lessonable->url, self::VIDEO_LESSON);
-            $this->videoUploadService->deleteVideoFromMux($lessonable->asset_id);
-        } elseif ($lessonable instanceof Document) {
+        if ($lessonable instanceof Document) {
             if ($lessonable->file_path && Storage::exists($lessonable->file_path)) {
                 $this->deleteFromLocal($lessonable->file_path, self::DOCUMENT_LESSON);
             }
@@ -474,7 +471,7 @@ class LessonController extends Controller
             }
 
             sleep(5);
-            $duration = $this->videoUploadService->getVideoDurationToMux($muxVideoUrl['asset_id']);
+            $duration = $this->videoUploadService->getVideoInfoFromMux($muxVideoUrl['asset_id']);
 
             $video->update([
                 'url' => $dataFile['secure_url'],

@@ -26,6 +26,11 @@ class LiveSession extends Model
         'duration',
         'recording_url',
         'viewers_count',
+        'notified_at'
+    ];
+
+    protected $casts = [
+        'starts_at' => 'datetime',
     ];
 
     public function conversation()

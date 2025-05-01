@@ -143,8 +143,8 @@
                     <td align="center">
                         <p style="font-size:14px; color:#999; margin-bottom:10px;">Cần trợ giúp?</p>
                         <p style="font-size:13px; color:#aaa; margin:0;">
-                            Email hỗ trợ: <a href="mailto:support@coursemely.com"
-                                             style="color:#E27447; text-decoration:none;">support@coursemely.com</a> |
+                            Email hỗ trợ: <a href="mailto:coursemely@gmail.com"
+                                             style="color:#E27447; text-decoration:none;">coursemely@gmail.com</a> |
                             Hotline: <a href="tel:+84123456789" style="color:#E27447; text-decoration:none;">0123 456
                                 789</a>
                         </p>

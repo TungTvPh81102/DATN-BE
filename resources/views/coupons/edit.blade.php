@@ -311,28 +311,35 @@
 
                         <div id="user_selection_section">
                             <div class="card">
-                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                    <h5 class="card-title mb-0">Chọn Người Dùng</h5>
-                                    <span class="badge bg-primary">Đã áp dụng: <span
-                                            id="selected_user_count">{{ $coupon->couponUses->count() }}</span> người
-                                        dùng</span>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-12 mb-3">
-                                            <label class="form-label">Tìm Kiếm Người Dùng</label>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <select id="user_select" class="form-control" multiple
-                                                    name="selected_users[]">
-                                                </select>
-                                                <input type="hidden" name="selected_users" id="selected_users_input">
-                                                <button type="button" class="btn btn-primary" id="add_user_btn">
-                                                    Thêm
-                                                </button>
+                                @if (Str::startsWith($coupon->code, 'LUCKYWHEEL'))
+                                        <span class="badge bg-success fs-5">Người chơi quay trúng mã giảm giá tại vòng quay may mắn</span>
+                                @else
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">Chọn Người Dùng</h5>
+                                        <span class="badge bg-primary">Đã áp dụng:
+                                            <span id="selected_user_count">{{ $coupon->couponUses->count() }}</span> người
+                                            dùng
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Tìm Kiếm Người Dùng</label>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <select id="user_select" class="form-control" multiple
+                                                        name="selected_users[]">
+                                                    </select>
+                                                    <input type="hidden" name="selected_users"
+                                                        id="selected_users_input">
+                                                    <button type="button" class="btn btn-primary" id="add_user_btn">
+                                                        Thêm
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endif
+
                             </div>
                         </div>
                     </div>
@@ -521,7 +528,7 @@
                             selectedUsers.push({
                                 id: option.id,
                                 name: option
-                                .name, 
+                                    .name,
                                 email: option.email || null,
                                 avatar: option.avatar || null
                             });

@@ -9,6 +9,7 @@ use App\Models\Conversation;
 use App\Models\ConversationUser;
 use App\Models\Course;
 use App\Models\CourseUser;
+use App\Models\LiveSession;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\User;
@@ -49,6 +50,10 @@ class ChatController extends Controller
                 ->where('type', 'group')
                 ->withCount('users')
                 // ->where('conversationable_type', Course::class)
+                ->where(function ($query) {
+                    $query->whereNull('conversationable_type')
+                        ->orWhere('conversationable_type', '!=', LiveSession::class);
+                })
                 ->get()
                 ->map(function ($conversation) {
                     $data = $conversation->toArray();
@@ -97,6 +102,10 @@ class ChatController extends Controller
                 ->withCount('users')
                 ->with(['users:id,name,avatar'])
                 // ->where('conversationable_type', Course::class)
+                ->where(function ($query) {
+                    $query->whereNull('conversationable_type')
+                        ->orWhere('conversationable_type', '!=', LiveSession::class);
+                })
                 ->get()
                 ->map(function ($conversation) {
                     $data = $conversation->toArray();

@@ -139,10 +139,6 @@ class LessonCodingController extends Controller
                 ? $data['hints']
                 : $coding->hints;
 
-            $data['test_case'] = isset($data['test_case'])
-                ? $data['test_case']
-                : $coding->test_case;
-
             $coding->update($data);
 
             DB::commit();

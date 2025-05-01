@@ -15,9 +15,11 @@ return new class extends Migration {
             $table->string('title');
             $table->string('language')->nullable();
             $table->json('hints')->nullable();
-            $table->text('sample_code')->nullable();
-            $table->text('result_code')->nullable();
+            $table->text('instruct')->nullable();
             $table->text('solution_code')->nullable();
+            $table->longText('code')->nullable();
+            $table->longText('student_code')->nullable();
+            $table->longText('test_case')->nullable();
             $table->timestamps();
         });
     }
