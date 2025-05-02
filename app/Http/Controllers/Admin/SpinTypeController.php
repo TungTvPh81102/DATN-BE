@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\SpinTypes\StoreSpinTypeRequest;
+use App\Http\Requests\Admin\SpinTypes\UpdateSpinTypeRequest;
 use App\Models\SpinType;
 use Illuminate\Http\Request;
 
@@ -22,18 +24,15 @@ class SpinTypeController extends Controller
      */
     public function create()
     {
-        return view('spin-types.create');
+        
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreSpinTypeRequest $request)
     {
-        $request->validate([
-            'name' => 'required|unique:spin_types,name',
-            'display_name' => 'required',
-        ]);
+        $request->validated();
 
         SpinType::create([
             'name' => $request->name,
@@ -56,21 +55,17 @@ class SpinTypeController extends Controller
      */
     public function edit(string $id)
     {
-        $spinType = SpinType::findOrFail($id);
-        return view('spin-types.edit', compact('spinType'));
+
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateSpinTypeRequest $request, string $id)
     {
         $spinType = SpinType::findOrFail($id);
 
-        $request->validate([
-            'name' => 'required|unique:spin_types,name,' . $spinType->id,
-            'display_name' => 'required',
-        ]);
+        $request->validated();
 
         $spinType->update([
             'name' => $request->name,
@@ -83,11 +78,9 @@ class SpinTypeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(SpinType $spinType)
     {
-        $spinType = SpinType::findOrFail($id);
         $spinType->delete();
-
         return redirect()->route('admin.spin-types.index')->with('success', 'Xóa loại phần thưởng thành công');
     }
 }
