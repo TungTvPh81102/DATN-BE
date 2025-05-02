@@ -23,6 +23,7 @@ use App\Traits\UploadToLocalTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
@@ -54,7 +55,9 @@ class QuizController extends Controller
                 return $this->respondForbidden('Bạn không có quyền thực hiện thao tác này');
             }
 
+            $course = $chapter->course;
             $data['order'] = $chapter->lessons->max('order') + 1;
+            $data['is_supplement'] = (int) $course->modification_request === 1;
 
             $quiz = Quiz::query()->create([
                 'title' => $data['title'],
@@ -70,6 +73,7 @@ class QuizController extends Controller
                 'order' => $data['order'],
                 'content' => $data['content'] ?? null,
                 'is_free_preview' => $data['is_free_preview'] ?? false,
+                'is_supplement' => $data['is_supplement'],
             ]);
 
             DB::commit();
@@ -505,5 +509,4 @@ class QuizController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
-
 }

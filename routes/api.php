@@ -210,7 +210,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'deleteComment']);
                     Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getReplies']);
                     Route::get('/comment-block-time', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getCommentBlockTime']);
-                    Route::post('/report-comment/{chapter_id}/{lesson_id}', [CommentLessonController::class, 'reportCommentLesson']);
+                    Route::post('/report-comment/{lesson_id}', [CommentLessonController::class, 'reportCommentLesson']);
                     Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'reply']);
                 });
         });

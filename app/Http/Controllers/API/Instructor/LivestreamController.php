@@ -343,7 +343,7 @@ class LivestreamController extends Controller
                     'liveStreamCredential',
                     'conversation.messages' => function ($query) {
                         $query->select('id', 'conversation_id', 'sender_id', 'content', 'created_at')
-                            ->orderBy('created_at', 'asc')->limit(20);
+                            ->orderBy('created_at', 'desc')->limit(20);
                         $query->with(['sender' => function ($query) {
                             $query->select('id', 'name', 'avatar');
                         }]);

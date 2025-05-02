@@ -55,7 +55,7 @@ class ProcessInstructorRegistrationJob implements ShouldQueue
                     'approved_at' => now(),
                     'note' => 'Duyệt đăng ký trở thành giảng viên.',
                     'approver_id' => null,
-                    'approval_logs' => json_encode([
+                    'approval_logs' => [
                         [
                             'name' => 'Hệ thống',
                             'status' => 'approved',
@@ -63,7 +63,7 @@ class ProcessInstructorRegistrationJob implements ShouldQueue
                             'reason' => null,
                             'action_at' => now()->toISOString(),
                         ]
-                    ])
+                    ]
                 ]);
 
                 $user->syncRoles(['instructor']);

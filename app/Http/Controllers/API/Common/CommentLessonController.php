@@ -449,25 +449,29 @@ class CommentLessonController extends Controller
             return $this->respondServerError();
         }
     }
-    
-    public function reportCommentLesson(ReportCommentRequest $request, $chapter_id, $lesson_id)
+
+    public function reportCommentLesson(ReportCommentRequest $request,  $lesson_id)
     {
         try {
             $user = Auth::user();
             if (!$user) {
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
-    
+
             $request->validated();
-    
+
             $lesson = Lesson::with('chapter.course')->findOrFail($lesson_id);
-    
-            if ($lesson->chapter_id != $chapter_id) {
-                return response()->json(['message' => 'Chương hoặc bài học không hợp lệ.'], 404);
+
+            if ($lesson->chapter_id === null) {
+                return $this->respondError('Chương hoặc bài học không hợp lệ.');
             }
-    
+
             $comment = Comment::with('user')->findOrFail($request->comment_id);
-    
+
+            if ($comment->user_id === $user->id) {
+                return $this->respondError('Bạn không thể báo cáo bình luận của chính mình.');
+            }
+
             $data = [
                 'course_name'     => $lesson->chapter->course->name,
                 'chapter_name'    => $lesson->chapter->title,
@@ -476,20 +480,21 @@ class CommentLessonController extends Controller
                 'comment_content' => $comment->content,
                 'reporter_name'   => $user->name,
                 'report_content'  => $request->report_content,
+                'comment_id'     => $request->comment_id,
             ];
-    
+
             $admin = User::whereHas('roles', function ($query) {
                 $query->where('name', 'admin');
             })->first();
             if ($admin) {
                 Mail::to($admin->email)->queue(new CommentReportMail($data));
             }
-    
-            return response()->json(['message' => 'Báo cáo đã được gửi thành công.'], 200);
-    
+
+            return $this->respondOk('Báo cáo đã được gửi thành công');
         } catch (\Exception $e) {
             $this->logError($e);
+
             return $this->respondServerError();
         }
-    } 
+    }
 }

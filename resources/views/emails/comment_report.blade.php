@@ -176,7 +176,7 @@
                             <div style="background-color:#fff8f5; border-radius:10px; padding:25px; text-align:center;">
                                 <p style="font-size:16px; color:#555; margin-bottom:20px;">Vui lòng xem xét báo cáo này
                                     và thực hiện các biện pháp cần thiết:</p>
-                                <a href="{{ config('app.fe_url') . '/admin/comments/' . $data['comment_id'] }}"
+                                <a href="{{ 'http://127.0.0.1:8000' . '/admin/comments' }}"
                                     style="display:inline-block; background: linear-gradient(to right, #E27447, #f59776); color:#fff; padding:15px 35px; font-size:16px; text-decoration:none; border-radius:8px; font-weight:600; letter-spacing:0.5px; box-shadow:0 4px 10px rgba(226,116,71,0.3); transition: all 0.3s;">
                                     👉 KIỂM TRA BÌNH LUẬN
                                 </a>
