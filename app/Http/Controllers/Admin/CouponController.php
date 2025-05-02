@@ -152,40 +152,34 @@ class CouponController extends Controller
             $data['discount_max_value'] = (empty($data['discount_max_value']) || $data['discount_type'] == 'fixed') ? 0 : $data['discount_max_value'];
             $coupon->update($data);
 
-            // Lấy danh sách user mới được chọn
-            $newUserIds = $request->selected_users;
-            // dd($newUserIds);
-            // dd($request->selected_users);
-            // Lấy danh sách user hiện tại trong coupon_uses
-            $existingUserIds = $coupon->couponUses()->pluck('user_id')->toArray();
-            // dd($newUserIds, $existingUserIds);
-            // Tìm user cần thêm mới
-            $usersToAdd = array_diff($newUserIds, $existingUserIds);
-                // dd($usersToAdd);
-            // Tìm user cần xoá
-            $usersToDelete = array_diff($existingUserIds, $newUserIds);
-
-            // Xoá user không còn trong danh sách
-            if (!empty($usersToDelete)) {
-                $coupon->couponUses()->whereIn('user_id', $usersToDelete)->delete();
-            }
-
-            // Thêm user mới vào
-            if (!empty($usersToAdd)) {
-                $now = now();
-                $batchData = collect($usersToAdd)->map(function ($userId) use ($coupon, $now) {
-                    return [
-                        'user_id' => $userId,
-                        'coupon_id' => $coupon->id,
-                        'status' => 'unused',
-                        'expired_at' => $now->clone()->addDays(7),
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ];
-                })->filter()->toArray(); // Đảm bảo chỉ có các user hợp lệ
-
-                if (!empty($batchData)) {
-                    DB::table('coupon_uses')->insert($batchData);
+            if ($request->has('selected_users')) {
+                $newUserIds = is_array($request->selected_users) ? $request->selected_users : [];
+            
+                $existingUserIds = $coupon->couponUses()->pluck('user_id')->toArray();
+            
+                $usersToAdd = array_diff($newUserIds, $existingUserIds);
+                $usersToDelete = array_diff($existingUserIds, $newUserIds);
+            
+                if (!empty($usersToDelete)) {
+                    $coupon->couponUses()->whereIn('user_id', $usersToDelete)->delete();
+                }
+            
+                if (!empty($usersToAdd)) {
+                    $now = now();
+                    $batchData = collect($usersToAdd)->map(function ($userId) use ($coupon, $now) {
+                        return [
+                            'user_id' => $userId,
+                            'coupon_id' => $coupon->id,
+                            'status' => 'unused',
+                            'expired_at' => $now->clone()->addDays(7),
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ];
+                    })->toArray();
+            
+                    if (!empty($batchData)) {
+                        DB::table('coupon_uses')->insert($batchData);
+                    }
                 }
             }
 

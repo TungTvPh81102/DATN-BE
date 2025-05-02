@@ -300,15 +300,6 @@
                     <div class="form-section">
                         <div class="section-title">Phạm Vi Áp Dụng</div>
 
-                        {{-- <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="system_wide_coupon" name="system_wide"
-                                value="{{ old('system_wide', 'true') }}"
-                                {{ old('system_wide', 'true') == 'true' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="system_wide_coupon">
-                                Áp Dụng Cho Toàn Bộ Hệ Thống
-                            </label>
-                        </div> --}}
-
                         <div id="user_selection_section">
                             <div class="card">
                                 @if (Str::startsWith($coupon->code, 'LUCKYWHEEL'))
@@ -329,8 +320,6 @@
                                                     <select id="user_select" class="form-control" multiple
                                                         name="selected_users[]">
                                                     </select>
-                                                    <input type="hidden" name="selected_users"
-                                                        id="selected_users_input">
                                                     <button type="button" class="btn btn-primary" id="add_user_btn">
                                                         Thêm
                                                     </button>
