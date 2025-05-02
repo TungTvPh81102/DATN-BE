@@ -17,6 +17,7 @@ class Lesson extends Model
         'is_free_preview',
         'order',
         'type',
+        'is_supplement',
         'lessonable_type',
         'lessonable_id',
     ];

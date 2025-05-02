@@ -122,7 +122,7 @@ class LiveSessionController extends Controller
                     },
                     'conversation.messages' => function ($query) {
                         $query->select('id', 'conversation_id', 'sender_id', 'content', 'created_at')
-                            ->orderBy('created_at', 'asc')->limit(20);
+                            ->orderBy('created_at', 'desc')->limit(20);
                         $query->with(['sender' => function ($query) {
                             $query->select('id', 'name', 'avatar');
                         }]);
@@ -176,6 +176,41 @@ class LiveSessionController extends Controller
         } catch (\Exception $e) {
             $this->logError($e);
 
+            return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau!');
+        }
+    }
+
+    public function getChatMessages(string $code, Request $request)
+    {
+        try {
+            $page = $request->input('page', 1);
+            $limit = $request->input('limit', 20);
+
+            $liveSession = LiveSession::where('code', $code)->first();
+
+            if (!$liveSession) {
+                return $this->respondNotFound('Không tìm thấy phiên live');
+            }
+
+            $messages = Message::query()
+                ->where('conversation_id', $liveSession->conversation_id)
+                ->with(['sender' => function ($query) {
+                    $query->select('id', 'name', 'avatar');
+                }])
+                ->orderBy('created_at', 'desc')
+                ->skip(($page - 1) * $limit)
+                ->take($limit)
+                ->get();
+
+            $hasMore = Message::where('conversation_id', $liveSession->conversation_id)
+                ->count() > $page * $limit;
+
+            return $this->respondOk('Tin nhắn phiên live', [
+                'messages' => $messages,
+                'hasMore' => $hasMore
+            ]);
+        } catch (\Exception $e) {
+            $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau!');
         }
     }

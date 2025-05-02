@@ -254,6 +254,10 @@ class LessonController extends Controller
                 return $this->respondNotFound('Không tìm thấy bài học');
             }
 
+            if ($chapter->course->modification_request === 1 && $lesson->is_supplement !== 1) {
+                return $this->respondForbidden('Khi yêu cầu sửa đổi, bạn chỉ có thể xóa các bài học bổ sung mới được thêm vào.');
+            }
+
             $lessonable = $lesson->lessonable;
             $this->deleteLessonable($lessonable);
             $lesson->delete();

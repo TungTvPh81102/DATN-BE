@@ -47,6 +47,7 @@ class LessonCodingController extends Controller
             ]);
 
             $data['order'] = $chapter->lessons->max('order') + 1;
+            $data['is_supplement'] = (int) $chapter->course->modification_request === 1;
 
             $lesson = Lesson::query()->create([
                 'chapter_id' => $chapter->id,
@@ -57,6 +58,7 @@ class LessonCodingController extends Controller
                 'lessonable_id' => $coding->id,
                 'order' => $data['order'],
                 'is_free_preview' => $data['is_free_preview'] ?? false,
+                'is_supplement' => $data['is_supplement'],
             ]);
 
             return $this->respondCreated('Tạo bài tập thành công', $lesson);

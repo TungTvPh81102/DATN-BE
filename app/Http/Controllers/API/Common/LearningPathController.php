@@ -120,6 +120,7 @@ class LearningPathController extends Controller
                         'is_unlocked' => (bool)$isUnlocked,
                         'order' => $lesson->order,
                         'lessonable' => $lesson->lessonable,
+                        'is_supplement' => $lesson->is_supplement,
                     ];
 
                     if ($lesson->type === 'quiz' && $lesson->lessonable_type === Quiz::class) {
@@ -611,17 +612,10 @@ class LearningPathController extends Controller
 
                 case Coding::class:
                     $userCodingInput = $request->input('code');
-                    $userCodeResult = $request->input('result');
 
                     if (!$userCodingInput) {
                         return $this->respondError('Vui lòng thực hiện bài kiểm tra.');
                     }
-
-                    // $expectedResult = $lessonable->result_code;
-
-                    // if (!$userCodeResult || $userCodeResult !== $expectedResult) {
-                    //     return $this->respondError('Kết quả code của bạn chưa đúng.');
-                    // }
 
                     $lessonProgress->is_completed = true;
 
@@ -632,9 +626,6 @@ class LearningPathController extends Controller
                         ],
                         [
                             'code' => $userCodingInput,
-                            'result' => $userCodeResult,
-                            // 'is_correct' => $userCodeResult === $expectedResult,
-                            'is_correct' => true
                         ]
                     );
 
@@ -1061,16 +1052,21 @@ class LearningPathController extends Controller
     private function updateCourseProgress($courseId, $userId)
     {
         try {
-            $totalLessons = Lesson::query()->whereIn('chapter_id', function ($query) use ($courseId) {
-                $query->select('id')->from('chapters')->where('course_id', $courseId);
-            })->count();
+            $totalLessons = Lesson::query()
+                ->whereIn('chapter_id', function ($query) use ($courseId) {
+                    $query->select('id')->from('chapters')->where('course_id', $courseId);
+                })
+                ->where('is_supplement', 0)
+                ->count();
 
             $completedLessons = LessonProgress::query()->where('user_id', $userId)
                 ->where('is_completed', true)
                 ->whereIn('lesson_id', function ($query) use ($courseId) {
-                    $query->select('id')->from('lessons')->whereIn('chapter_id', function ($q) use ($courseId) {
-                        $q->select('id')->from('chapters')->where('course_id', $courseId);
-                    });
+                    $query->select('id')->from('lessons')
+                        ->where('is_supplement', 0)
+                        ->whereIn('chapter_id', function ($q) use ($courseId) {
+                            $q->select('id')->from('chapters')->where('course_id', $courseId);
+                        });
                 })
                 ->count();
 
