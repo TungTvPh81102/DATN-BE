@@ -1,6 +1,24 @@
 @extends('layouts.app')
 @push('page-css')
     <link href="{{ asset('assets/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="{{ asset('assets/css/dashboard.css') }}" />
+    <style>
+        .no-data {
+            text-align: center;
+            font-size: 18px;
+            color: #999;
+            padding: 20px;
+        }
+
+        .highcharts-series rect {
+            transition: all 0.3s ease-in-out;
+        }
+
+        .highcharts-series rect:hover {
+            filter: brightness(1.2);
+            transform: scale(1.05);
+        }
+    </style>
 @endpush
 @section('content')
     <div class="container-fluid">
@@ -19,103 +37,97 @@
                 </div>
             </div>
         </div>
-        <div class="row mb-3 pb-1">
+        <div class="row mb-4">
             <div class="col-12">
-                <div class="d-flex align-items-lg-center flex-lg-row flex-column">
-                    <div class="flex-grow-1">
-                        <h4 class="fs-16 mb-1" id="greeting">Xin chào, {{ Auth::user()->name ?? '' }}!</h4>
-                        <p class="text-muted mb-0">
-                            Chúc bạn một ngày tốt lành!
-                        </p>
-                    </div>
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <h4 class="fs-20 mb-1 text-primary" id="greeting">Xin chào, {{ Auth::user()->name ?? '' }}!</h4>
+                    <p class="text-muted mb-0">Chúc bạn một ngày làm việc hiệu quả!</p>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-xxl-7">
-                <div class="d-flex flex-column">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="card card-animate">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <p class="fw-medium text-muted mb-0">Tổng người dùng duyệt web</p>
-                                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
-                                                    id="analytic-session-user"
-                                                    data-target="28.05">{{ number_format($analyticsUserSession[0]['totalUsers'] ?? 0) }}
-                                                    người</span>
-                                            </h2>
-                                        </div>
-                                        <div>
-                                            <div class="avatar-sm flex-shrink-0">
-                                                <span class="avatar-title bg-info-subtle rounded-circle fs-2">
-                                                    <i class="bx bx-user text-info"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div><!-- end card body -->
-                            </div> <!-- end card-->
-                        </div> <!-- end col-->
-
-                        <div class="col-md-6">
-                            <div class="card card-animate">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between">
-                                        <div>
-                                            <p class="fw-medium text-muted mb-0">Số phiên duyệt web</p>
-                                            <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
-                                                    data-target="97.66"
-                                                    id="session-web">{{ number_format($analyticsUserSession[0]['sessions'] ?? 0) }}
-                                                    phiên</span>
-                                            </h2>
-                                        </div>
-                                        <div>
-                                            <div class="avatar-sm flex-shrink-0">
-                                                <span class="avatar-title bg-info-subtle rounded-circle fs-2">
-                                                    <i class="bx bx-pulse text-info"></i>
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div><!-- end card body -->
-                            </div> <!-- end card-->
-                        </div> <!-- end col-->
-                    </div> <!-- end row-->
-                    <div>
-                        <div class="card" style="min-height: 330px">
+        <div class="row d-flex align-items-stretch">
+            <div class="col-xxl-7 d-flex flex-column">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card card-animate">
                             <div class="card-body">
-                                <div id="line_chart_basic" data-colors='["--vz-primary","--vz-success","--vz-danger"]'
-                                    class="apex-charts" dir="ltr"></div>
-                            </div>
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <p class="fw-medium text-muted mb-0">Tổng người dùng duyệt web</p>
+                                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
+                                                id="analytic-session-user"
+                                                data-target="28.05">{{ number_format($analyticsUserSession[0]['totalUsers'] ?? 0) }}
+                                                người</span>
+                                        </h2>
+                                    </div>
+                                    <div>
+                                        <div class="avatar-sm flex-shrink-0">
+                                            <span class="avatar-title bg-info-subtle rounded-circle fs-2">
+                                                <i class="bx bx-user text-info"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!-- end card body -->
+                        </div> <!-- end card-->
+                    </div> <!-- end col-->
+        
+                    <div class="col-md-6">
+                        <div class="card card-animate">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <p class="fw-medium text-muted mb-0">Số phiên duyệt web</p>
+                                        <h2 class="mt-4 ff-secondary fw-semibold"><span class="counter-value"
+                                                data-target="97.66"
+                                                id="session-web">{{ number_format($analyticsUserSession[0]['sessions'] ?? 0) }}
+                                                phiên</span>
+                                        </h2>
+                                    </div>
+                                    <div>
+                                        <div class="avatar-sm flex-shrink-0">
+                                            <span class="avatar-title bg-info-subtle rounded-circle fs-2">
+                                                <i class="bx bx-pulse text-info"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div><!-- end card body -->
+                        </div> <!-- end card-->
+                    </div> <!-- end col-->
+                </div> <!-- end row-->
+                <div class="flex-grow-1">
+                    <div class="card" style="min-height: 330px">
+                        <div class="card-body">
+                            <div id="line_chart_basic" data-colors='["--vz-primary","--vz-success","--vz-danger"]'
+                                class="apex-charts" dir="ltr"></div>
                         </div>
                     </div>
                 </div>
             </div> <!-- end col-->
-
-            <div class="col-xxl-5">
-                <div class="row">
-                    <div class="col-xl-12">
-                        <div class="card">
-                            <div class="card-header align-items-center d-flex">
-                                <h4 class="card-title mb-0 flex-grow-1">Số lượt xem theo đất nước</h4>
+        
+            <div class="col-xxl-5 d-flex flex-column">
+                <div class="row flex-grow-1">
+                    <div class="col-xl-12 d-flex flex-column">
+                        <div class="card flex-grow-1">
+                            <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
+                                <h4 class="card-title mb-0 flex-grow-1 text-white">Số lượt xem theo đất nước</h4>
                             </div>
-                            <div class="card-body p-0">
-                                <div id="world-map" style="width: 100%; height: 420px;"></div>
-                            </div><!-- end card body -->
-                        </div><!-- end card -->
-                    </div> <!-- end col-->
-
-                </div> <!-- end row-->
-            </div><!-- end col -->
-        </div> <!-- end row-->
+                            <div class="card-body p-0" style="height: 100%;">
+                                <div id="world-map" style="width: 100%; height: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                    
+        </div> <!-- end row-->        
 
         <div class="row">
             <div class="col-xl-6">
                 <div class="card">
-                    <div class="card-header border-0 align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Thời gian truy cập</h4>
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Thời gian truy cập</h4>
                     </div><!-- end card header -->
                     <div class="card-body p-0 pb-2">
                         <div>
@@ -128,8 +140,8 @@
 
             <div class="col-xl-6">
                 <div class="card card-height-100">
-                    <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Thống kê thiết bị sử dụng</h4>
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Thống kê thiết bị sử dụng</h4>
                     </div><!-- end card header -->
                     <div class="card-body p-0">
                         <div>
@@ -143,8 +155,8 @@
         <div class="row">
             <div class="col-xl-4">
                 <div class="card card-height-100">
-                    <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Top 4 trình duyệt sử dụng</h4>
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Top 4 trình duyệt sử dụng</h4>
                     </div><!-- end card header -->
                     <div class="card-body">
                         <div id="user_device_pie_charts" data-colors='["--vz-primary", "--vz-warning", "--vz-info"]'
@@ -162,8 +174,8 @@
 
             <div class="col-xl-4 col-md-6">
                 <div class="card card-height-100">
-                    <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Phân tích tỉ lệ thoát</h4>
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Phân tích tỉ lệ thoát</h4>
                     </div>
 
                     <div id="bounceRateChart"></div>
@@ -172,8 +184,8 @@
 
             <div class="col-xl-4 col-md-6">
                 <div class="card card-height-100">
-                    <div class="card-header align-items-center d-flex">
-                        <h4 class="card-title mb-0 flex-grow-1">Top 7 page có lượt truy cập nhiều nhất</h4>
+                    <div class="card-header bg-primary bg-gradient bg-opacity-60 d-flex align-items-center">
+                        <h4 class="card-title mb-0 flex-grow-1 text-white">Top 7 page có lượt truy cập nhiều nhất</h4>
                     </div><!-- end card header -->
                     <div class="card-body">
                         <div class="table-responsive table-card">
@@ -205,7 +217,6 @@
                 </div><!-- end card -->
             </div><!-- end col -->
         </div><!-- end row -->
-
     </div>
 @endsection
 
@@ -223,6 +234,22 @@
     <script src="{{ asset('assets/js/pages/daterangepicker.min.js') }}"></script>
 
     <script src="{{ asset('assets/libs/swiper/swiper-bundle.min.js') }}"></script>
+    <!-- 1. Highmaps = Highcharts + Maps -->
+    <script src="https://code.highcharts.com/maps/highmaps.js"></script>
+
+    <!-- 2. Các module mở rộng khác -->
+    <script src="https://code.highcharts.com/highcharts-more.js"></script>
+    <script src="https://code.highcharts.com/modules/annotations.js"></script>
+    <script src="https://code.highcharts.com/modules/heatmap.js"></script>
+    <script src="https://code.highcharts.com/modules/packed-bubble.js"></script>
+    <script src="https://code.highcharts.com/modules/sankey.js"></script>
+    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+    <!-- 3. Module export (chỉ cần 1 lần) -->
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+    <!-- 4. Map data -->
+    <script src="https://code.highcharts.com/mapdata/custom/world.js"></script>
 
     <script>
         var currentHour = new Date().getHours();
@@ -388,12 +415,13 @@
                 chart = undefined;
             }
 
+            // Xóa nội dung container
             chartContainer.innerHTML = "";
 
             if (!Array.isArray(data) || data.length === 0) {
                 chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
-            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
-        </div>`;
+                    <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+                </div>`;
                 return;
             }
 
@@ -405,36 +433,51 @@
             }
 
             let categories = extractSeries(data, type, "date").map(item => item.date);
-            let series = [{
-                    name: "Người dùng mới",
-                    data: extractSeries(data, type, "newUsers").map(item => item.value)
-                },
-                {
-                    name: "Tổng người dùng",
-                    data: extractSeries(data, type, "totalUsers").map(item => item.value)
-                },
-                {
-                    name: "Số phiên duyệt web",
-                    data: extractSeries(data, type, "sessions").map(item => item.value)
-                }
-            ];
+            let newUsersData = extractSeries(data, type, "newUsers").map((item, index) => [categories[index], item.value]);
+            let totalUsersData = extractSeries(data, type, "totalUsers").map((item, index) => [categories[index], item
+                .value
+            ]);
+            let sessionsData = extractSeries(data, type, "sessions").map((item, index) => [categories[index], item.value]);
 
-            let options = {
-                series: series,
-                chart: {
-                    type: 'line',
-                    height: 300,
-                    toolbar: {
-                        show: false
+            // Highcharts configuration
+            chart = Highcharts.chart('line_chart_basic', {
+                credits: {
+                    enabled: false
+                },
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    type: 'category',
+                    categories: categories
+                },
+                yAxis: {
+                    title: {
+                        text: 'Lượt'
                     }
                 },
-                xaxis: {
-                    categories: categories
-                }
-            };
-
-            chart = new ApexCharts(chartContainer, options);
-            chart.render();
+                legend: {
+                    enabled: true
+                },
+                plotOptions: {
+                    series: {
+                        marker: {
+                            enabled: true,
+                            radius: 3
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Người dùng mới',
+                    data: newUsersData.map(item => item[1])
+                }, {
+                    name: 'Tổng người dùng',
+                    data: totalUsersData.map(item => item[1])
+                }, {
+                    name: 'Số phiên duyệt web',
+                    data: sessionsData.map(item => item[1])
+                }]
+            });
         }
 
         let chartBrowerUsers;
@@ -451,8 +494,8 @@
 
             if (!data || data.length == 0) {
                 chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
-            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
-        </div>`;
+                    <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+                </div>`;
                 return;
             }
 
@@ -462,42 +505,42 @@
                 "#ff5733"
             ];
 
-            let options = {
-                series: screenPageViews,
-                labels: browsers,
+            // Tạo series data cho Highcharts
+            let seriesData = browsers.map((browser, index) => ({
+                name: browser,
+                y: screenPageViews[index],
+                color: colors[index % colors.length]
+            }));
+
+            // Highcharts configuration
+            chartBrowerUsers = Highcharts.chart('user_device_pie_charts', {
+                credits: {
+                    enabled: false
+                },
                 chart: {
-                    type: "donut",
-                    height: 219,
+                    type: 'pie',
+                    height: 219
+                },
+                title: {
+                    text: null
                 },
                 plotOptions: {
                     pie: {
-                        size: 100,
-                        donut: {
-                            size: "76%"
+                        innerSize: '76%',
+                        depth: 45,
+                        dataLabels: {
+                            enabled: false
                         }
                     }
                 },
-                dataLabels: {
-                    enabled: false
-                },
-                legend: {
-                    show: false
-                },
-                stroke: {
-                    width: 0
-                },
-                colors: colors,
                 tooltip: {
-                    y: {
-                        formatter: function(value) {
-                            return formatNumber(value);
-                        }
-                    }
-                }
-            };
-
-            chartBrowerUsers = new ApexCharts(chartContainer, options);
-            chartBrowerUsers.render();
+                    pointFormat: '{point.name}: <b>{point.y}</b> lượt'
+                },
+                series: [{
+                    name: 'Lượt xem',
+                    data: seriesData
+                }]
+            });
 
             $('#list_browers').empty();
             if (data && data.length > 0) {
@@ -506,18 +549,17 @@
                     let formattedValue = formatNumber(item.screenPageViews);
 
                     let row = `
-            <tr>
-                <td>
-                    <h4 class="text-truncate fs-14 fs-medium mb-0">
-                        <i class="ri-stop-fill align-middle fs-18" style="color:${iconColor};"></i>
-                        ${item.browser}
-                    </h4>
-                </td>
-                <td class="text-end">
-                    <p class="text-muted mb-0"><i data-feather="users" class="me-2 icon-sm"></i>${formattedValue}</p>
-                </td>
-            </tr>
-        `;
+                    <tr>
+                        <td>
+                            <h4 class="text-truncate fs-14 fs-medium mb-0">
+                                <i class="ri-stop-fill align-middle fs-18" style="color:${iconColor};"></i>
+                                ${item.browser}
+                            </h4>
+                        </td>
+                        <td class="text-end">
+                            <p class="text-muted mb-0"><i data-feather="users" class="me-2 icon-sm"></i>${formattedValue}</p>
+                        </td>
+                    </tr>`;
 
                     $('#list_browers').append(row);
                 });
@@ -542,8 +584,8 @@
 
             if (!Array.isArray(data) || data.length === 0) {
                 chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
-            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
-        </div>`;
+                    <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+                </div>`;
                 return;
             }
 
@@ -557,36 +599,42 @@
 
             let categories = cleanedData.map(item => item.sessionSource);
             let bounceRates = cleanedData.map(item => parseFloat(item.bounceRate));
-
             let colors = ["#ff4d4f", "#faad14", "#1890ff", "#52c41a", "#9254de"];
 
-            let options = {
-                series: [{
-                    name: "Tỷ lệ thoát",
-                    data: bounceRates
-                }],
+            // Highcharts configuration
+            chartBounceRate = Highcharts.chart('bounceRateChart', {
+                credits: {
+                    enabled: false
+                },
                 chart: {
                     type: 'bar',
-                    height: 300,
-                    toolbar: {
-                        show: false
+                    height: 300
+                },
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    categories: categories
+                },
+                yAxis: {
+                    title: {
+                        text: 'Tỷ lệ thoát (%)'
                     }
+                },
+                legend: {
+                    enabled: false
                 },
                 plotOptions: {
                     bar: {
-                        horizontal: true,
-                        distributed: true,
-                        borderRadius: 4
+                        colorByPoint: true,
+                        colors: colors
                     }
                 },
-                colors: colors,
-                xaxis: {
-                    categories: categories
-                }
-            };
-
-            chartBounceRate = new ApexCharts(chartContainer, options);
-            chartBounceRate.render();
+                series: [{
+                    name: 'Tỷ lệ thoát',
+                    data: bounceRates
+                }]
+            });
         }
 
         let worldMap;
@@ -597,6 +645,8 @@
             let chartContainer = document.querySelector("#world-map");
 
             if (worldMap) {
+                // Nếu đang sử dụng jsVectorMap, ta cần giữ nguyên phần này
+                // hoặc chuyển sang sử dụng Highcharts maps thay thế
                 worldMap.destroy();
                 worldMap = null;
             }
@@ -605,51 +655,69 @@
 
             if (!Array.isArray(data) || data.length == 0) {
                 chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
-            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
-        </div>`;
+                    <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+                </div>`;
                 return;
             }
 
-            let formattedData = {};
+            // Chuẩn bị dữ liệu cho Highcharts
+            let mapData = [];
             data.forEach(item => {
                 let countryCode = countryNameToCode[item.country];
                 if (countryCode) {
-                    formattedData[countryCode] = parseInt(item.screenPageViews).toLocaleString("vi-VN").replace(
-                        /\./g, ".");
+                    mapData.push({
+                        'hc-key': countryCode.toLowerCase(), // Highcharts sử dụng mã nước viết thường
+                        value: parseInt(item.screenPageViews),
+                        name: item.country
+                    });
                 }
             });
 
-            worldMap = new jsVectorMap({
-                selector: "#world-map",
-                map: "world",
-                backgroundColor: "transparent",
-                regionStyle: {
-                    initial: {
-                        fill: "#e4e4e4"
+            // Sử dụng Highcharts Map
+            // Lưu ý: Cần tải thêm module highcharts-maps và bản đồ thế giới
+            worldMap = Highcharts.mapChart('world-map', {
+                credits: {
+                    enabled: false
+                },
+                chart: {
+                    map: 'custom/world', // Yêu cầu tải bản đồ thế giới
+                    backgroundColor: 'transparent'
+                },
+                title: {
+                    text: null
+                },
+                mapNavigation: {
+                    enabled: true,
+                    buttonOptions: {
+                        verticalAlign: 'bottom'
+                    }
+                },
+                colorAxis: {
+                    min: 0,
+                    minColor: '#E6E7E8',
+                    maxColor: '#005645'
+                },
+                series: [{
+                    data: mapData,
+                    name: 'Lượt xem',
+                    states: {
+                        hover: {
+                            color: '#007bff'
+                        }
                     },
-                    hover: {
-                        fill: "#007bff"
+                    dataLabels: {
+                        enabled: false,
+                        format: '{point.name}'
+                    },
+                    tooltip: {
+                        pointFormat: '{point.name}: {point.value} lượt xem'
                     }
-                },
-                zoomButtons: false,
-                series: {
-                    regions: [{
-                        values: formattedData,
-                        scale: ["#C8EEFF", "#0071A4"],
-                        normalizeFunction: "polynomial"
-                    }]
-                },
-                onRegionTooltipShow(tooltip, code) {
-                    if (formattedData[code]) {
-                        tooltip.text(`${tooltip.text()} - ${formattedData[code]} lượt xem`);
-                    }
-                }
+                }]
             });
         }
 
         function formatNumber(value) {
-            return value.toLocaleString("vi-VN").replace(/\./g,
-                ".") + ' lượt';
+            return value.toLocaleString("vi-VN").replace(/\./g, ".") + ' lượt';
         }
 
         let chartDeviceUsers;
@@ -666,8 +734,8 @@
 
             if (!data || data.length === 0) {
                 chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
-            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
-        </div>`;
+                    <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+                </div>`;
                 return;
             }
 
@@ -678,57 +746,56 @@
                 "#C71585"
             ];
 
+            // Tạo dữ liệu cho Highcharts
+            let seriesData = deviceNames.map((device, index) => ({
+                name: device,
+                y: sessionCounts[index],
+                color: colors[index % colors.length]
+            }));
 
-            let options = {
-                series: sessionCounts,
-                labels: deviceNames,
+            // Highcharts configuration - chuyển radialBar sang column chart hoặc pie chart
+            chartDeviceUsers = Highcharts.chart('user_device_chart', {
+                credits: {
+                    enabled: false
+                },
                 chart: {
-                    type: "radialBar",
+                    type: 'column',
                     height: 380
                 },
-                legend: {
-                    show: true,
-                    position: 'bottom',
-                    markers: {
-                        width: 10,
-                        height: 10,
-                        radius: 3
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    categories: deviceNames
+                },
+                yAxis: {
+                    title: {
+                        text: 'Số phiên'
                     }
+                },
+                legend: {
+                    enabled: false
+                },
+                tooltip: {
+                    pointFormat: '{point.name}: <b>{point.y}</b> phiên'
                 },
                 plotOptions: {
-                    radialBar: {
-                        dataLabels: {
-                            name: {
-                                fontSize: "14px"
-                            },
-                            value: {
-                                fontSize: "16px",
-                                formatter: (val) => formatNumber(val)
-                            }
-                        }
+                    column: {
+                        colorByPoint: true,
+                        colors: colors
                     }
                 },
-                colors: colors,
-                tooltip: {
-                    y: {
-                        formatter: function(value) {
-                            return formatNumber(value);
-                        }
-                    }
-                }
-            };
-
-            chartDeviceUsers = new ApexCharts(chartContainer, options);
-            chartDeviceUsers.render();
+                series: [{
+                    name: 'Thiết bị',
+                    data: seriesData
+                }]
+            });
         }
 
         let chartHourTraffic;
 
         function updateHourlyTrafficChart(data = []) {
             let chartContainer = document.querySelector("#hourlyTrafficChart");
-            let transformedData = [];
-
-            let days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
 
             if (typeof chartHourTraffic !== "undefined" && chartHourTraffic) {
                 chartHourTraffic.destroy();
@@ -739,56 +806,81 @@
 
             if (!data || data.length === 0) {
                 chartContainer.innerHTML = `<div style="text-align: center; padding: 20px; color: #999;">
-            <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
-        </div>`;
+                    <p><i class="fas fa-exclamation-circle"></i> Không có dữ liệu</p>
+                </div>`;
                 return;
             }
 
+            let days = ["Chủ Nhật", "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy"];
             let uniqueDays = [...new Set(data.map(item => item.dayOfWeek))];
 
-            uniqueDays.forEach(dayIndex => {
-                let dayName = days[dayIndex];
+            // Chuẩn bị dữ liệu cho Highcharts heat map
+            let transformedData = [];
 
-                let dayData = data
-                    .filter(item => item.dayOfWeek == dayIndex)
-                    .map(item => ({
-                        x: `${item.hour}:00`,
-                        y: Number(item.sessions)
-                    }));
-
-                transformedData.push({
-                    name: dayName,
-                    data: dayData
-                });
+            data.forEach(item => {
+                transformedData.push([
+                    parseInt(item.hour), // x: hour
+                    parseInt(item.dayOfWeek), // y: day of week
+                    parseInt(item.sessions) // z: value (sessions)
+                ]);
             });
 
-            let options = {
+            // Highcharts configuration
+            chartHourTraffic = Highcharts.chart('hourlyTrafficChart', {
+                credits: {
+                    enabled: false
+                },
                 chart: {
                     type: 'heatmap',
-                    height: 350,
-                    toolbar: {
-                        show: false
-                    }
+                    height: 350
                 },
-                series: transformedData,
-                colors: ["#008FFB"],
-                xaxis: {
+                title: {
+                    text: null
+                },
+                xAxis: {
                     title: {
-                        text: "Giờ trong ngày"
+                        text: 'Giờ trong ngày'
                     },
-                    labels: {
-                        rotate: -45,
-                        style: {
-                            fontSize: '12px'
-                        }
+                    categories: Array.from({
+                        length: 24
+                    }, (_, i) => `${i}:00`)
+                },
+                yAxis: {
+                    title: {
+                        text: null
+                    },
+                    categories: days,
+                    reversed: true
+                },
+                colorAxis: {
+                    min: 0,
+                    minColor: '#FFFFFF',
+                    maxColor: Highcharts.getOptions().colors[0]
+                },
+                legend: {
+                    align: 'right',
+                    layout: 'vertical',
+                    margin: 0,
+                    verticalAlign: 'top',
+                    y: 25,
+                    symbolHeight: 280
+                },
+                tooltip: {
+                    formatter: function() {
+                        return '<b>' + days[this.point.y] + ', ' + this.series.xAxis.categories[this.point.x] +
+                            '</b><br/>' +
+                            'Số phiên: <b>' + this.point.value + '</b>';
                     }
                 },
-                dataLabels: {
-                    enabled: false
-                }
-            };
-            chartHourTraffic = new ApexCharts(document.querySelector("#hourlyTrafficChart"), options);
-            chartHourTraffic.render();
+                series: [{
+                    name: 'Lưu lượng theo giờ',
+                    data: transformedData,
+                    dataLabels: {
+                        enabled: true,
+                        color: '#000000'
+                    }
+                }]
+            });
         }
 
         function formatNumber(value) {

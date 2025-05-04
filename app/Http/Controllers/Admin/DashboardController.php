@@ -65,15 +65,17 @@ class DashboardController extends Controller
                 ->whereYear('created_at', $lastMonth->year)
                 ->first();
 
-            $revenueChange = 0;
-            if ($totalAmount->total_revenue > 0 && $totalAmountLastMonth->total_revenue > 0) {
-                $revenueChange = (($totalAmount->total_revenue - $totalAmountLastMonth->total_revenue) / $totalAmountLastMonth->total_revenue) * 100;
-            }
+            $revenueChange = $totalAmountLastMonth->total_revenue > 0
+                ? round((($totalAmount->total_revenue - $totalAmountLastMonth->total_revenue) / $totalAmountLastMonth->total_revenue) * 100, 2)
+                : ($totalAmount->total_revenue > 0 ? '100' : 0);
 
-            $profitChange = 0;
-            if ($totalAmount->total_profit > 0 && $totalAmountLastMonth->total_profit > 0) {
-                $profitChange = (($totalAmount->total_profit - $totalAmountLastMonth->total_profit) / $totalAmountLastMonth->total_profit) * 100;
-            }
+            $revenueChange = ($revenueChange > 100) ? '100' : (($revenueChange < -100) ? '-100' : $revenueChange);
+
+            $profitChange = $totalAmountLastMonth->total_profit > 0
+                ? round((($totalAmount->total_profit - $totalAmountLastMonth->total_profit) / $totalAmountLastMonth->total_profit) * 100, 2)
+                : ($totalAmount->total_profit > 0 ? '100' : 0);
+
+            $profitChange = ($profitChange > 100) ? '100' : (($profitChange < -100) ? '-100' : $profitChange);
 
             $totalCourse = $queryTotalCourse
                 // ->whereMonth('created_at', $currentMonth->month)
@@ -85,10 +87,11 @@ class DashboardController extends Controller
                 ->whereYear('created_at', $lastMonth->year)
                 ->count();
 
-            $courseChange = 0;
-            if ($totalCourseLastMonth > 0) {
-                $courseChange = (($totalCourse - $totalCourseLastMonth) / $totalCourseLastMonth) * 100;
-            }
+            $courseChange = $totalCourseLastMonth > 0
+                ? round((($totalCourse - $totalCourseLastMonth) / $totalCourseLastMonth) * 100, 2)
+                : ($totalCourse > 0 ? '100' : 0);
+
+            $courseChange = ($courseChange > 100) ? '100' : (($courseChange < -100) ? '-100' : $courseChange);
 
             $totalInstructor = $queryTotalInstructor
                 ->whereMonth('created_at', $currentMonth->month)
@@ -100,10 +103,11 @@ class DashboardController extends Controller
                 ->whereYear('created_at', $lastMonth->year)
                 ->count();
 
-            $instructorChange = 0;
-            if ($totalInstructorLastMonth > 0) {
-                $instructorChange = (($totalInstructor - $totalInstructorLastMonth) / $totalInstructorLastMonth) * 100;
-            }
+            $instructorChange = $totalInstructorLastMonth > 0
+                ? round((($totalInstructor - $totalInstructorLastMonth) / $totalInstructorLastMonth) * 100, 2)
+                : ($totalInstructor > 0 ? '100' : 0);
+
+            $instructorChange = ($instructorChange > 100) ? '100' : (($instructorChange < -100) ? '-100' : $instructorChange);
 
             $courseRatings = $queryCourseRatings->get();
             $system_Funds = $querySystem_Funds->get();
@@ -430,7 +434,7 @@ class DashboardController extends Controller
                 DB::raw('COALESCE(courses.total_courses, 0) as total_courses'),
                 DB::raw('COALESCE(students.total_enrolled_students, 0) as total_enrolled_students')
             )
-            ->orderByDesc('total_revenue');
+            ->orderByDesc('total_revenue')->limit(10);
     }
 
     private function getTopCourse()
