@@ -101,6 +101,8 @@ Route::get('/{{ Auth::user()->code }}/get-validate-instructor');
 Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('livestreams')->group(function () {
         Route::post('/{livestream}/send-message', [LiveSessionController::class, 'sendMessage']);
+        Route::post('/{liveSessionId}/heartbeat', [LiveSessionController::class, 'updateViewingStatus']);
+        Route::post('/{liveSessionId}/leave', [LiveSessionController::class, 'leaveSession']);
     });
 
     Route::prefix('ai')->group(function () {

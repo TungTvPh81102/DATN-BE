@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\Common;
 
 use App\Events\LiveChatMessageSent;
+use App\Events\LiveViewerCountUpdate;
 use App\Events\UserJoinedLiveSession;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
@@ -16,6 +17,7 @@ use App\Traits\LoggableTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Storage;
 
 class LiveSessionController extends Controller
@@ -168,8 +170,9 @@ class LiveSessionController extends Controller
             }
 
             if ($liveSession->can_access && $liveSession->status === 'live') {
-                $liveSession->increment('viewers_count');
                 broadcast(new UserJoinedLiveSession($liveSession->id, $user));
+                $this->trackUserViewing($liveSession->id, $user ? $user->id : null);
+                $liveSession->increment('viewers_count');
             }
 
             return $this->respondOk('Thông tin phiên live', $liveSession);
@@ -371,5 +374,81 @@ class LiveSessionController extends Controller
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại sau!');
         }
+    }
+
+    protected function trackUserViewing($liveSessionId, $userId = null)
+    {
+        $redisKey = "live_session:{$liveSessionId}:viewers";
+        $viewerId = $userId ?? request()->ip() . ':' . request()->header('User-Agent');
+        $liveSession = LiveSession::find($liveSessionId);
+
+        if ($userId && $userId == $liveSession->instructor_id) {
+            return Redis::zcard($redisKey);
+        }
+
+        Redis::zadd($redisKey, time(), $viewerId);
+
+        // Xóa những người xem không hoạt động sau 30 giây
+        $inactiveTime = time() - 30;
+        Redis::zremrangebyscore($redisKey, 0, $inactiveTime);
+
+        Redis::expire($redisKey, 14400);
+
+        $viewerCount = Redis::zcard($redisKey);
+
+        broadcast(new LiveViewerCountUpdate($liveSessionId, $viewerCount));
+
+        return $viewerCount;
+    }
+
+    public function updateViewingStatus(Request $request, $liveSessionId)
+    {
+        $user = Auth::check() ? Auth::user() : null;
+        $viewerId = $user ? $user->id : request()->ip() . ':' . request()->header('User-Agent');
+
+        $redisKey = "live_session:{$liveSessionId}:viewers";
+
+        $liveSession = LiveSession::find($liveSessionId);
+
+        if ($user && $user->id == $liveSession->instructor_id) {
+            $viewerCount = Redis::zcard($redisKey);
+            return response()->json(['viewer_count' => $viewerCount]);
+        }
+
+        Redis::zadd($redisKey, time(), $viewerId);
+
+        // Xóa những người xem không hoạt động sau 30 giây
+        $inactiveTime = time() - 30;
+        Redis::zremrangebyscore($redisKey, 0, $inactiveTime);
+
+        // Đếm số người xem hiện tại
+        $viewerCount = Redis::zcard($redisKey);
+
+        broadcast(new LiveViewerCountUpdate($liveSessionId, $viewerCount));
+
+        return response()->json(['viewer_count' => $viewerCount]);
+    }
+
+    public function leaveSession(Request $request, $liveSessionId)
+    {
+        $user = Auth::check() ? Auth::user() : null;
+        $viewerId = $user ? $user->id : request()->ip() . ':' . request()->header('User-Agent');
+
+        $redisKey = "live_session:{$liveSessionId}:viewers";
+
+        $liveSession = LiveSession::find($liveSessionId);
+
+        if ($user && $user->id == $liveSession->instructor_id) {
+            $viewerCount = Redis::zcard($redisKey);
+            return response()->json(['viewer_count' => $viewerCount]);
+        }
+
+        Redis::zrem($redisKey, $viewerId);
+
+        $viewerCount = Redis::zcard($redisKey);
+
+        broadcast(new LiveViewerCountUpdate($liveSessionId, $viewerCount));
+
+        return response()->json(['viewer_count' => $viewerCount]);
     }
 }

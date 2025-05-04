@@ -171,9 +171,9 @@
                                 <p style="font-size:15px; line-height:1.5; color:#555; margin:0 0 15px;">
                                     <strong>Mô tả khóa học:</strong>
                                 </p>
-                                <p style="font-size:14px; line-height:1.6; color:#666; margin:0;">
+                                <textarea style="font-size:14px; line-height:1.6; color:#666; margin:0;">
                                     {{ $course->description }}
-                                </p>
+                                </textarea>
                             </div>
                         </td>
                     </tr>
@@ -184,18 +184,6 @@
                                 style="display:inline-block; background: linear-gradient(to right, #E27447, #f59776); color:#fff; padding:15px 35px; font-size:16px; text-decoration:none; border-radius:8px; font-weight:600; letter-spacing:0.5px; box-shadow:0 4px 10px rgba(226,116,71,0.3); transition: all 0.3s;">
                                 🔍 XEM XÉT YÊU CẦU KIỂM DUYỆT
                             </a>
-                        </td>
-                    </tr>
-
-                    <tr>
-                        <td style="padding:0 40px 30px;">
-                            <div
-                                style="background-color:#fff8f5; border-radius:10px; padding:20px; border-left:4px solid #E27447;">
-                                <p style="font-size:15px; line-height:1.5; color:#825144; margin:0;">
-                                    <strong>Lưu ý:</strong> Vui lòng kiểm tra nội dung khóa học đảm bảo tuân thủ các quy
-                                    định và tiêu chuẩn chất lượng của CourseMeLy trước khi phê duyệt.
-                                </p>
-                            </div>
                         </td>
                     </tr>
 
