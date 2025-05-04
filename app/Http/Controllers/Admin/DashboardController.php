@@ -22,7 +22,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         try {
-            $title = 'Dashboard';
+            $title = 'Tổng quan';
             $year = now()->year;
 
             $queryTotalAmount = $this->getTotalAmount();
