@@ -155,11 +155,11 @@
                                     </thead>
                                     <tbody id="sortableBanners" class="list form-check-all">
                                         @foreach ($banners as $banner)
-                                            <tr>
+                                            <tr data-id="{{ $banner->id }}">
                                                 <th scope="row">
                                                     <div class="form-check">
                                                         <input class="form-check-input" type="checkbox" name="itemID"
-                                                            value="{{ $banner->id }}">
+                                                            value="{{ $banner->id }}" data-id="{{$banner->id}}">
                                                     </div>
                                                 </th>
                                                 <td class="order">{{ $loop->iteration  }}</td>
@@ -267,7 +267,7 @@
                 // Cập nhật thứ tự trong DOM ngay lập tức sau khi kéo thả
                 rows.forEach((row, index) => {
                     // Cập nhật lại cột thứ tự trong bảng
-                    row.querySelector('.order').textContent = index; // Thứ tự mới
+                    row.querySelector('.order').textContent = index + 1; // Thứ tự mới
                     var id = row.getAttribute('data-id');
                     orderData.push({
                         id: id,

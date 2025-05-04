@@ -119,7 +119,7 @@
                                                     </div>
                                                 </th>
                                                 <td class="phone">
-                                                    {{ $comment->user->name }}
+                                                    {{ $comment->user->name ?? 'Không xác định' }}
                                                 </td>
                                                 <td class="id">{{ $comment->content }}</td>
 

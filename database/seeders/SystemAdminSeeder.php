@@ -26,7 +26,7 @@ class SystemAdminSeeder extends Seeder
             'email' => 'coursemely@gmail.com',
             'password' => Hash::make('Coursemely@gmail.com'),
             'email_verified_at' => now(),
-            'thumbnail' => 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1746133764/Gemini_Generated_Image_6g1crc6g1crc6g1c_abpz3g.jpg',
+            'avatar' =>'https://res.cloudinary.com/dvrexlsgx/image/upload/v1746133764/Gemini_Generated_Image_6g1crc6g1crc6g1c_abpz3g.jpg',
             'status' => User::STATUS_ACTIVE,
             'created_at' => now(),
             'updated_at' => now(),

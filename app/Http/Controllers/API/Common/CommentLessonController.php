@@ -186,21 +186,30 @@ class CommentLessonController extends Controller
                 return $this->respondNotFound('Không tìm thấy bài học');
             }
 
-            $customCheck = function ($text, $profanities) {
+            $customCheck = function ($text, $profanities, $falsePositives) {
                 $plainText = strip_tags($text);
                 $plainText = strtolower($plainText);
                 $plainText = preg_replace('/[^a-z0-9\s]/', '', $plainText);
+               
+                foreach ($falsePositives as $falsePositive) {
+                    if (stripos($plainText, strtolower($falsePositive)) !== false) {
+                        $plainText = str_replace(strtolower($falsePositive), '', $plainText);
+                    }
+                }
+
                 foreach ($profanities as $word) {
                     if (stripos($plainText, strtolower($word)) !== false) {
                         return true;
                     }
                 }
+
                 return false;
             };
 
             $profanities = config('blasp.profanities', []);
+            $falsePositives = config('blasp.false_positives', []);
 
-            if ($customCheck($data['content'], $profanities)) {
+            if ($customCheck($data['content'], $profanities, $falsePositives)) {
                 $violationKey = "comment_violations:user_{$user->id}";
                 $violations = Redis::incr($violationKey);
 

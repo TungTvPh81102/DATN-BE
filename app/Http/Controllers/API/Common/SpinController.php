@@ -59,8 +59,7 @@ class SpinController extends Controller
         })->toArray();
 
         // Lấy từ bảng gifts (chỉ lấy nếu còn hàng)
-        $gifts = Gift::where('stock', '>', 0)
-            ->where('is_selected', 1)
+        $gifts = Gift::where('is_selected', 1)
             ->where('is_active', 1)
             ->limit(2)
             ->get();
