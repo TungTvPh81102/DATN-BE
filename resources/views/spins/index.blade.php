@@ -188,18 +188,12 @@
                 <div class="card">
                     <div class="card-header d-flex align-items-center justify-content-between">
                         <h3>Cấu hình tỷ lệ trúng (Tổng: {{ $totalProbability }}%)</h3>
-                        <form action="{{ route('admin.spins.toggle-status') }}" method="POST">
-                            @csrf
-                            <div class="form-check form-switch form-switch-success">
-                                <input class="form-check-input" role="switch"
-                                       type="checkbox" 
-                                       name="status" 
-                                       value="active"
-                                       onchange="this.form.submit()"
-                                       {{ $spinSetting->status === 'active' ? 'checked' : '' }}>
-                                <label class="form-check-label">Kích hoạt vòng quay</label>
-                            </div>
-                        </form>
+                        <div class="form-check form-switch form-switch-success">
+                            <input class="form-check-input toggle-spin-status" type="checkbox" role="switch"
+                                data-url="{{ route('admin.spins.toggle-status') }}"
+                                {{ $spinSetting->status === 'active' ? 'checked' : '' }}>
+                            <label class="form-check-label">Kích hoạt vòng quay</label>
+                        </div>
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
@@ -232,8 +226,9 @@
                                                 method="POST" class="d-inline">
                                                 @csrf
                                                 @method('PUT')
-                                                <input type="number" name="probability" value="{{ number_format($config->probability, 0) }}"
-                                                    step="0.01" min="0" max="100"
+                                                <input type="number" name="probability"
+                                                    value="{{ number_format($config->probability, 0) }}" step="0.01"
+                                                    min="0" max="100"
                                                     class="form-control form-control-sm d-inline" required>
                                                 <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
                                             </form>
@@ -263,7 +258,8 @@
                                                     class="form-control form-control-sm d-inline" required>
                                                 <input type="hidden" name="name" value="{{ $gift->name }}">
                                                 <input type="hidden" name="stock" value="{{ $gift->stock }}">
-                                                <input type="hidden" name="description" value="{{ $gift->description }}">
+                                                <input type="hidden" name="description"
+                                                    value="{{ $gift->description }}">
                                                 <input type="hidden" name="image_url" value="{{ $gift->image_url }}">
                                                 <input type="hidden" name="is_active" value="{{ $gift->is_active }}">
                                                 <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
@@ -315,13 +311,16 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <div class="form-check form-switch form-switch-warning">
-                                                <input class="form-check-input popular-course-toggle" 
-                                                       role="switch"
-                                                       type="checkbox" 
-                                                       data-gift-id="{{ $gift->id }}"
-                                                       {{ $gift->is_selected ? 'checked' : '' }}>
-                                            </div>
+                                            <form method="POST"
+                                                action="{{ route('admin.spins.toggle-selection', ['type' => 'gift', 'id' => $gift->id]) }}">
+                                                @csrf
+                                                <div class="form-check form-switch form-switch-warning">
+                                                    <input class="form-check-input" type="checkbox" name="is_selected"
+                                                        onchange="this.form.submit()" role="switch"
+                                                        {{ $gift->is_selected ? 'checked' : '' }}>
+                                                </div>
+                                            </form>
+
                                         </td>
                                         <td>
                                             <a href="{{ route('admin.spins.gift.delete', $gift->id) }}" type="button"
@@ -421,8 +420,8 @@
                             </div>
                             <div class="col-md-12">
                                 <label for="cells" class="form-label">Số ô quà</label>
-                                <input type="int" name="cells" value="{{ old('cells') }}"
-                                    class="form-control" placeholder="Số ô quà trong vòng quay">
+                                <input type="int" name="cells" value="{{ old('cells') }}" class="form-control"
+                                    placeholder="Số ô quà trong vòng quay">
                             </div>
                             <div class="col-md-12">
                                 <button type="submit" class="btn btn-primary w-100">Thêm ô quà</button>
@@ -955,31 +954,27 @@
                 }
             });
         });
-        $('.popular-course-toggle').on('change', function() {
-                var giftId = $(this).data('gift-id');
-                var isSelected = $(this).is(':checked') ? 1 : 0;
+        $(document).on('change', '.toggle-spin-status', function() {
+            const isChecked = $(this).is(':checked');
+            const url = $(this).data('url');
 
-                $.ajax({
-                    url: '{{ route("admin.spins.toggle-selection", ["type" => "gift", "id" => "__ID__"]) }}'.replace('__ID__', giftId),
-                    method: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}',
-                        is_selected: isSelected
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            toastr.success(response.message); // Sử dụng toastr hoặc alert
-                        } else {
-                            // Nếu thất bại, đảo ngược trạng thái checkbox
-                            $(this).prop('checked', !isSelected);
-                            toastr.error(response.message);
-                        }
-                    }.bind(this), // Bind this để giữ context của checkbox
-                    error: function(xhr) {
-                        $(this).prop('checked', !isSelected); // Đảo ngược nếu lỗi
-                        toastr.error('Có lỗi xảy ra: ' + (xhr.responseJSON?.message || 'Không xác định'));
-                    }.bind(this)
-                });
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    status: isChecked ? 'active' : 'inactive'
+                },
+                success: function(response) {
+                    toastr.success(response.message);
+                },
+                error: function(xhr) {
+                    // Nếu lỗi, đảo lại checkbox
+                    $(this).prop('checked', !isChecked);
+                    const message = xhr.responseJSON?.message || 'Có lỗi xảy ra';
+                    toastr.error(message);
+                }.bind(this)
             });
+        });
     </script>
 @endpush
