@@ -9,60 +9,118 @@ use App\Models\Lesson;
 use App\Models\User;
 use App\Models\Video;
 use Faker\Factory;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class RenderDataSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
         $faker = Factory::create('vi_VN');
 
         $categories = Category::all();
-        $instructors = User::query()
-            ->whereHas('roles', fn($q) => $q->where('name', 'instructor'))
-            ->get();
 
-        if ($categories->isEmpty() || $instructors->isEmpty()) {
-            return;
-        }
+        $instructors = User::query()->whereHas('roles', function ($query) {
+            $query->where('name', 'instructor');
+        })->get();
 
-        foreach ($instructors as $instructor) {
-            $courseCount = rand(5, 10);
+        $courseTemplates = [
+            "Công nghệ thông tin & Truyền thông" => [
+                "Lập trình Web chuyên nghiệp",
+                "Phát triển ứng dụng di động",
+                "Quản trị hệ thống mạng",
+                "An ninh mạng và bảo mật thông tin",
+                "Trí tuệ nhân tạo và ứng dụng"
+            ],
+            "Kinh doanh" => [
+                "Quản trị kinh doanh hiện đại",
+                "Khởi nghiệp và phát triển doanh nghiệp",
+                "Chiến lược marketing số",
+                "Quản lý tài chính doanh nghiệp",
+                "Kế toán và kiểm toán"
+            ],
+            "Marketing" => [
+                "Digital Marketing chuyên sâu",
+                "Chiến lược quảng cáo online",
+                "Phân tích dữ liệu marketing",
+                "Xây dựng thương hiệu cá nhân",
+                "Social Media Marketing"
+            ],
+            "Nghệ thuật & Thiết kế" => [
+                "Thiết kế đồ hoạ chuyên nghiệp",
+                "Nhiếp ảnh nghệ thuật",
+                "Animation và Motion Graphics",
+                "Thiết kế UI/UX",
+                "Đồ hoạ 3D"
+            ],
+            "Kỹ năng mềm" => [
+                "Kỹ năng giao tiếp hiệu quả",
+                "Quản lý thời gian và năng suất",
+                "Nghệ thuật thuyết trình",
+                "Kỹ năng lãnh đạo",
+                "Quản lý công việc và dự án"
+            ],
+            "Sức khoẻ & Làm đẹp" => [
+                "Chăm sóc sức khoẻ toàn diện",
+                "Yoga và thiền",
+                "Dinh dưỡng và chế độ ăn",
+                "Chăm sóc da chuyên nghiệp",
+                "Massage và phục hồi"
+            ],
+            "Nấu ăn & Ẩm thực" => [
+                "Ẩm thực chuyên nghiệp",
+                "Đầu bếp tại gia",
+                "Bánh và Dessert",
+                "Ẩm thực quốc tế",
+                "Chế biến đồ ăn vặt"
+            ],
+            "Thể thao & Fitness" => [
+                "Huấn luyện thể hình",
+                "Yoga và Pilates",
+                "Dinh dưỡng thể thao",
+                "Võ thuật",
+                "Chạy bộ và marathon"
+            ],
+            "Giáo dục & Phát triển bản thân" => [
+                "Kỹ năng học tập hiệu quả",
+                "Phát triển bản thân toàn diện",
+                "Quản lý tài chính cá nhân",
+                "Tư duy phản biện",
+                "Nghệ thuật sống"
+            ],
+            "AI & Machine Learning" => [
+                "Nhập môn Trí tuệ nhân tạo",
+                "Machine Learning chuyên sâu",
+                "Xử lý ngôn ngữ tự nhiên",
+                "Học sâu và Neural Network",
+                "Ứng dụng AI trong kinh doanh"
+            ]
+        ];
 
-            for ($i = 0; $i < $courseCount; $i++) {
-                $category = $categories->random();
+        foreach ($categories as $category) {
+            $courseNames = $courseTemplates[$category->name] ?? [];
 
-                $courseName = $this->generateCourseTitle($category->name, $faker);
-                $courseCode = Str::uuid();
-                $startDate = Carbon::create(2024, 1, 1)->addDays(rand(0, now()->diffInDays('2024-01-01')));
-
-                $isFree = rand(0, 1) === 1;
-                if ($isFree) {
-                    $price = 0;
-                    $priceSale = 0;
-                } else {
-                    $price = rand(60, 200) * 5000; 
-
-                    $priceSale = rand(0, 1) ? rand(50, intval($price / 5000) - 2) * 5000 : null;
+            foreach ($courseNames as $courseName) {
+                if ($instructors->isEmpty()) {
+                    break;
                 }
 
-                $course = Course::create([
+                $courseCode = Str::uuid();
+
+                $course = Course::query()->create([
                     'name' => $courseName,
                     'code' => $courseCode,
                     'slug' => Str::slug($courseName) . '-' . $courseCode,
-                    'description' => $faker->paragraph(5),
+                    'description' => $faker->paragraph(),
                     'category_id' => $category->id,
-                    'user_id' => $instructor->id,
-                    'level' => $faker->randomElement(['beginner', 'advanced']),
-                    'is_free' => $isFree,
-                    'price' => $price ,
-                    'price_sale' => $priceSale ?? 0,
-                    'created_at' => $startDate,
-                    'benefits' => json_encode($this->generateBenefits($faker)),
-                    'requirements' => json_encode($this->generateRequirements($faker)),
-                    'qa' => json_encode($this->generateQa($faker)),
+                    'user_id' => $instructors->random()->id,
+                    'level' => $faker->randomElement([
+                        'beginner', 'intermediate', 'advanced'
+                    ]),
                 ]);
 
                 $this->createChaptersWithLessonsAndVideos($course, $faker);
@@ -72,163 +130,95 @@ class RenderDataSeeder extends Seeder
 
     private function createChaptersWithLessonsAndVideos($course, $faker)
     {
-        $chapterCount = rand(4, 8);
+        $chapterCount = $faker->numberBetween(4, 10);
 
-        for ($i = 1; $i <= $chapterCount; $i++) {
-            $chapterTitle = $this->generateChapterTitle($faker);
-
+        for ($i = 0; $i < $chapterCount; $i++) {
             $chapter = Chapter::create([
                 'course_id' => $course->id,
-                'title' => $chapterTitle,
-                'order' => $i,
+                'title' => $this->generateChapterTitle($course->name, $i + 1),
+                'order' => $i + 1,
             ]);
 
-            $lessonCount = rand(4, 7);
+            $lessonCount = $faker->numberBetween(3, 7);
 
-            for ($j = 1; $j <= $lessonCount; $j++) {
-                $lessonTitle = $this->generateLessonTitle($faker);
-
+            for ($j = 0; $j < $lessonCount; $j++) {
                 $lesson = Lesson::create([
                     'chapter_id' => $chapter->id,
-                    'title' => $lessonTitle,
-                    'slug' => Str::slug($lessonTitle),
-                    'content' => $faker->paragraph(4),
-                    'is_free_preview' => $j == 1,
-                    'order' => $j,
+                    'title' => sprintf(
+                        "Bài %d: %s trong %s",
+                        $j + 1,
+                        $this->generateLessonTitle(),
+                        $chapter->title
+                    ),
+                    'slug' => Str::slug(sprintf(
+                        "Bai %d %s",
+                        $j + 1,
+                        $this->generateLessonTitle()
+                    )),
+                    'content' => $faker->paragraph(),
+                    'is_free_preview' => $j === 0,
+                    'order' => $j + 1,
                     'type' => 'video',
                     'lessonable_type' => Video::class,
                 ]);
 
                 $video = Video::create([
-                    'title' => $lessonTitle,
+                    'title' => $lesson->title,
                     'type' => 'upload',
                     'url' => 'https://res.cloudinary.com/dvrexlsgx/video/upload/v1741057384/videos/lessons/iS0tbh035U.mp4',
-                    'asset_id' => '
-02xvTqNE02XRop6ijrWi8ZQPcpbPu69901AYMPcq1BFQLY',
-                    'mux_playback_id' => 'nkNIkX149RhUNR2sR7tZp9yfDQ83mmBzyRMTmgWAgeg',
-                    'duration' => rand(300, 1200),
+                    'asset_id' => "GSLT64BKatzxbwXE01P5rzqmRxHmKk900v6CtxYFHUBg8",
+                    'mux_playback_id' => 'NvLKobHTNEMqhXZktGplZZdiITb02ZmQQpVNYUib8UHU',
+                    'duration' => 1163
                 ]);
 
                 $lesson->update([
-                    'lessonable_id' => $video->id,
+                    'lessonable_id' => $video->id
                 ]);
             }
         }
     }
 
-    private function generateCourseTitle($categoryName, $faker)
+    private function generateChapterTitle($courseName, $chapterNumber)
     {
-        $keywords = [
-            'Cơ bản',
+        $prefixes = [
+            'Tổng quan về',
+            'Khám phá',
+            'Nền tảng',
             'Chuyên sâu',
-            'Nâng cao',
-            'Thực chiến',
-            'Từ A đến Z',
-            'Hiện đại',
-            'Ứng dụng',
-            'Kỹ thuật số',
-            'Quản lý',
-            'Thành công'
+            'Thực hành'
         ];
 
-        $prefix = $faker->randomElement(['Khoá học', 'Hướng dẫn', 'Chương trình đào tạo']);
-        $keyword = $faker->randomElement($keywords);
+        $topics = [
+            'kỹ năng',
+            'kiến thức',
+            'công nghệ',
+            'chiến lược',
+            'ứng dụng'
+        ];
 
-        return "{$prefix} {$categoryName} {$keyword}";
+        $prefix = $prefixes[array_rand($prefixes)];
+        $topic = $topics[array_rand($topics)];
+
+        return sprintf(
+            "Chương %d: %s %s trong %s",
+            $chapterNumber,
+            $prefix,
+            $topic,
+            $courseName
+        );
     }
 
-    private function generateChapterTitle($faker)
+    private function generateLessonTitle()
     {
         $topics = [
-            'Giới thiệu',
-            'Công cụ cần thiết',
-            'Kiến thức nền tảng',
-            'Thực hành cơ bản',
-            'Phân tích nâng cao',
-            'Ứng dụng thực tế',
-            'Chiến lược tối ưu',
-            'Bí quyết thành công',
-            'Quản lý dự án',
-            'Kỹ năng mềm hỗ trợ'
+            'Kiến thức cơ bản',
+            'Kỹ năng chuyên sâu',
+            'Thực hành hiệu quả',
+            'Chiến lược áp dụng',
+            'Giải pháp chuyên nghiệp'
         ];
 
-        return $faker->randomElement($topics);
+        return $topics[array_rand($topics)];
     }
 
-    private function generateLessonTitle($faker)
-    {
-        $actions = ['Tìm hiểu', 'Phân tích', 'Áp dụng', 'Xây dựng', 'Thực hành', 'Đánh giá', 'Triển khai', 'Tối ưu hóa'];
-        $topics = ['cơ bản', 'kỹ thuật', 'quy trình', 'chiến lược', 'công cụ', 'bài tập thực hành', 'dự án mẫu', 'bài học thực tế'];
-
-        return $faker->randomElement($actions) . ' ' . $faker->randomElement($topics);
-    }
-
-    private function generateBenefits($faker)
-    {
-        $benefits = [
-            'Nắm vững kiến thức nền tảng',
-            'Phát triển kỹ năng thực hành',
-            'Ứng dụng lý thuyết vào thực tế',
-            'Mở rộng cơ hội nghề nghiệp',
-            'Tiết kiệm thời gian học tập',
-            'Cập nhật công nghệ mới nhất',
-            'Nâng cao kỹ năng quản lý dự án',
-            'Phát triển tư duy phản biện',
-            'Xây dựng nền tảng vững chắc'
-        ];
-
-        return $faker->randomElements($benefits, 4);
-    }
-
-    private function generateRequirements($faker)
-    {
-        $requirements = [
-            'Máy tính có kết nối Internet ổn định',
-            'Kiến thức cơ bản về Tin học',
-            'Tinh thần ham học hỏi và kỷ luật',
-            'Khả năng tự học và tự nghiên cứu',
-            'Tư duy logic và phân tích vấn đề',
-            'Đã cài đặt phần mềm cần thiết',
-            'Kỹ năng đọc hiểu tài liệu tiếng Anh cơ bản',
-            'Đã từng học qua môn liên quan là lợi thế',
-            'Sẵn sàng thực hành thường xuyên'
-        ];
-
-        return $faker->randomElements($requirements, 4);
-    }
-
-    private function generateQa($faker)
-    {
-        $qaList = [];
-        $questions = [
-            'Tôi cần kiến thức nền tảng gì trước khi tham gia?',
-            'Khóa học kéo dài bao lâu?',
-            'Có bài tập thực hành không?',
-            'Khóa học có cấp chứng chỉ không?',
-            'Tôi có thể học theo tốc độ riêng không?',
-            'Giảng viên hỗ trợ như thế nào?',
-            'Có yêu cầu phần mềm/hệ thống nào không?'
-        ];
-
-        $answers = [
-            'Bạn cần có kiến thức cơ bản.',
-            'Khoảng 3 tháng, tùy theo tiến độ.',
-            'Có các bài tập thực hành sau mỗi chương.',
-            'Hoàn thành khóa học sẽ nhận được chứng chỉ.',
-            'Bạn có thể học linh hoạt theo tốc độ của mình.',
-            'Giảng viên hỗ trợ qua email và diễn đàn thảo luận.',
-            'Cần máy tính cài đặt phần mềm hỗ trợ học tập.'
-        ];
-
-        $qaCount = rand(3, 5);
-
-        for ($i = 0; $i < $qaCount; $i++) {
-            $qaList[] = [
-                'question' => $faker->randomElement($questions),
-                'answer' => $faker->optional()->randomElement($answers)
-            ];
-        }
-
-        return $qaList;
-    }
 }
