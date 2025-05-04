@@ -30,6 +30,7 @@ class InstructorModificationRate extends Notification implements ShouldQueue
 
     public function toMail(): MailMessage
     {
+        Log::info($this->newRate);
         return (new MailMessage)
             ->view('emails.update_rate_instructor', [
                 'newSharePercentage' => $this->newRate,

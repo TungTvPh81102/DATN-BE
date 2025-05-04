@@ -405,7 +405,7 @@
                     </div>
                     <div class="card-body">
                         <div class="text-center p-3">
-                            @if ($withDraw && $withDraw->status === 'Hoàn thành')
+                            @if ($withDraw && $withDraw->status == 'Đã xử lý')
                                 <div class="mb-3">
                                     <i class="ri-check-double-line text-success" style="font-size: 3rem;"></i>
                                 </div>

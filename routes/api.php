@@ -4,11 +4,13 @@ use App\Http\Controllers\API\Auth\AuthController;
 use App\Http\Controllers\API\Auth\GoogleController;
 use App\Http\Controllers\API\Common\BannerController;
 use App\Http\Controllers\API\Common\BlogController;
+use App\Http\Controllers\API\Common\CommentLessonController;
 use App\Http\Controllers\API\Common\CommonController;
 use App\Http\Controllers\API\Common\CouponController;
 use App\Http\Controllers\API\Common\CourseController as CommonCourseController;
 use App\Http\Controllers\API\Common\FilterController;
 use App\Http\Controllers\API\Common\FollowController;
+use App\Http\Controllers\API\Common\LiveSessionController;
 use App\Http\Controllers\API\Common\RatingController;
 use App\Http\Controllers\API\Common\ReactionController;
 use App\Http\Controllers\API\Common\SearchController;
@@ -17,10 +19,12 @@ use App\Http\Controllers\API\Common\TagController;
 use App\Http\Controllers\API\Common\TransactionController;
 use App\Http\Controllers\API\Common\UserController;
 use App\Http\Controllers\API\Common\WishListController;
+use App\Http\Controllers\API\Instructor\AICourseController;
 use App\Http\Controllers\API\Instructor\ChapterController;
 use App\Http\Controllers\API\Instructor\CouponController as InstructorCouponController;
 use App\Http\Controllers\API\Instructor\CourseController;
 use App\Http\Controllers\API\Instructor\DocumentController;
+use App\Http\Controllers\API\Instructor\LearnerController;
 use App\Http\Controllers\API\Instructor\LessonController;
 use App\Http\Controllers\API\Instructor\LivestreamController;
 use App\Http\Controllers\API\Instructor\PostController;
@@ -65,16 +69,17 @@ Route::get('/vnpay-callback', [TransactionController::class, 'vnpayCallback']);
 Route::get('/momo-callback', [TransactionController::class, 'momoCallback']);
 
 Route::prefix('livestreams')->group(function () {
-    Route::get('/', [LivestreamController::class, 'index']);
-    Route::get('/{livestream}', [LivestreamController::class, 'show']);
-    Route::post('/{livestream}/join', [LivestreamController::class, 'joinLiveSession'])
+    Route::get('/', [LiveSessionController::class, 'getLiveSessions']);
+    Route::get('/{livestream}', [LiveSessionController::class, 'show'])->middleware('optionalAuth');
+    Route::post('/{livestream}/join', [LiveSessionController::class, 'joinLiveSession'])
         ->middleware('optionalAuth');
-    Route::post('/{livestream}/leave', [LivestreamController::class, 'leave']);
 });
 
 Route::get('/reset-password/{token}', function ($token) {
     return view('emails.auth.reset-password', ['token' => $token]);
 })->middleware('guest')->name('password.reset');
+
+Route::post('/webhooks/mux', [App\Http\Controllers\API\Common\MuxWebhookController::class, 'handleWebhook']);
 
 #============================== ROUTE SEARCH =============================
 Route::prefix('search')
@@ -94,6 +99,23 @@ Route::get('get-followers-count/{intructorCode}', [FollowController::class, 'get
 Route::get('/{{ Auth::user()->code }}/get-validate-instructor');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::prefix('livestreams')->group(function () {
+        Route::post('/{livestream}/send-message', [LiveSessionController::class, 'sendMessage']);
+        Route::post('/{liveSessionId}/heartbeat', [LiveSessionController::class, 'updateViewingStatus']);
+        Route::post('/{liveSessionId}/leave', [LiveSessionController::class, 'leaveSession']);
+    });
+
+    Route::prefix('ai')->group(function () {
+        Route::post('/course-planning', [AICourseController::class, 'generateContent']);
+        Route::post('/apply-recommendation', [AICourseController::class, 'applyRecommendation']);
+        Route::post('/generate-lesson-content', [AICourseController::class, 'generateLessonContent']);
+    });
+
+    Route::post('/check-password', [CommonController::class, 'checkPassword']);
+
+    Route::post('/chat-box', [CommonController::class, 'chatBox']);
+    Route::delete('/chat-box/clear', [CommonController::class, 'clearChatHistory']);
+
     Route::post('/broadcasting/auth', [\App\Http\Controllers\API\Common\BroadcastController::class, 'authenticate']);
 
     Route::post('/send-notification', [\App\Http\Controllers\NotificationController::class, 'sendNotification']);
@@ -113,10 +135,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('user', function (Request $request) {
         return $request->user();
-    });
-
-    Route::prefix('livestreams')->group(function () {
-        Route::post('/{livestream}/send-message', [LivestreamController::class, 'sendMessage']);
     });
 
     Route::get('/instructors/{code}/follow-status', [FollowController::class, 'checkUserFollower']);
@@ -173,6 +191,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('learning-paths')->as('learning-paths.')->group(function () {
         Route::get('/{slug}/lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'getLessons']);
         Route::get('/{slug}/lesson/{lesson}', [\App\Http\Controllers\API\Common\LearningPathController::class, 'show']);
+        Route::get('/{slug}/lessons/{lessonId}/validate-access', [\App\Http\Controllers\API\Common\LearningPathController::class, 'validateLessonAccess']);
         Route::put('/lesson/{lessonId}/update-last-time-video', [\App\Http\Controllers\API\Common\LearningPathController::class, 'updateLastTimeVideo']);
         Route::patch('/lesson/{lessonId}/complete-lesson', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completeLesson']);
         Route::patch('/lesson/{lessonId}/complete-practice-exercise', [\App\Http\Controllers\API\Common\LearningPathController::class, 'completePracticeExercise']);
@@ -193,6 +212,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::delete('/{comment}', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'deleteComment']);
                     Route::get('{comment}/replies', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getReplies']);
                     Route::get('/comment-block-time', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'getCommentBlockTime']);
+                    Route::post('/report-comment/{lesson_id}', [CommentLessonController::class, 'reportCommentLesson']);
                     Route::post('/{comment}/reply', [\App\Http\Controllers\API\Common\CommentLessonController::class, 'reply']);
                 });
         });
@@ -205,33 +225,32 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     #============================== ROUTE SPIN LUCKY =============================
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::prefix('spins')->as('spins.')->group(function () {
-            // Quay vòng quay may mắn
-            Route::post('/spin', [SpinController::class, 'spin'])->name('spin');
+    Route::prefix('spins')->as('spins.')->group(function () {
+        // Quay vòng quay may mắn
+        Route::post('/spin', [SpinController::class, 'spin'])->name('spin');
 
-            // Lấy số lượt quay còn lại của người dùng
-            Route::get('/user/turn', [SpinController::class, 'getSpins'])->name('user.spins');
+        // Lấy số lượt quay còn lại của người dùng
+        Route::get('/user/turn', [SpinController::class, 'getSpins'])->name('user.spins');
 
-            // Cập nhật membership và tặng lượt quay
-            Route::post('/user/update-membership', [SpinController::class, 'updateMembership'])->name('user.update-membership');
+        // Cập nhật membership và tặng lượt quay
+        Route::post('/user/update-membership', [SpinController::class, 'updateMembership'])->name('user.update-membership');
 
-            // Hoàn thành hồ sơ và tặng lượt quay
-            Route::post('/user/complete-profile', [SpinController::class, 'completeProfile'])->name('user.complete-profile');
+        // Hoàn thành hồ sơ và tặng lượt quay
+        Route::post('/user/complete-profile', [SpinController::class, 'completeProfile'])->name('user.complete-profile');
 
-            // Hoàn thành khóa học và tặng lượt quay
-            Route::post('/user/complete-course', [SpinController::class, 'completeCourse'])->name('user.complete-course');
+        // Hoàn thành khóa học và tặng lượt quay
+        Route::post('/user/complete-course', [SpinController::class, 'completeCourse'])->name('user.complete-course');
 
-            // Lấy lịch sử quay của người dùng
-            Route::get('/user/spin-history', [SpinController::class, 'getSpinHistory'])->name('user.spin-history');
+        // Lấy lịch sử quay của người dùng
+        Route::get('/user/spin-history', [SpinController::class, 'getSpinHistory'])->name('user.spin-history');
 
-            // Lấy danh sách phần thưởng có thể trúng
-            Route::get('/rewards', [SpinController::class, 'getAvailableRewards'])->name('rewards');
+        // Lấy danh sách phần thưởng có thể trúng
+        Route::get('/rewards', [SpinController::class, 'getAvailableRewards'])->name('rewards');
 
-            //Kiểm tra trạng thái vòng quay
-            Route::get('/status', [SpinController::class, 'getSpinStatus']);
-        });
+        //Kiểm tra trạng thái vòng quay
+        Route::get('/status', [SpinController::class, 'getSpinStatus']);
     });
+
     #============================== ROUTE TRANSACTION =============================
     Route::prefix('transactions')->as('transactions.')->group(function () {
         Route::get('/', [TransactionController::class, 'index']);
@@ -301,6 +320,12 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->group(function () {
                     Route::get('/', [LivestreamController::class, 'getLivestreams']);
                     Route::post('/', [LivestreamController::class, 'startLivestream']);
+                    Route::get('get-stream-key', [LivestreamController::class, 'getStreamKey']);
+                    Route::post('generate-stream-key', [LivestreamController::class, 'generateStreamKey']);
+
+                    Route::get('/schedule', [LivestreamController::class, 'getLiveSchedules']);
+                    Route::get('/schedule/{livestream}', [LivestreamController::class, 'getLiveSchedule']);
+                    Route::post('/schedule', [LivestreamController::class, 'createLiveSchedule']);
                 });
 
             #============================== ROUTE FEEDBACK =============================
@@ -321,6 +346,7 @@ Route::middleware('auth:sanctum')->group(function () {
                         ->group(function () {
                             Route::get('/', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'index']);
                             Route::get('/{learner}', [\App\Http\Controllers\API\Instructor\LearnerController::class, 'getLearnerProgress']);
+                            Route::get('/{learner}/weekly-study-time', [LearnerController::class, 'getWeeklyStudyTime']);
                         });
 
                     #============================== ROUTE COURSE =============================
@@ -328,6 +354,7 @@ Route::middleware('auth:sanctum')->group(function () {
                         ->group(function () {
                             Route::get('/', [CourseController::class, 'index']);
                             Route::get('/course-approved', [CourseController::class, 'courseApproved']);
+                            Route::get('/course-with-price', [CourseController::class, 'courseWithPrice']);
                             Route::get('/trash', [CourseController::class, 'trash']);
                             Route::get('/{course}', [CourseController::class, 'getCourseOverView']);
                             Route::get('/{course}/course-list-of-user', [CourseController::class, 'courseListOfUser']);
@@ -363,6 +390,7 @@ Route::middleware('auth:sanctum')->group(function () {
                             Route::put('/{chapterId}/{lesson}', [LessonController::class, 'updateTitleLesson']);
                             Route::put('/{chapterId}/{lesson}/content', [LessonController::class, 'updateContentLesson']);
                             Route::delete('/{chapterId}/{lesson}', [LessonController::class, 'deleteLesson']);
+                            Route::post('/move', [LessonController::class, 'moveLessons']);
 
                             Route::post('/{chapterId}/store-lesson-video', [\App\Http\Controllers\API\Instructor\LessonVideoController::class, 'storeLessonVideo']);
                             Route::get('/{chapterId}/{lesson}/show-lesson', [\App\Http\Controllers\API\Instructor\LessonVideoController::class, 'getLessonVideo']);
@@ -461,6 +489,8 @@ Route::middleware('auth:sanctum')->group(function () {
                     Route::delete('/delete-group-chat/{id}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiDeleteGroupChat']);
                     Route::delete('/kick-member-group-chat', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiKickMemberGroupChat']);
                     Route::get('/{id}/remaining-members', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetRemainingMembers']);
+                    Route::put('/{conversationId}/{action}/toggle-block/{userId}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiToggleBlockUserInChat'])
+                        ->where('action', 'block|unblock');
                 });
 
             Route::get('/group/get-group-student', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetStudentGroups']);
@@ -469,6 +499,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->group(function () {
                     Route::get('/get-direct-chats', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetDirectChats']);
                     Route::post('/start-direct-chat', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiStartDirectChat']);
+                    Route::post('/start-chat-with-system', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiStartChatWithSystem']);
                 });
 
             Route::get('/get-message/{conversationId}', [\App\Http\Controllers\API\Chat\ChatController::class, 'apiGetMessage']);

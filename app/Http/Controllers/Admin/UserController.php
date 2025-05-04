@@ -9,7 +9,10 @@ use App\Http\Requests\Admin\Users\UpdateProfileRequest;
 use App\Http\Requests\Admin\Users\UpdateUserRequest;
 use App\Imports\UsersImport;
 use App\Models\Course;
+use App\Models\Invoice;
+use App\Models\Transaction;
 use App\Models\User;
+use App\Models\WithdrawalRequest;
 use App\Traits\FilterTrait;
 use App\Traits\LoggableTrait;
 use App\Traits\UploadToCloudinaryTrait;
@@ -166,38 +169,82 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
+    public function show(Request $request, User $user)
     {
         try {
-
             $title = 'Quản lý thành viên';
             $subTitle = 'Chi tiết người dùng';
 
-            $user->load('profile');
+            $user->load(['profile', 'instructorCommissions']);
 
-            $queryCourses = Course::where('user_id', $user->id)
-                ->where('status', 'approved')
-                ->orderByDesc('created_at');
+            $roleUser = 'member';
 
+            if ($user->hasRole('instructor')) {
+                $roleUser = 'instructor';
+            } elseif ($user->hasRole('employee')) {
+                $roleUser = 'employee';
+            }
 
-            $totalStudents = (clone $queryCourses)->sum('total_student');
-            $courses = $queryCourses->paginate(5);
+            $courses = $this->getCourseInstructor($user->id);
+            $totalStudents = $this->getTotalStudentsByInstructor($user->id);
+            $memberships = $this->getMembershipInstructor($user->id);
+            $purchases = $this->getHistoryBought($user->id);
+            $transactions = $this->getHistoryWithdraw($user->id);
+            $totalSpent = $this->getTotaltotalSpent($user->id);
+            $totalRevenueInstructor = $this->getTotalRevenueInstructor($user->id);
+
+            if ($roleUser == 'member') {
+                $courses = $this->getCourseStudent($user->id);
+                $memberships = $this->getMembershipStudent($user->id);
+            }
+
+            if ($request->ajax()) {
+                $requestType = $request->input('type', 'courses');
+                $response = [];
+
+                switch ($requestType) {
+                    case 'courses':
+                        $response['courses_table'] = view('users.includes.course_table', compact('courses', 'roleUser'))->render();
+                        $response['pagination_links_courses'] = $courses->links()->toHtml();
+                        break;
+
+                    case 'memberships':
+                        $response['memberships_table'] = view('users.includes.membership_table', compact('memberships', 'roleUser'))->render();
+                        $response['pagination_links_memberships'] = $memberships->links()->toHtml();
+                        break;
+
+                    case 'purchases':
+                        $response['purchases_table'] = view('users.includes.purchase_table', compact('purchases'))->render();
+                        $response['pagination_links_purchases'] = $purchases->links()->toHtml();
+                        break;
+
+                    case 'withdrawals':
+                        $response['withdrawals_table'] = view('users.includes.withdrawal_table', compact('transactions'))->render();
+                        $response['pagination_links_withdrawals'] = $transactions->links()->toHtml();
+                        break;
+                }
+
+                return response()->json($response);
+            }
 
             return view('users.show', compact([
                 'user',
                 'courses',
                 'totalStudents',
+                'memberships',
+                'roleUser',
+                'purchases',
+                'transactions',
+                'totalSpent',
+                'totalRevenueInstructor',
                 'title',
                 'subTitle'
             ]));
         } catch (\Exception $e) {
-
             $this->logError($e);
-
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
-
     /**
      * Show the form for editing the specified resource.
      */
@@ -245,7 +292,6 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
-
     /**
      * Update the specified resource in storage.
      */
@@ -354,7 +400,6 @@ class UserController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
-
     /**
      * Remove the specified resource from storage.
      */
@@ -553,7 +598,6 @@ class UserController extends Controller
 
         return $roles[$role] ?? ['name' => 'member', 'actor' => 'khách hàng', 'role_name' => 'clients'];
     }
-
     private function filter(Request $request, $query)
     {
         $filters = [
@@ -571,7 +615,6 @@ class UserController extends Controller
 
         return $query;
     }
-
     private function search($searchTerm, $query)
     {
         if (!empty($searchTerm)) {
@@ -587,7 +630,6 @@ class UserController extends Controller
 
         return $query;
     }
-
     public function profileUpdate(UpdateProfileRequest $request, User $user)
     {
         try {
@@ -638,5 +680,205 @@ class UserController extends Controller
 
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
+    }
+    private function getCourseInstructor($instructorId)
+    {
+        $courses = DB::table('courses')
+            ->select(
+                'courses.id',
+                'courses.name',
+                'courses.slug',
+                'courses.thumbnail',
+            )->where(['courses.status' => 'approved', 'courses.user_id' => $instructorId]);
+
+        $invoices = DB::table('invoices')
+            ->select('invoices.course_id', DB::raw('SUM(invoices.final_amount*invoices.instructor_commissions) as total_revenue'))
+            ->where('invoices.status', 'Đã thanh toán')
+            ->groupBy('invoices.course_id');
+
+        $invoices =  DB::table(DB::raw("({$invoices->toSql()}) as invoices"))->mergeBindings($invoices)
+            ->joinSub($courses, 'courses', function ($join) {
+                $join->on('courses.id', '=', 'invoices.course_id');
+            });
+
+        $ratings = DB::table('ratings')
+            ->select(DB::raw('AVG(DISTINCT ratings.rate) as avg_rating'), 'ratings.course_id')
+            ->joinSub($courses, 'courses', function ($join) {
+                $join->on('ratings.course_id', '=', 'courses.id');
+            })->groupBy('ratings.course_id');
+
+        $course_users = DB::table('course_users')
+            ->select('course_users.course_id', DB::raw('COUNT(course_users.user_id) as total_student'), DB::raw('AVG(course_users.progress_percent) as avg_progress'))
+            ->joinSub($courses, 'courses', function ($join) {
+                $join->on('courses.id', '=', 'course_users.course_id');
+            })->groupBy('course_users.course_id');
+
+        $courseRevenue = DB::table(DB::raw("({$courses->toSql()}) as courses"))
+            ->mergeBindings($courses)
+            ->select(
+                'courses.id',
+                'courses.name',
+                'courses.slug',
+                'courses.thumbnail',
+                'course_users.total_student',
+                DB::raw('ROUND(COALESCE(invoices.total_revenue), 2) as total_revenue'),
+                DB::raw('ROUND(COALESCE(course_users.avg_progress),2) as avg_progress'),
+                DB::raw('ROUND(COALESCE(ratings.avg_rating), 1) as avg_rating')
+            )
+            ->joinSub($invoices, 'invoices', function ($join) {
+                $join->on('invoices.course_id', '=', 'courses.id');
+            })
+            ->leftJoinSub($ratings, 'ratings', function ($join) {
+                $join->on('ratings.course_id', '=', 'courses.id');
+            })
+            ->leftJoinSub($course_users, 'course_users', function ($join) {
+                $join->on('course_users.course_id', '=', 'courses.id');
+            })
+            ->orderByDesc('total_revenue')
+            ->paginate(5);
+
+        return $courseRevenue;
+    }
+    private function getCourseStudent($userId)
+    {
+        $invoices = DB::table('invoices')
+            ->select('invoices.course_id', 'invoices.created_at')
+            ->where(['invoices.status' => 'Đã thanh toán', 'invoices.user_id' => $userId])
+            ->where('invoices.course_id', '!=', Null);
+
+        $invoices = DB::table('courses')
+            ->joinSub($invoices, 'invoices', function ($join) {
+                $join->on('courses.id', '=', 'invoices.course_id');
+            })
+            ->select('invoices.*', 'courses.id', 'courses.name', 'courses.slug', 'courses.thumbnail');
+
+        $course_users = DB::table('course_users')
+            ->select('course_users.course_id', 'course_users.progress_percent')
+            ->where('user_id', $userId);
+
+        $courseRevenue = DB::table(DB::raw("({$invoices->toSql()}) as invoices"))
+            ->mergeBindings($invoices)
+            ->select(
+                'invoices.id',
+                'invoices.name',
+                'invoices.slug',
+                'invoices.thumbnail',
+                'course_users.progress_percent',
+                'invoices.created_at'
+            )->leftJoinSub($course_users, 'course_users', function ($join) {
+                $join->on('course_users.course_id', '=', 'invoices.course_id');
+            })
+            ->orderByDesc('invoices.created_at')
+            ->paginate(5);
+
+        return $courseRevenue;
+    }
+    private function getTotalStudentsByInstructor($instructorId)
+    {
+        return DB::table('courses')
+            ->join('course_users', function ($join) {
+                $join->on('courses.id', '=', 'course_users.course_id');
+            })
+            ->where('courses.user_id', $instructorId)
+            ->distinct('course_users.user_id')
+            ->count('course_users.user_id');
+    }
+    private function getMembershipStudent($userId)
+    {
+        $invoices = DB::table('invoices')
+            ->select('invoices.membership_plan_id', 'invoices.created_at')
+            ->where(['invoices.status' => 'Đã thanh toán', 'invoices.user_id' => $userId])
+            ->where('invoices.membership_plan_id', '!=', Null);
+
+        $invoices = DB::table('membership_plans')
+            ->joinSub($invoices, 'invoices', function ($join) {
+                $join->on('membership_plans.id', '=', 'invoices.membership_plan_id');
+            })
+            ->select('invoices.*', 'membership_plans.id', 'membership_plans.name', 'membership_plans.duration_months');
+        $membershipRevenue = DB::table(DB::raw("({$invoices->toSql()}) as invoices"))
+            ->mergeBindings($invoices)
+            ->select(
+                'invoices.id',
+                'invoices.name',
+                'invoices.duration_months',
+                'invoices.created_at'
+            )
+            ->orderByDesc('invoices.created_at')
+            ->paginate(5);
+
+        return $membershipRevenue;
+    }
+    private function getMembershipInstructor($instructorId)
+    {
+        $membership = DB::table('membership_plans')
+            ->select(
+                'membership_plans.id',
+                'membership_plans.name',
+                'membership_plans.duration_months',
+                'membership_plans.created_at'
+            )->where(['membership_plans.status' => 'active', 'membership_plans.instructor_id' => $instructorId]);
+
+        $invoices = DB::table('invoices')
+            ->select(
+                'invoices.membership_plan_id',
+                DB::raw('SUM(invoices.final_amount*invoices.instructor_commissions) as total_revenue, COUNT(DISTINCT user_id) as total_bought')
+            )->where('invoices.status', 'Đã thanh toán')
+            ->groupBy('invoices.membership_plan_id');
+
+        $invoices =  DB::table(DB::raw("({$invoices->toSql()}) as invoices"))->mergeBindings($invoices)
+            ->joinSub($membership, 'membership_plans', function ($join) {
+                $join->on('membership_plans.id', '=', 'invoices.membership_plan_id');
+            });
+
+        $membershipRevenue = DB::table(DB::raw("({$membership->toSql()}) as membership_plans"))
+            ->mergeBindings($membership)
+            ->select(
+                'membership_plans.id',
+                'membership_plans.name',
+                'membership_plans.duration_months',
+                DB::raw('ROUND(COALESCE(invoices.total_revenue), 2) as total_revenue'),
+                DB::raw('COALESCE(invoices.total_bought) as total_bought'),
+                'membership_plans.created_at'
+            )
+            ->joinSub($invoices, 'invoices', function ($join) {
+                $join->on('membership_plans.id', '=', 'invoices.membership_plan_id');
+            })
+            ->orderByDesc('total_revenue')
+            ->paginate(5);
+
+        return $membershipRevenue;
+    }
+    private function getHistoryBought($userId)
+    {
+        return Invoice::query()
+            ->where(['user_id' => $userId, 'status' => 'Đã thanh toán'])
+            ->with(['course', 'membershipPlan'])
+            ->paginate(5);
+    }
+    private function getHistoryWithdraw($userID)
+    {
+        return Transaction::query()
+            ->where(['user_id' => $userID, 'status' => 'Giao dịch thành công', 'type' => 'withdrawal'])
+            ->with('transactionable')
+            ->paginate(5);
+    }
+    private function getTotaltotalSpent($userId)
+    {
+        return DB::table('invoices')
+            ->select(DB::raw('SUM(final_amount) as totalSpent'))
+            ->where(['user_id' => $userId, 'status' => 'Đã thanh toán'])
+            ->first();
+    }
+    private function getTotalRevenueInstructor($instructorId){
+        return Invoice::query()
+        ->select([
+            DB::raw('SUM(final_amount*instructor_commissions) as total_revenue'),
+            DB::raw('SUM(final_amount*(1-instructor_commissions)) as total_instructor_share')
+        ])
+        ->whereHas('course', function($query) use ($instructorId){
+            $query->where('user_id', $instructorId);
+        })
+        ->where('status', 'Đã thanh toán')
+        ->first();
     }
 }

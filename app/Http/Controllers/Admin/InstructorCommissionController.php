@@ -24,7 +24,7 @@ class InstructorCommissionController extends Controller
         $title = 'Quản lý và phân chia doanh thu';
         $subTitle = 'Phân chia doanh thu';
 
-        $queryInstructorCommission = InstructorCommission::query()->with('instructor');
+        $queryInstructorCommission = InstructorCommission::query()->with('instructor')->latest('created_at');
 
         if ($request->filled('instructor_name')) {
             $queryInstructorCommission->whereHas('instructor', function ($q) use ($request) {
@@ -52,6 +52,14 @@ class InstructorCommissionController extends Controller
             $queryInstructorCommission->whereDate('created_at', '=', $request->input('start_date'));
         }
 
+        if ($request->filled('commission_amount')) {
+            $queryInstructorCommission->where('commission_amount', $request->input('commission_amount'));
+        }
+    
+        if ($request->filled('start_date')) {
+            $queryInstructorCommission->whereDate('created_at', '=', $request->input('start_date'));
+        }
+    
         if ($request->filled('end_date')) {
             $queryInstructorCommission->where('created_at', '<=', $request->input('end_date'));
         }
@@ -236,4 +244,8 @@ class InstructorCommissionController extends Controller
             return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+
+    
+    
+
 }

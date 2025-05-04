@@ -167,16 +167,22 @@ class BannerController extends Controller
     {
         try {
             DB::beginTransaction();
+            if (str_contains($id, ',')) {
 
-            $banner = Banner::query()->findOrFail($id);
+                $bannerID = explode(',', $id);
 
-            $banner->delete();
+                $this->deleteBanners($bannerID);
+            }else {
+                $banner = Banner::query()->findOrFail($id);
 
-            if (!empty($banner->image) && filter_var($banner->image, FILTER_VALIDATE_URL)) {
-                $this->deleteImage($banner->image,  self::FOLDER);
+                $banner->delete();
+    
+                if (!empty($banner->image) && filter_var($banner->image, FILTER_VALIDATE_URL)) {
+                    $this->deleteImage($banner->image,  self::FOLDER);
+                }
+                Banner::where('order', '>', $banner->order)
+                    ->decrement('order');
             }
-            Banner::where('order', '>', $banner->order)
-                ->decrement('order');
             DB::commit();
 
             return response()->json([

@@ -30,23 +30,27 @@ class LearnerController extends Controller
                 return $this->respondForbidden('Bạn không có quyền truy cập');
             }
 
-            $courses = Course::query()->where('user_id', $user->id)->pluck('id');
+            $courseIds = Course::where('user_id', $user->id)->pluck('id');
 
             $learners = DB::table('course_users')
                 ->join('users', 'course_users.user_id', '=', 'users.id')
-                ->whereIn('course_users.course_id', $courses)
+                ->whereIn('course_users.course_id', $courseIds)
                 ->select(
-                    'users.code',
                     'users.id',
+                    'users.code',
                     'users.name',
                     'users.email',
                     'users.avatar',
-                    'course_users.enrolled_at',
-                    DB::raw('COUNT(course_users.course_id) as total_courses')
+                    DB::raw('MIN(course_users.enrolled_at) as enrolled_at'),
+                    DB::raw('COUNT(DISTINCT course_users.course_id) as total_courses')
                 )
-                ->groupBy('course_users.user_id', 'users.id', 'users.name', 'users.email', 'users.avatar', 'course_users.enrolled_at',
-                    'users.code')
-                ->distinct()
+                ->groupBy(
+                    'users.id',
+                    'users.code',
+                    'users.name',
+                    'users.email',
+                    'users.avatar'
+                )
                 ->orderBy('enrolled_at', 'desc')
                 ->get();
 
@@ -221,6 +225,8 @@ class LearnerController extends Controller
                 'name' => $learner->name,
                 'phone' => $learner->phone ?? '',
                 'email' => $learner->email,
+                'avatar' => $learner->avatar,
+                'created_at' => $learner->created_at,
                 'id' => $learner->id
             ];
 
@@ -344,4 +350,44 @@ class LearnerController extends Controller
             'weeklyData' => $weeklyStudyTime->values()->all()
         ];
     }
+    public function getWeeklyStudyTime(Request $request, string $code)
+    {
+        try {
+            $instructor = Auth::user();
+    
+            if (!$instructor || !$instructor->hasRole('instructor')) {
+                return $this->respondForbidden('Bạn không có quyền truy cập');
+            }
+    
+            $learner = User::where('code', $code)->first();
+    
+            if (!$learner) {
+                return $this->respondNotFound('Không tìm thấy học viên');
+            }
+    
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+    
+            if (!$startDate || !$endDate) {
+                $request->merge([
+                    'start_date' => now()->subYear()->startOfDay()->toDateTimeString(),
+                    'end_date' => now()->endOfDay()->toDateTimeString(),
+                ]);
+            } else {
+                $request->merge([
+                    'start_date' => Carbon::parse($startDate)->startOfDay()->toDateTimeString(),
+                    'end_date' => Carbon::parse($endDate)->endOfDay()->toDateTimeString(),
+                ]);
+            }
+    
+            $studyTime = $this->calculateWeeklyStudyTime($learner->id, $request);
+    
+            return $this->respondOk('Thời gian học hàng tuần của học viên: ' . $learner->name, $studyTime);
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return $this->respondServerError();
+        }
+    }
+    
+
 }

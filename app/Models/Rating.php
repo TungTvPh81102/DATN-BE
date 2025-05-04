@@ -15,6 +15,7 @@ class Rating extends Model
         'rate',
         'content'
     ];
+    
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

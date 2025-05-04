@@ -55,6 +55,15 @@ class ProcessInstructorRegistrationJob implements ShouldQueue
                     'approved_at' => now(),
                     'note' => 'Duyệt đăng ký trở thành giảng viên.',
                     'approver_id' => null,
+                    'approval_logs' => [
+                        [
+                            'name' => 'Hệ thống',
+                            'status' => 'approved',
+                            'note' => 'Giảng viên tự động được phê duyệt.',
+                            'reason' => null,
+                            'action_at' => now()->toISOString(),
+                        ]
+                    ]
                 ]);
 
                 $user->syncRoles(['instructor']);
@@ -67,11 +76,13 @@ class ProcessInstructorRegistrationJob implements ShouldQueue
                     'instructor_id' => $user->id,
                     'rate' => 0.6,
                     'rate_logs' => json_encode([
-                        'old_rate' => null,
-                        'new_rate' => 0.6,
-                        'changed_at' => now(),
-                        'user_name' => 'Hệ thống tự động đánh giá',
-                        'note' => 'Tỷ lệ mặc định khi giảng viên bắt đầu tham gia'
+                        [
+                            'old_rate' => null,
+                            'new_rate' => 0.6,
+                            'changed_at' => now()->toISOString(),
+                            'user_name' => 'Hệ thống tự động đánh giá',
+                            'note' => 'Tỷ lệ mặc định khi giảng viên bắt đầu tham gia'
+                        ]
                     ])
                 ]);
             } else {
@@ -80,6 +91,15 @@ class ProcessInstructorRegistrationJob implements ShouldQueue
                     'note' => 'Hồ sơ chưa đủ điều kiện duyệt. Vui lòng bổ sung thông tin.',
                     'rejected_at' => now(),
                     'approver_id' => null,
+                    'approval_logs' => json_encode([
+                        [
+                            'name' => 'Hệ thống',
+                            'status' => 'rejected',
+                            'note' => 'Hồ sơ chưa đủ điều kiện duyệt. Vui lòng bổ sung thông tin.',
+                            'reason' => json_encode($approvalCheck['errors']),
+                            'action_at' => now()->toISOString(),
+                        ]
+                    ])
                 ]);
 
                 $user->notify(new InstructorRejectedNotification($user));

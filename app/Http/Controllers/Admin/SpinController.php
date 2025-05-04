@@ -40,9 +40,9 @@ class SpinController extends Controller
         $missingTypes = array_diff($requiredTypes, $spinConfigTypes);
 
         $typeNames = [
-            'no_reward' => 'Không trúng',
+            'no_reward' => 'Chúc bạn may mắn lần sau',
             'coupon' => 'Mã giảm giá',
-            'spin' => 'Lượt quay',
+            'spin' => 'Tặng thêm 1 lượt quay',
         ];
         $missingTypeNames = array_map(function ($type) use ($typeNames) {
             return $typeNames[$type] ?? ucfirst($type); // Fallback nếu type không có trong ánh xạ
@@ -186,6 +186,23 @@ class SpinController extends Controller
 
             $data = $request->all();
             // dd( $data); die;
+            $newCells = (int) ($data['cells'] ?? 1);
+
+            // Tính tổng cells hiện tại
+            $currentTotalCells = SpinConfig::sum('cells');
+
+            // Nếu vượt quá 8 -> báo lỗi
+            if ($currentTotalCells + $newCells > 6) {
+                return redirect()->back()->with('error', 'Tổng số ô quà không được vượt quá 8.');
+            }
+            $spinType = SpinType::where('name', $data['type'])->first();
+
+            if (!$spinType) {
+                return redirect()->back()->with('error', 'Loại ô quà không hợp lệ.');
+            }
+
+            // Gán tên ô quà = display_name của loại
+            $data['name'] = $spinType->display_name;
             $spinConfig = SpinConfig::create($data);
             DB::commit();
             return redirect()->back()->with('success', 'Thêm ô quà thành công!');
@@ -202,53 +219,53 @@ class SpinController extends Controller
         }
     }
     public function toggleSelection(Request $request, $type, $id)
-{
-    try {
-        $spinSetting = SpinSetting::first();
-        if ($spinSetting && $spinSetting->status === 'active') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Không thể thay đổi trạng thái quà hiện vật khi vòng quay đang hoạt động!'
-            ], 403);
-        }
-
-        if ($type === 'gift') {
-            $item = Gift::findOrFail($id);
-            if (!$item->is_selected) {
-                $selectedGiftsCount = Gift::where('is_selected', 1)->count();
-                if ($selectedGiftsCount >= 2) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Chỉ được phép thêm tối đa 2 quà hiện vật vào vòng quay!'
-                    ], 400);
-                }
+    {
+        try {
+            $spinSetting = SpinSetting::first();
+            if ($spinSetting && $spinSetting->status === 'active') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không thể thay đổi trạng thái quà hiện vật khi vòng quay đang hoạt động!'
+                ], 403);
             }
 
-            $item->is_selected = !$item->is_selected;
-            $item->save();
+            if ($type === 'gift') {
+                $item = Gift::findOrFail($id);
+                if (!$item->is_selected) {
+                    $selectedGiftsCount = Gift::where('is_selected', 1)->count();
+                    if ($selectedGiftsCount >= 2) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Chỉ được phép thêm tối đa 2 quà hiện vật vào vòng quay!'
+                        ], 400);
+                    }
+                }
 
-            $message = $item->is_selected
-                ? 'Thêm quà hiện vật vào vòng quay thành công!'
-                : 'Bỏ quà hiện vật khỏi vòng quay thành công!';
+                $item->is_selected = !$item->is_selected;
+                $item->save();
+
+                $message = $item->is_selected
+                    ? 'Thêm quà hiện vật vào vòng quay thành công!'
+                    : 'Bỏ quà hiện vật khỏi vòng quay thành công!';
+                return response()->json([
+                    'success' => true,
+                    'message' => $message,
+                    'is_selected' => $item->is_selected
+                ]);
+            }
+
             return response()->json([
-                'success' => true,
-                'message' => $message,
-                'is_selected' => $item->is_selected
-            ]);
+                'success' => false,
+                'message' => 'Loại phần thưởng không hợp lệ'
+            ], 400);
+        } catch (\Exception $e) {
+            $this->logError($e);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
         }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Loại phần thưởng không hợp lệ'
-        ], 400);
-    } catch (\Exception $e) {
-        $this->logError($e);
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
     }
-}
     // Cập nhật cấu hình tỷ lệ trúng (SpinConfig)
     public function updateSpinConfig(Request $request, $id)
     {

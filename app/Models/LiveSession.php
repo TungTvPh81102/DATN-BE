@@ -10,20 +10,28 @@ class LiveSession extends Model
     use HasFactory;
 
     protected $fillable = [
+        'live_stream_credential_id',
         'instructor_id',
+        'code',
         'title',
+        'thumbnail',
         'description',
-        'stream_key',
-        'mux_playback_id',
+        'visibility',
         'status',
-        'start_time',
-        'end_time',
+        'starts_at',
+        'actual_start_time',
+        'actual_end_time',
+        'recording_asset_id',
+        'recording_playback_id',
+        'duration',
+        'recording_url',
+        'viewers_count',
+        'notified_at'
     ];
 
-    public function instructor()
-    {
-        return $this->belongsTo(User::class, 'instructor_id');
-    }
+    protected $casts = [
+        'starts_at' => 'datetime',
+    ];
 
     public function conversation()
     {
@@ -35,4 +43,13 @@ class LiveSession extends Model
         return $this->hasMany(LiveSessionParticipant::class);
     }
 
+    public function instructor()
+    {
+        return $this->belongsTo(User::class, 'instructor_id');
+    }
+
+    public function liveStreamCredential()
+    {
+        return $this->belongsTo(LiveStreamCredential::class);
+    }
 }

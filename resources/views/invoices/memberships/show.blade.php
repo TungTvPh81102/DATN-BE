@@ -674,7 +674,7 @@
                                 $activityLogs = $invoice->membershipPlan->membershipSubscription->activity_logs;
                             @endphp
                             
-                            @if(count($activityLogs) > 0)
+                            @if(!empty($activityLogs) && count($activityLogs) > 0)
                                 <div class="timeline">
                                     @foreach ($activityLogs as $index => $log)
                                         @php

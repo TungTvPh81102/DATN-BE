@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('codings', function (Blueprint $table) {
-           $table->text('instruct')->nullable()->after('hints');
+        Schema::table('lessons', function (Blueprint $table) {
+            $table->boolean('is_supplement')->default(0)->after('lessonable_id');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('codings', function (Blueprint $table) {
-            $table->dropColumn('instruct');
+        Schema::table('lessons', function (Blueprint $table) {
+            $table->dropColumn('is_supplement');
         });
     }
 };

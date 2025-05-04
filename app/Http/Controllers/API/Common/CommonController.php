@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
@@ -402,20 +403,15 @@ class CommonController extends Controller
 
     public function chatBox(Request $request)
     {
+        if ($request->input('clear_history', false)) {
+            return $this->clearChatHistory();
+        }
+
         $userMessage = $request->input('message', '');
         $context = $request->input('context', 'Chưa có, khi chưa có bạn hãy hỏi lại học viên');
-        $clearHistory = $request->input('clear_history', false);
         $timestamp = Carbon::now()->format('[d/m/Y H:i:s]');
 
         $chatHistory = Session::get('chat_history', []);
-
-        if ($clearHistory) {
-            Session::forget('chat_history');
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Chat history cleared'
-            ]);
-        }
 
         if (empty($chatHistory)) {
             $chatHistory[] = [
@@ -454,14 +450,42 @@ class CommonController extends Controller
 
         Session::put('chat_history', $chatHistory);
 
-        return response()->json([
+        return $this->respondOk('Lấy dữ liệu thành công', [
             'reply' => $aiReply,
             'time' => Carbon::now()->format('H:i')
         ]);
     }
-    public function resetChatBox()
+
+    public function clearChatHistory()
     {
         Session::forget('chat_history');
         return $this->respondNoContent();
+    }
+
+    public function checkPassword(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            if (!$user) {
+                return $this->respondUnauthorized('Vui lòng đăng nhập');
+            }
+
+            $password = $request->input('password');
+
+            if (empty($password)) {
+                return $this->respondError('Vui lòng nhập mật khẩu');
+            }
+
+            if (!Hash::check($password, $user->password)) {
+                return $this->respondError('Mật khẩu không chính xác');
+            }
+
+            return $this->respondOk('Mật khẩu chính xác');
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
     }
 }

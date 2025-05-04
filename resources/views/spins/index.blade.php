@@ -143,7 +143,7 @@
                                     @if (!$hasEnoughSpinConfigTypes)
                                         <li class="mb-2">
                                             <i class="bi bi-dash-circle text-danger me-2"></i>
-                                            Vòng quay chưa đủ 3 loại phần thưởng (Không trúng, Mã giảm giá, Lượt quay). Thiếu:
+                                            Vòng quay chưa đủ 3 loại phần thưởng. Thiếu:
                                             <ul class="list-group list-group-flush mt-1">
                                                 @foreach ($missingTypeNames as $typeName)
                                                     <li class="list-group-item border-0 ps-4">{{ $typeName }}</li>
@@ -216,7 +216,7 @@
                                     <th>Loại</th>
                                     <th>Tên</th>
                                     <th>Số ô</th>
-                                    <th>Tỷ lệ (%)</th>
+                                    <th>Tỷ lệ</th>
                                     <th>Hành động</th>
                                 </tr>
                             </thead>
@@ -226,13 +226,13 @@
                                         <td>{{ $config->type }}</td>
                                         <td>{{ $config->name }}</td>
                                         <td>{{ $config->cells ?? '1' }}</td>
-                                        <td>{{ $config->probability }}</td>
+                                        <td>{{ number_format($config->probability, 0) }}%</td>
                                         <td>
                                             <form action="{{ route('admin.spins.spin-config.update', $config->id) }}"
                                                 method="POST" class="d-inline">
                                                 @csrf
                                                 @method('PUT')
-                                                <input type="number" name="probability" value="{{ $config->probability }}"
+                                                <input type="number" name="probability" value="{{ number_format($config->probability, 0) }}"
                                                     step="0.01" min="0" max="100"
                                                     class="form-control form-control-sm d-inline" required>
                                                 <button type="submit" class="btn btn-primary btn-sm">Cập nhật</button>
@@ -252,7 +252,7 @@
                                         <td>Gift</td>
                                         <td>{{ $gift->name }}</td>
                                         <td>{{ $gift->cells ?? '1' }}</td>
-                                        <td>{{ $gift->probability }}</td> 
+                                        <td>{{ number_format($gift->probability, 0) }}%</td>
                                         <td>
                                             <form action="{{ route('admin.spins.gift.update', $gift->id) }}" method="POST"
                                                 class="d-inline">
@@ -412,11 +412,6 @@
                                         <option value="{{ $spinType->name }}">{{ $spinType->display_name }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-                            <div class="col-md-12">
-                                <label for="name" class="form-label">Tên</label>
-                                <input type="text" name="name" value="{{ old('name') }}" class="form-control"
-                                    placeholder="Tên ô quà" required>
                             </div>
                             <div class="col-md-12">
                                 <label for="probability" class="form-label">Tỷ lệ (%)</label>

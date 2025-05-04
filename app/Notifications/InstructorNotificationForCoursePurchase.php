@@ -18,9 +18,6 @@ class InstructorNotificationForCoursePurchase extends Notification implements Sh
     private $course;
     private $transaction;
 
-    /**
-     * Create a new notification instance.
-     */
     public function __construct($buyer, $course, $transaction)
     {
         $this->buyer = $buyer;
@@ -28,29 +25,24 @@ class InstructorNotificationForCoursePurchase extends Notification implements Sh
         $this->transaction = $transaction;
     }
 
-
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
     public function via(object $notifiable): array
     {
         return ['mail', 'database', 'broadcast'];
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
     public function toMail($notifiable)
     {
         return (new MailMessage)
             ->subject('Khóa học của bạn đã được mua!')
-            ->greeting('Xin chào ' . $notifiable->name . '!')
-            ->line('Khóa học "' . $this->course->name . '" đã được mua bởi học viên: ' . $this->buyer->name)
-            ->line('Số tiền: ' . number_format($this->transaction->amount, 0, ',', '.') . ' VND')
-            ->action('Xem chi tiết', url('/instructor/courses/' . $this->course->id))
-            ->line('Chúc mừng bạn đã có thêm một học viên!');
+            ->view(
+                'emails.instructor_course_purchase',
+                [
+                    'notifiable' => $notifiable,
+                    'buyer' => $this->buyer,
+                    'course' => $this->course,
+                    'transaction' => $this->transaction
+                ]
+            );
     }
 
 

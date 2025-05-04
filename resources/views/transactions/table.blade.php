@@ -39,7 +39,7 @@
                             @endif
                         </td>
                         <td class="col-1">
-                            @if ($transaction->status === 'Thành công')
+                            @if ($transaction->status === 'Giao dịch thành công')
                                 <span class="badge bg-success">
                                     {{ $transaction->status }}
                                 </span>

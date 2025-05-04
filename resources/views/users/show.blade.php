@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @push('page-css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
         .user-card {
             border-radius: 0.75rem;
@@ -397,18 +398,82 @@
                                         </div>
                                     </div>
 
-                                    <div class="row user-info-row">
-                                        <div class="col-md-3 user-info-label">
-                                            <i class="mdi mdi-account-group user-info-icon"></i>Tổng số học viên:
+                                    @if ($roleUser == 'instructor')
+                                        <div class="row user-info-row">
+                                            <div class="col-md-3 user-info-label">
+                                                <i class="mdi mdi-account-group user-info-icon"></i>Tổng số học viên:
+                                            </div>
+                                            <div class="col-md-9 user-info-value">
+                                                @if ($totalStudents > 0)
+                                                    {{ $totalStudents }}
+                                                @else
+                                                    <span class="text-muted fst-italic">Chưa có học viên</span>
+                                                @endif
+                                            </div>
                                         </div>
-                                        <div class="col-md-9 user-info-value">
-                                            @if ($totalStudents > 0)
-                                                {{ $totalStudents }}
-                                            @else
-                                                <span class="text-muted fst-italic">Chưa có học viên</span>
-                                            @endif
+
+                                        <div class="row user-info-row">
+                                            <div class="col-md-3 user-info-label">
+                                                <i class="mdi mdi-cash-multiple user-info-icon"></i>Hoa hồng nhận được:
+                                            </div>
+                                            <div class="col-md-9 user-info-value">
+                                                <span class="badge bg-primary">
+                                                    {{ fmod($user->instructorCommissions->rate * 100, 1) == 0
+                                                        ? number_format($user->instructorCommissions->rate * 100, 0)
+                                                        : number_format($user->instructorCommissions->rate * 100, 2) }}%
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
+
+                                        <div class="row user-info-row">
+                                            <div class="col-md-3 user-info-label">
+                                                <i class="mdi mdi-bank user-info-icon"></i>Tổng doanh thu:
+                                            </div>
+                                            <div class="col-md-9 user-info-value">
+                                                @if (!empty($totalRevenueInstructor->total_revenue))
+                                                    <span class="badge bg-info">
+                                                        {{ number_format($totalRevenueInstructor->total_revenue ?? 0) }}
+                                                        VND
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted fst-italic">Chưa có doanh thu</span>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <div class="row user-info-row">
+                                            <div class="col-md-3 user-info-label">
+                                                <i class="mdi mdi-domain user-info-icon"></i>Hệ thống nhận được:
+                                            </div>
+                                            <div class="col-md-9 user-info-value">
+                                                @if (!empty($totalRevenueInstructor->total_instructor_share))
+                                                    <span class="badge bg-success">
+                                                        {{ number_format($totalRevenueInstructor->total_instructor_share ?? 0) }}
+                                                        VND
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted fst-italic">Giảng viên chưa có doanh thu</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    @if ($roleUser != 'employee')
+                                        <div class="row user-info-row">
+                                            <div class="col-md-3 user-info-label">
+                                                <i class="mdi mdi-cash-refund user-info-icon"></i>Tổng tiền đã chi:
+                                            </div>
+                                            <div class="col-md-9 user-info-value">
+                                                @if (!empty($totalSpent->totalSpent))
+                                                    <span class="badge bg-danger">
+                                                        {{ number_format($totalSpent->totalSpent ?? 0) }} VND
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted fst-italic">Chưa chi tiền</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
 
                                     <div class="row user-info-row">
                                         <div class="col-md-3 user-info-label">
@@ -427,56 +492,435 @@
                                             {{ \Carbon\Carbon::parse($user->updated_at)->format('d/m/Y H:i:s') }}
                                         </div>
                                     </div>
-                                    @if ($user->hasRole('instructor'))
 
+                                    @if ($roleUser != 'employee')
                                         <div class="mt-4">
                                             <h5 class="mb-3 fw-bold">
-                                                📚 Danh sách khóa học của giảng viên <span
+                                                📊 Thông tin hoạt động của <span
                                                     class="text-primary">{{ $user->name }}</span>
                                             </h5>
 
-                                            @if ($courses->count() > 0)
-                                                <div class="table-responsive shadow-sm rounded border bg-white">
-                                                    <table class="table table-hover mb-0">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th>STT</th>
-                                                                <th>Ảnh</th>
-                                                                <th>Tên khóa học</th>
-                                                                <th>Số học viên</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach ($courses as $index => $course)
-                                                                <tr>
-                                                                    <td>{{ $courses->firstItem() + $index }}</td>
-                                                                    <td>
-                                                                        <img src="{{ $course->thumbnail ?? '/images/placeholder.png' }}"
-                                                                            alt="thumbnail" class="img-thumbnail"
-                                                                            style="width: 80px; height: 50px; object-fit: cover;">
-                                                                    </td>
-                                                                    <td>{{ $course->name }}</td>
-                                                                    <td>{{ $course->total_student }}</td>
-                                                                </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                    </table>
+                                            <ul class="nav nav-tabs nav-tabs-custom" role="tablist">
+                                                <li class="nav-item">
+                                                    <a class="nav-link active" data-bs-toggle="tab" href="#tab-courses"
+                                                        role="tab">
+                                                        <i class="mdi mdi-book-open-page-variant me-1"></i> Khóa học
+                                                        @if ($courses->count() > 0)
+                                                            <span
+                                                                class="badge bg-soft-primary text-primary">{{ $courses->total() }}</span>
+                                                        @endif
+                                                    </a>
+                                                </li>
+
+                                                <li class="nav-item">
+                                                    <a class="nav-link" data-bs-toggle="tab" href="#tab-memberships"
+                                                        role="tab">
+                                                        <i class="mdi mdi-certificate me-1"></i> Gói Membership
+                                                        @if (isset($memberships) && $memberships->count() > 0)
+                                                            <span
+                                                                class="badge bg-soft-info text-info">{{ $memberships->total() }}</span>
+                                                        @endif
+                                                    </a>
+                                                </li>
+
+                                                <li class="nav-item">
+                                                    <a class="nav-link" data-bs-toggle="tab" href="#tab-purchases"
+                                                        role="tab">
+                                                        <i class="mdi mdi-cart me-1"></i> Lịch sử mua hàng
+                                                        @if (isset($purchases) && $purchases->count() > 0)
+                                                            <span
+                                                                class="badge bg-soft-success text-success">{{ $purchases->total() }}</span>
+                                                        @endif
+                                                    </a>
+                                                </li>
+
+                                                @if ($roleUser == 'instructor')
+                                                    <li class="nav-item">
+                                                        <a class="nav-link" data-bs-toggle="tab" href="#tab-withdrawals"
+                                                            role="tab">
+                                                            <i class="mdi mdi-bank-transfer-out me-1"></i> Lịch sử rút tiền
+                                                            @if (isset($transactions) && $transactions->count() > 0)
+                                                                <span
+                                                                    class="badge bg-soft-warning text-warning">{{ $transactions->total() }}</span>
+                                                            @endif
+                                                        </a>
+                                                    </li>
+                                                @endif
+                                            </ul>
+
+                                            <!-- Tab Content -->
+                                            <div class="tab-content p-3 border border-top-0 rounded-bottom">
+                                                <!-- Tab: Khóa học -->
+                                                <div class="tab-pane fade show active" id="tab-courses" role="tabpanel">
+                                                    @if ($courses->count() > 0)
+                                                        <div class="table-responsive shadow-sm rounded">
+                                                            <table class="table table-hover mb-0" id="table-courses">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>STT</th>
+                                                                        <th>Tên khóa học</th>
+                                                                        @if ($roleUser == 'instructor')
+                                                                            <th>Học viên</th>
+                                                                            <th>Doanh thu</th>
+                                                                            <th>Đánh giá</th>
+                                                                        @else
+                                                                            <th>Trạng thái</th>
+                                                                            <th>Tiến độ học</th>
+                                                                            <th>Ngày mua</th>
+                                                                        @endif
+                                                                        <th>Thao tác</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach ($courses as $index => $course)
+                                                                        <tr>
+                                                                            <td>{{ $courses->firstItem() + $index }}</td>
+                                                                            <td>
+                                                                                <div class="d-flex">
+                                                                                    <img src="{{ $course->thumbnail ?? '/images/placeholder.png' }}"
+                                                                                        alt="thumbnail"
+                                                                                        class="img-thumbnail"
+                                                                                        style="width: 80px; height: 50px; object-fit: cover;">
+                                                                                    <span style="white-space: pre-line;"
+                                                                                        class="ms-1">{{ $course->name }}</span>
+                                                                                </div>
+                                                                            </td>
+                                                                            @if ($roleUser == 'instructor')
+                                                                                <td>{{ $course->total_student }}</td>
+                                                                                <td>{{ number_format($course->total_revenue) }}
+                                                                                    VND</td>
+                                                                                @php
+                                                                                    $rating =
+                                                                                        round($course->avg_rating * 2) /
+                                                                                        2;
+                                                                                    $fullStars = floor($rating);
+                                                                                    $halfStar =
+                                                                                        $rating - $fullStars === 0.5;
+                                                                                    $emptyStars =
+                                                                                        5 -
+                                                                                        $fullStars -
+                                                                                        ($halfStar ? 1 : 0);
+                                                                                @endphp
+
+                                                                                <td>
+                                                                                    @for ($i = 0; $i < $fullStars; $i++)
+                                                                                        <i
+                                                                                            class="fas fa-star text-warning"></i>
+                                                                                    @endfor
+
+                                                                                    @if ($halfStar)
+                                                                                        <i
+                                                                                            class="fas fa-star-half-alt text-warning"></i>
+                                                                                    @endif
+
+                                                                                    @for ($i = 0; $i < $emptyStars; $i++)
+                                                                                        <i
+                                                                                            class="far fa-star text-warning"></i>
+                                                                                    @endfor
+                                                                                </td>
+                                                                            @else
+                                                                                <td>
+                                                                                    <span
+                                                                                        class="badge bg-success text-white">Đã
+                                                                                        mua</span>
+                                                                                </td>
+                                                                                <td>
+                                                                                    @if ($course->progress_percent == 100)
+                                                                                        <span class="badge bg-primary">Hoàn
+                                                                                            thành</span>
+                                                                                    @elseif($course->progress_percent < 100 && $course->progress_percent > 0)
+                                                                                        <span class="badge bg-warning">Chưa
+                                                                                            hoàn
+                                                                                            thành</span>
+                                                                                    @else
+                                                                                        <span class="badge bg-danger">Chưa
+                                                                                            học</span>
+                                                                                    @endif
+                                                                                </td>
+                                                                                <td>{{ \Carbon\Carbon::parse($course->created_at)->format('d/m/Y H:i') }}
+                                                                                </td>
+                                                                            @endif
+                                                                            <td>
+                                                                                <a href="{{ route('admin.courses.show', $course->id) }}"
+                                                                                    class="btn btn-sm btn-info">
+                                                                                    <i class="mdi mdi-eye"></i>
+                                                                                </a>
+                                                                            </td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+
+                                                        <div class="mt-4 d-flex justify-content-center">
+                                                            <div id="pagination-links-courses">
+                                                                {{ $courses->appends(request()->query())->links() }}
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <div class="alert alert-info">
+                                                            <i class="mdi mdi-information-outline me-2"></i>
+                                                            @if ($roleUser == 'instructor')
+                                                                Không có khóa học nào được tạo bởi giảng viên này.
+                                                            @else
+                                                                Bạn chưa mua khóa học nào.
+                                                            @endif
+                                                        </div>
+                                                    @endif
                                                 </div>
 
-                                                <!-- Pagination -->
-                                                <div class="mt-3">
-                                                    {{ $courses->links() }}
+                                                <!-- Tab: Gói Membership -->
+                                                <div class="tab-pane fade" id="tab-memberships" role="tabpanel">
+                                                    @if (isset($memberships) && $memberships->count() > 0)
+                                                        <div class="table-responsive shadow-sm rounded">
+                                                            <table class="table table-hover mb-0" id="table-memberships">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>STT</th>
+                                                                        <th>Tên gói</th>
+                                                                        <th>Thời hạn</th>
+                                                                        @if ($roleUser == 'instructor')
+                                                                            <th>Tổng doanh thu</th>
+                                                                            <th>Số người mua</th>
+                                                                        @else
+                                                                            <th>Ngày mua</th>
+                                                                            <th>Ngày hết hạn</th>
+                                                                        @endif
+                                                                        <th>Thao tác</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach ($memberships as $index => $membership)
+                                                                        <tr>
+                                                                            <td>{{ $memberships->firstItem() + $index }}
+                                                                            </td>
+                                                                            <td>
+                                                                                <div class="d-flex">
+                                                                                    <div class="flex-shrink-0 me-2 d-flex">
+                                                                                        <img src="{{ asset('assets/images/thumnail_membership.jpg') }}"
+                                                                                            class="img-fluid rounded-circle"
+                                                                                            style="width: 50px; height: 50px; object-fit: cover;"
+                                                                                            alt="" />
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <h6 class="mb-0"
+                                                                                            style="white-space: pre-line;">
+                                                                                            {{ $membership->name }}
+                                                                                        </h6>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td><code>{{ $membership->duration_months }}
+                                                                                    tháng</code></td>
+                                                                            @if ($roleUser == 'instructor')
+                                                                                <td>{{ number_format($membership->total_revenue) }}
+                                                                                    VND</td>
+                                                                                <td>{{ $membership->total_bought }} người
+                                                                                    mua</td>
+                                                                            @else
+                                                                                <td>{{ \Carbon\Carbon::parse($membership->created_at)->format('d/m/Y') }}
+                                                                                </td>
+                                                                                <td>
+                                                                                    {{ optional($membership->created_at ? \Carbon\Carbon::parse($membership->created_at) : null)->addMonths($membership->duration_months)
+                                                                                        ?->format('d/m/Y') ?? 'Chưa có' }}
+                                                                                </td>
+                                                                            @endif
+                                                                            <td>
+                                                                                <a href="{{ route('admin.approvals.memberships.show', $membership->id) }}"
+                                                                                    class="btn btn-sm btn-info">
+                                                                                    <i class="mdi mdi-eye"></i>
+                                                                                </a>
+                                                                            </td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+
+                                                        <div class="mt-4 d-flex justify-content-center">
+                                                            <div id="pagination-links-memberships">
+                                                                {{ $memberships->appends(request()->query())->links() }}
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <div class="alert alert-info">
+                                                            <i class="mdi mdi-information-outline me-2"></i>
+                                                            @if ($roleUser == 'instructor')
+                                                                Giảng viên chưa tạo gói membership nào.
+                                                            @else
+                                                                Người dùng chưa đăng ký gói membership nào.
+                                                            @endif
+                                                        </div>
+                                                    @endif
                                                 </div>
-                                            @else
-                                                <div class="alert alert-info mt-3">
-                                                    Không có khóa học nào được tạo bởi giảng viên này.
+
+                                                <!-- Tab: Lịch sử mua hàng (chỉ cho member) -->
+                                                <div class="tab-pane fade" id="tab-purchases" role="tabpanel">
+                                                    @if (isset($purchases) && $purchases->count() > 0)
+                                                        <div class="table-responsive shadow-sm rounded">
+                                                            <table class="table table-hover mb-0" id="table-purchases">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>STT</th>
+                                                                        <th>Mã giao dịch</th>
+                                                                        <th>Loại</th>
+                                                                        <th>Tên sản phẩm</th>
+                                                                        <th>Số tiền</th>
+                                                                        <th>Phương thức</th>
+                                                                        <th>Ngày mua</th>
+                                                                        <th>Thao tác</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @foreach ($purchases as $index => $purchase)
+                                                                        <tr>
+                                                                            <td>{{ $purchases->firstItem() + $index }}
+                                                                            </td>
+                                                                            <td><code>{{ $purchase->code }}</code>
+                                                                            </td>
+                                                                            <td>
+                                                                                @if ($purchase->invoice_type == 'course')
+                                                                                    <span
+                                                                                        class="badge bg-soft-primary text-primary">
+                                                                                        <i
+                                                                                            class="mdi mdi-book-open-variant me-1"></i>Khóa
+                                                                                        học
+                                                                                    </span>
+                                                                                @elseif($purchase->invoice_type == 'membership')
+                                                                                    <span
+                                                                                        class="badge bg-soft-info text-info">
+                                                                                        <i
+                                                                                            class="mdi mdi-certificate me-1"></i>Membership
+                                                                                    </span>
+                                                                                @endif
+                                                                            </td>
+                                                                            <td>
+                                                                                @if ($purchase->invoice_type == 'course')
+                                                                                    {{ $purchase->course->name }}
+                                                                                @elseif($purchase->invoice_type == 'membership')
+                                                                                    {{ $purchase->membershipPlan->name }}
+                                                                                @endif
+                                                                            </td>
+                                                                            <td>{{ number_format($purchase->final_amount) }}
+                                                                                VND</td>
+                                                                            <td>
+                                                                                <span class="badge bg-soft-info text-info">
+                                                                                    <i
+                                                                                        class="mdi mdi-credit-card me-1"></i>{{ $purchase->payment_method }}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td>{{ \Carbon\Carbon::parse($purchase->created_at)->format('d/m/Y H:i') }}
+                                                                            </td>
+                                                                            <td>
+                                                                                @if ($purchase->invoice_type == 'course')
+                                                                                    <a href="{{ route('admin.invoices.show', $purchase->code) }}"
+                                                                                        class="btn btn-sm btn-info">
+                                                                                        <i class="mdi mdi-eye"></i>
+                                                                                    </a>
+                                                                                @elseif($purchase->invoice_type == 'membership')
+                                                                                    <a href="{{ route('admin.invoices.memberships.show', $purchase->code) }}"
+                                                                                        class="btn btn-sm btn-info">
+                                                                                        <i class="mdi mdi-eye"></i>
+                                                                                    </a>
+                                                                                @endif
+                                                                            </td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+
+                                                        <div class="mt-4 d-flex justify-content-center">
+                                                            <div id="pagination-links-purchases">
+                                                                {{ $purchases->appends(request()->query())->links() }}
+                                                            </div>
+                                                        </div>
+                                                    @else
+                                                        <div class="alert alert-info">
+                                                            <i class="mdi mdi-information-outline me-2"></i>
+                                                            Người dùng chưa có giao dịch mua hàng nào.
+                                                        </div>
+                                                    @endif
                                                 </div>
-                                            @endif
+
+                                                <!-- Tab: Lịch sử rút tiền (chỉ cho instructor) -->
+                                                @if ($roleUser == 'instructor')
+                                                    <div class="tab-pane fade" id="tab-withdrawals" role="tabpanel">
+                                                        @if (isset($transactions) && $transactions->count() > 0)
+                                                            <div class="table-responsive shadow-sm rounded">
+                                                                <table class="table table-hover mb-0"
+                                                                    id="table-withdrawals">
+                                                                    <thead class="table-light">
+                                                                        <tr>
+                                                                            <th>STT</th>
+                                                                            <th>Mã giao dịch</th>
+                                                                            <th>Số tiền</th>
+                                                                            <th>Phương thức</th>
+                                                                            <th>Trạng thái</th>
+                                                                            <th>Ngày yêu cầu</th>
+                                                                            <th>Thao tác</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        @foreach ($transactions as $index => $transaction)
+                                                                            <tr>
+                                                                                <td>{{ $transactions->firstItem() + $index }}
+                                                                                </td>
+                                                                                <td><code>{{ $transaction->transaction_code }}</code>
+                                                                                </td>
+                                                                                <td>{{ number_format($transaction->amount) }}
+                                                                                    VND</td>
+                                                                                <td>
+                                                                                    <span
+                                                                                        class="badge bg-soft-primary text-primary">
+                                                                                        <i
+                                                                                            class="mdi mdi-bank me-1"></i>Chuyển
+                                                                                        khoản
+                                                                                    </span>
+                                                                                </td>
+                                                                                <td>
+                                                                                    @if ($transaction->transactionable->status == 'Đã xử lý')
+                                                                                        <span
+                                                                                            class="badge bg-soft-success text-success">Đã
+                                                                                            xử lý</span>
+                                                                                    @elseif($transaction->transactionable->status == 'Từ chối')
+                                                                                        <span
+                                                                                            class="badge bg-soft-danger text-danger">Từ
+                                                                                            chối</span>
+                                                                                    @else
+                                                                                        <span
+                                                                                            class="badge bg-soft-secondary text-secondary">{{ $transaction->transactionable->status }}</span>
+                                                                                    @endif
+                                                                                </td>
+                                                                                <td>{{ \Carbon\Carbon::parse($transaction->created_at)->format('d/m/Y H:i') }}
+                                                                                </td>
+                                                                                <td>
+                                                                                    <a href="{{ route('admin.withdrawals.show', $transaction->transactionable->id) }}"
+                                                                                        class="btn btn-sm btn-info">
+                                                                                        <i class="mdi mdi-eye"></i>
+                                                                                    </a>
+                                                                                </td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+
+                                                            <div class="mt-4 d-flex justify-content-center">
+                                                                <div id="pagination-links-withdrawals">
+                                                                    {{ $transactions->appends(request()->query())->links() }}
+                                                                </div>
+                                                            </div>
+                                                        @else
+                                                            <div class="alert alert-info">
+                                                                <i class="mdi mdi-information-outline me-2"></i>
+                                                                Người dùng chưa có giao dịch rút tiền nào.
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </div>
-
-
-
-
                                     @endif
 
                                     <div class="action-buttons">
@@ -503,3 +947,63 @@
         </div>
     </div>
 @endsection
+@push('page-scripts')
+    <script>
+        $(document).ready(function() {
+            $(document).on('click', '#pagination-links-courses a', function(e) {
+                e.preventDefault();
+                var page = $(this).attr('href').split('page=')[1];
+                loadTabContent('courses', page);
+            });
+
+            $(document).on('click', '#pagination-links-memberships a', function(e) {
+                e.preventDefault();
+                var page = $(this).attr('href').split('page=')[1];
+                loadTabContent('memberships', page);
+            });
+
+            $(document).on('click', '#pagination-links-purchases a', function(e) {
+                e.preventDefault();
+                var page = $(this).attr('href').split('page=')[1];
+                loadTabContent('purchases', page);
+            });
+
+            $(document).on('click', '#pagination-links-withdrawals a', function(e) {
+                e.preventDefault();
+                var page = $(this).attr('href').split('page=')[1];
+                loadTabContent('withdrawals', page);
+            });
+
+            var currentTab = 'courses';
+
+            function loadTabContent(tabType, page) {
+                $.ajax({
+                    url: "{{ route('admin.users.show', $user->id) }}",
+                    type: "GET",
+                    data: {
+                        type: tabType,
+                        page: page
+                    },
+                    dataType: "json",
+                    beforeSend: function() {
+                        $('#table-' + tabType + ' tbody').html(
+                            '<tr><td colspan="8" class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></td></tr>'
+                        );
+                    },
+                    success: function(data) {
+                        $('#table-' + tabType + ' tbody').html(data[tabType + '_table']);
+                        $('#pagination-links-' + tabType).html(data['pagination_links_' + tabType]);
+                    },
+                    error: function(xhr, status, error) {
+                        $('#table-' + tabType + ' tbody').html(
+                            '<tr><td colspan="8" class="text-center">Không có dữ liệu hiển thị</td></tr>'
+                        );
+
+                        toastr.error('Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.', 'Lỗi!');
+                        console.error('Ajax_loi', error)
+                    }
+                });
+            }
+        });
+    </script>
+@endpush

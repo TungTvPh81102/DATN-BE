@@ -1,14 +1,30 @@
 <div class="card-body" id="item_List">
     <div class="listjs-table">
 
-        <div class="table-responsive table-card mt-3 mb-1">
-            <table class="table align-middle table-nowrap">
-                <thead class="table-light">
+    <div class="table-responsive table-card mt-3 mb-1">
+        <table class="table align-middle table-nowrap">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col" style="width: 50px;">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="checkAll"
+                                value="option">
+                        </div>
+                    </th>
+                    <th>STT</th>
+                    <th>Giảng viên</th>
+                    <th>Hoa hồng hiện tại (%)</th>
+                    <th>Cập nhật lúc</th>
+                    <th>Lịch sử thay đổi</th>
+                </tr>
+            </thead>
+            <tbody class="list form-check-all">
+                @foreach ($instructorCommissions as $instructorCommission)
                     <tr>
-                        <th scope="col" style="width: 50px;">
+                        <th scope="row">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="checkAll"
-                                    value="option">
+                                <input class="form-check-input" type="checkbox" name="itemID"
+                                    value="{{ $instructorCommission->id }}">
                             </div>
                         </th>
                         <th style="width: 60px;">STT</th>

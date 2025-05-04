@@ -174,8 +174,11 @@ class CategoryController extends Controller
     public function destroy(Category $category)
     {
         try {
-            if ($category->children->count() > 0) {
-                return response()->json($data = ['status' => 'error', 'message' => 'Danh mục đang có cấp con.']);
+            if ($category->children()->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Danh mục đang có danh mục con, không thể xóa.'
+                ]);
             }
 
             if ($category->courses()->count() > 0 || $category->posts()->count() > 0) {

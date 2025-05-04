@@ -6,8 +6,10 @@ use App\Events\GroupMessageSent;
 use App\Events\UserStatusChanged;
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Models\ConversationUser;
 use App\Models\Course;
 use App\Models\CourseUser;
+use App\Models\LiveSession;
 use App\Models\Media;
 use App\Models\Message;
 use App\Models\User;
@@ -48,6 +50,10 @@ class ChatController extends Controller
                 ->where('type', 'group')
                 ->withCount('users')
                 // ->where('conversationable_type', Course::class)
+                ->where(function ($query) {
+                    $query->whereNull('conversationable_type')
+                        ->orWhere('conversationable_type', '!=', LiveSession::class);
+                })
                 ->get()
                 ->map(function ($conversation) {
                     $data = $conversation->toArray();
@@ -57,6 +63,16 @@ class ChatController extends Controller
                             return $this->isUserOnlineInConversation($user->id, $conversation->id);
                         })
                         ->count();
+
+                    $data['users'] = $conversation->users->map(function ($user) {
+                        return [
+                            'id' => $user->id,
+                            'name' => $user->name,
+                            'avatar' => $user->avatar,
+                            'is_blocked' => $user->pivot->is_blocked ?? false,
+                        ];
+                    });
+
                     unset($data['id']);
                     return $data;
                 });
@@ -86,6 +102,10 @@ class ChatController extends Controller
                 ->withCount('users')
                 ->with(['users:id,name,avatar'])
                 // ->where('conversationable_type', Course::class)
+                ->where(function ($query) {
+                    $query->whereNull('conversationable_type')
+                        ->orWhere('conversationable_type', '!=', LiveSession::class);
+                })
                 ->get()
                 ->map(function ($conversation) {
                     $data = $conversation->toArray();
@@ -448,8 +468,8 @@ class ChatController extends Controller
             DB::beginTransaction();
 
             $userId = Auth::id();
-
-            $conversation = Conversation::query()->find($data['conversation_id']);
+            $conversationId = $data['conversation_id'];
+            $conversation = Conversation::query()->find($conversationId);
 
             if (!$conversation || !($conversation instanceof Conversation)) {
                 return $this->respondNotFound('Cuộc trò chuyện không tồn tại');
@@ -457,6 +477,14 @@ class ChatController extends Controller
 
             if (!$conversation->users->contains($userId)) {
                 return $this->respondError('Bạn không thuộc cuộc trò chuyện này');
+            }
+
+            $conversationUser = ConversationUser::where('conversation_id', $conversationId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if ($conversationUser && $conversationUser->is_blocked) {
+                return $this->respondForbidden('Bạn đã bị chặn trong cuộc trò chuyện này');
             }
 
             $message = Message::create([
@@ -555,7 +583,7 @@ class ChatController extends Controller
             $userId = Auth::id();
             $page = $request->query('page', 1);
             $perPage = 4;
-    
+
             $conversations = Conversation::query()
                 ->whereHas('users', function ($query) use ($userId) {
                     $query->where('user_id', $userId);
@@ -563,14 +591,14 @@ class ChatController extends Controller
                 ->where('type', 'direct')
                 ->with(['users:id,name,avatar'])
                 ->withCount('messages')
-                ->orderByDesc('updated_at')  
+                ->orderByDesc('updated_at')
                 ->take($perPage)
                 ->get();
-    
+
             if ($conversations->isEmpty()) {
                 return $this->respondNotFound('Bạn không có cuộc trò chuyện cá nhân nào');
             }
-    
+
             $users = $conversations->flatMap(function ($conversation) use ($userId) {
                 return $conversation->users->map(function ($user) use ($conversation, $userId) {
                     if ($user->id !== $userId) {
@@ -584,13 +612,13 @@ class ChatController extends Controller
                     }
                 })->filter();
             });
-    
+
             if ($users->isEmpty()) {
                 return $this->respondNotFound('Không tìm thấy người dùng nào trong các cuộc trò chuyện cá nhân');
             }
-    
+
             $uniqueUsers = $users->take($perPage)->values();
-    
+
             return $this->respondOk('Danh sách cuộc trò chuyện cá nhân', $uniqueUsers);
         } catch (\Exception $e) {
             $this->logError($e);
@@ -693,6 +721,113 @@ class ChatController extends Controller
             return $this->respondOk('Tạo trò chuyện thành công', $conversation->load('users'));
         } catch (\Exception $e) {
             $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function apiStartChatWithSystem(Request $request)
+    {
+        try {
+            $validator = $request->validate([
+                'reason' => 'required|string',
+                'details' => 'required|string',
+                'description' => 'nullable|string',
+            ]);
+
+            if (!isset($validator['reason']) || !isset($validator['details'])) {
+                return $this->respondError('Lý do và chi tiết không được để trống');
+            }
+
+            $userId = Auth::id();
+            $reason = $request->input('reason');
+            $details = $request->input('details');
+            $additionalDescription = $request->input('description', '');
+            $admin = User::whereHas('roles', function ($q) {
+                $q->where('name', 'admin');
+            })
+                ->first();
+
+            $conversation = Conversation::query()
+                ->where('type', 'direct')
+                ->where('owner_id', $admin->id)
+                ->where('name', 'Cuộc trò chuyện với hệ thống')
+                ->first();
+
+            if (!$conversation) {
+                $conversation = Conversation::create([
+                    'type' => 'direct',
+                    'owner_id' => $userId,
+                    'name' => 'Cuộc trò chuyện với hệ thống'
+                ]);
+
+                $conversation->users()->attach([$userId, $admin->id]);
+            }
+
+            $messageContent = "Yêu cầu hỗ trợ:\n";
+            $messageContent .= "Loại vấn đề: {$reason}\n";
+            $messageContent .= "Chi tiết: {$details}";
+
+            if (!empty($additionalDescription)) {
+                $messageContent .= "\n\nMô tả thêm: {$additionalDescription}";
+            }
+
+            Message::create([
+                'conversation_id' => $conversation->id,
+                'sender_id' => $userId,
+                'content' => $messageContent,
+                'type' => 'text',
+            ]);
+
+            return $this->respondOk('Tạo trò chuyện thành công', $conversation->load('users'));
+        } catch (\Exception $e) {
+            $this->logError($e, $request->all());
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function apiToggleBlockUserInChat(Request $request, string $conversationId, string $action, string $userId)
+    {
+        try {
+            $conversation = Conversation::find($conversationId);
+
+            if (!$conversation) {
+                return $this->respondNotFound('Không tìm thấy cuộc trò chuyện');
+            }
+
+            if ($conversation->owner_id != Auth::id()) {
+                return $this->respondForbidden('Bạn không có quyền thực hiện chức năng này');
+            }
+
+            if ($userId == Auth::id()) {
+                return $this->respondBadRequest('Bạn không thể chặn chính mình');
+            }
+
+            $conversationUser = ConversationUser::where('conversation_id', $conversationId)
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$conversationUser) {
+                return $this->respondNotFound('Người dùng không thuộc cuộc trò chuyện này');
+            }
+
+            $isBlocked = $action === 'block';
+            $conversationUser->update([
+                'is_blocked' => $isBlocked
+            ]);
+
+            $message = $isBlocked
+                ? 'Đã chặn người dùng trong cuộc trò chuyện này thành công'
+                : 'Đã bỏ chặn người dùng trong cuộc trò chuyện này thành công';
+
+            return $this->respondOk($message);
+        } catch (\Exception $e) {
+            $this->logError($e, [
+                'conversationId' => $conversationId,
+                'userId' => $userId,
+                'action' => $action
+            ]);
 
             return $this->respondServerError();
         }

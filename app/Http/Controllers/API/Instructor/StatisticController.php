@@ -12,7 +12,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Log;
 
 class StatisticController extends Controller
 {
@@ -34,7 +34,7 @@ class StatisticController extends Controller
                 ->where('courses.user_id', $user->id)
                 ->count();
 
-            $totalRevenue = DB::table('invoices')->selectRaw('ROUND(SUM(final_amount)*0.6, 2) as total_revenue')->where('invoices.status',  "Đã thanh toán")
+            $totalRevenue = DB::table('invoices')->selectRaw('ROUND(SUM(final_amount*instructor_commissions), 2) as total_revenue')->where('invoices.status',  "Đã thanh toán")
                 ->join('courses', 'invoices.course_id', '=', 'courses.id')
                 ->where('courses.user_id', $user->id)
                 ->first();
@@ -77,7 +77,7 @@ class StatisticController extends Controller
                 )->where(['courses.status' => 'approved', 'courses.user_id' => $user->id]);
 
             $invoices = DB::table('invoices')
-                ->select('invoices.course_id', DB::raw('SUM(invoices.final_amount) as total_revenue'))
+                ->select('invoices.course_id', DB::raw('SUM(invoices.final_amount*invoices.instructor_commissions) as total_revenue'))
                 ->joinSub($courses, 'courses', function ($join) {
                     $join->on('courses.id', '=', 'invoices.course_id');
                 })->groupBy('invoices.course_id');
@@ -107,7 +107,7 @@ class StatisticController extends Controller
                     'categories.name as name_category',
                     'categories.slug as slug_category',
                     'categories.icon as icon_category',
-                    DB::raw('ROUND(COALESCE(invoices.total_revenue)*0.6, 2) as total_revenue'),
+                    DB::raw('ROUND(COALESCE(invoices.total_revenue), 2) as total_revenue'),
                     DB::raw('ROUND(COALESCE(course_users.avg_progress),2) as avg_progress'),
                     DB::raw('ROUND(COALESCE(ratings.avg_rating), 1) as avg_rating')
                 )
@@ -145,7 +145,7 @@ class StatisticController extends Controller
             if ($year > $yearNow) $year = $yearNow;
 
             $monthlyRevenue = DB::table('invoices')
-                ->selectRaw('MONTH(invoices.created_at) as month, ROUND(SUM(final_amount) * 0.6, 2) as revenue')
+                ->selectRaw('MONTH(invoices.created_at) as month, ROUND(SUM(final_amount*instructor_commissions), 2) as revenue')
                 ->join('courses', function ($join) use ($user) {
                     $join->on('invoices.course_id', '=', 'courses.id')->where('courses.user_id', $user->id);
                 })
@@ -323,31 +323,29 @@ class StatisticController extends Controller
             if ($year > $yearNow) $year = $yearNow;
 
             $membershipRevenue = DB::table('invoices')
-                ->selectRaw('MONTH(invoices.created_at) as month, 
-                    SUM(CASE WHEN invoices.invoice_type = "membership" THEN invoices.final_amount * 0.6 ELSE 0 END) as membership_revenue,
-                    GROUP_CONCAT(DISTINCT membership_plans.name) as membership_plan_names')
-                ->leftJoin('membership_plans', 'invoices.membership_plan_id', '=', 'membership_plans.id')
-                ->whereYear('invoices.created_at', $year)
+                ->selectRaw('
+                membership_plans.id as plan_id,
+                membership_plans.name as plan_name,
+                SUM(invoices.final_amount * invoices.instructor_commissions) as membership_revenue
+            ')
+                ->join('membership_plans', 'invoices.membership_plan_id', '=', 'membership_plans.id')
+                ->where('membership_plans.instructor_id', $user->id)
                 ->where('invoices.status', 'Đã thanh toán')
-                ->groupBy('month')
+                ->where('invoices.invoice_type', 'membership')
+                ->whereYear('invoices.created_at', $year)
+                ->groupBy('membership_plans.id', 'membership_plans.name')
+                ->having('membership_revenue', '>', 0)
                 ->get();
 
-
-            $monthlyMemberships = [];
-
-            for ($i = 1; $i <= 12; $i++) {
-                $monthlyData = $membershipRevenue->firstWhere('month', $i);
-                $monthlyMemberships[] = [
-                    'id' => $i,
-                    'month' => $i,
-                    'membershipRevenue' => $monthlyData?->membership_revenue ?? 0,
-                    'membershipPlanNames' => $monthlyData && $monthlyData->membership_plan_names
-                        ? explode(',', $monthlyData->membership_plan_names)
-                        : [],
+            $membershipStats = $membershipRevenue->map(function ($item) {
+                return [
+                    'membershipPlanId' => $item->plan_id,
+                    'membershipPlanName' => $item->plan_name,
+                    'membershipRevenue' => (float) $item->membership_revenue,
                 ];
-            }
+            });
 
-            return $this->respondOk('Thống kê doanh thu gói thành viên theo tháng', $monthlyMemberships);
+            return $this->respondOk('Thống kê doanh thu theo gói thành viên', $membershipStats);
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại');
@@ -357,14 +355,18 @@ class StatisticController extends Controller
     public function getRatingsStatistics(Request $request)
     {
         try {
+            $instructor = Auth::user();
+
+            if (!$instructor) {
+                return $this->respondUnauthorized('Vui lòng đăng nhập và thử lại');
+            }
+
             $query = Rating::query();
 
             $query->join('courses', 'ratings.course_id', '=', 'courses.id')
                 ->where('courses.status', 'approved');
 
-            if ($request->has('instructor_id')) {
-                $query->where('courses.instructor_id', $request->instructor_id);
-            }
+            $query->where('courses.user_id', $instructor->id);
 
             if ($request->has('course_id')) {
                 $query->where('ratings.course_id', $request->course_id);

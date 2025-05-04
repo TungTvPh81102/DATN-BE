@@ -186,7 +186,7 @@ class CommentBlogController extends Controller
                 'countdown' => $ttl,
                 'formatted_countdown' => $formattedCountdown,
                 'block_until' => $blockUntil->toDateTimeString(),
-            ], 200);
+            ], 400);
         } catch (\Exception $e) {
             Log::error('Error in getCommentBlockTime: ' . $e->getMessage());
             if ($e instanceof RedisException) {

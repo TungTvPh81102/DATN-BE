@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\LiveStreamCredential;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,15 +13,23 @@ return new class extends Migration {
     {
         Schema::create('live_sessions', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(LiveStreamCredential::class)->nullable()->constrained('live_stream_credentials')->cascadeOnDelete();
             $table->foreignId('instructor_id')->constrained('users')->cascadeOnDelete();
+            $table->string('code')->unique();
             $table->string('title')->nullable();
-            $table->string('description')->nullable();
-            $table->string('stream_key')->nullable();
-            $table->string('mux_playback_id')->nullable();
-            $table->enum('status', ['Đang diễn ra', 'Kết thúc', 'Sắp diễn ra', 'Đã hủy'])
-                ->default('Đang diễn ra');
-            $table->dateTime('start_time')->nullable();
-            $table->dateTime('end_time')->nullable();
+            $table->string('thumbnail')->nullable();
+            $table->text('description')->nullable();
+            $table->enum('visibility', ['public', 'private'])->default('public');
+            $table->enum('status', ['upcoming', 'live', 'ended', 'overdue'])->default('upcoming');
+            $table->dateTime('starts_at')->nullable();
+            $table->dateTime('actual_start_time')->nullable();
+            $table->dateTime('actual_end_time')->nullable();
+            $table->string('recording_asset_id')->nullable();
+            $table->string('recording_playback_id')->nullable();
+            $table->string('duration')->nullable();
+            $table->string('recording_url')->nullable();
+            $table->integer('viewers_count')->nullable()->default(0);
+            $table->timestamp('notified_at')->nullable();
             $table->timestamps();
         });
     }

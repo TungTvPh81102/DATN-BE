@@ -11,7 +11,6 @@ class SystemFundTransaction extends Model
 
     protected $fillable = [
         'transaction_id',
-        'course_id',
         'user_id',
         'total_amount',
         'retained_amount',

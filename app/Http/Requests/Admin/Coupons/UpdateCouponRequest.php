@@ -34,6 +34,17 @@ class UpdateCouponRequest extends FormRequest
             'expire_date' => 'required|date|after:start_date',
             'max_usage' => 'nullable|integer',
             'status' => 'boolean',
+            'system_wide' => 'nullable|boolean',
+            'selected_users' => [
+                'nullable',
+                'array',
+                function ($attribute, $value, $fail) {
+                    if (request()->input('system_wide') == false && empty($value)) {
+                        $fail('Vui lòng chọn ít nhất một người dùng nếu không áp dụng toàn hệ thống.');
+                    }
+                },
+            ],
+            'selected_users.*' => 'exists:users,id',
         ];
     }
     public function messages()
@@ -81,6 +92,10 @@ class UpdateCouponRequest extends FormRequest
              //Used_count
              'used_count.required'=>'Trường used_count là bắt buộc',
              'used_count.integer'=>'Sai kiểu dữ liệu interger',
+             'system_wide.boolean' => 'Trường áp dụng toàn hệ thống phải là kiểu boolean.',
+ 
+             'selected_users.array' => 'Trường danh sách người dùng phải là một mảng.',
+             'selected_users.*.exists' => 'Người dùng được chọn không tồn tại trong hệ thống.',
         ];
     }
     protected function prepareForValidation()
@@ -88,5 +103,15 @@ class UpdateCouponRequest extends FormRequest
         $this->merge([
             'user_id' => auth()->id(),
         ]);
+        if (is_string($this->selected_users)) {
+            $selectedUsers = json_decode($this->selected_users, true);
+    
+            // Chỉ lấy ID thôi
+            $userIds = collect($selectedUsers)->pluck('id')->toArray();
+    
+            $this->merge([
+                'selected_users' => $userIds,
+            ]);
+        }
     }
 }

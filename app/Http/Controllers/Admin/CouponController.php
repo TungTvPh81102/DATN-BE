@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\CouponsExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Coupons\ImportCouponRequest;
 use App\Http\Requests\Admin\Coupons\StoreCouponRequest;
 use App\Http\Requests\Admin\Coupons\UpdateCouponRequest;
+use App\Imports\CouponsImport;
 use App\Jobs\AssignCouponJob;
 use App\Models\Coupon;
 use App\Models\CouponUse;
@@ -16,6 +19,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CouponController extends Controller
 {
@@ -73,6 +77,7 @@ class CouponController extends Controller
     public function store(StoreCouponRequest $request)
     {
         try {
+            // dd($request->all());
             DB::beginTransaction();
 
             $user = Auth::user();
@@ -123,7 +128,7 @@ class CouponController extends Controller
     {
         $coupon = Coupon::query()
             ->with(['couponUses' => function ($query) {
-                $query->select('id', 'coupon_id', 'user_id');
+                $query->select('id', 'coupon_id', 'user_id', 'status');
             }, 'couponUses.user:id,name,email,avatar'])
             ->findOrFail($id);
 
@@ -138,26 +143,98 @@ class CouponController extends Controller
     public function update(UpdateCouponRequest $request, string $id)
     {
         try {
+            // dd($request->all());
             DB::beginTransaction();
+
             $coupon = Coupon::findOrFail($id);
             $data = $request->validated();
+
             $data['discount_max_value'] = (empty($data['discount_max_value']) || $data['discount_type'] == 'fixed') ? 0 : $data['discount_max_value'];
             $coupon->update($data);
 
+            if ($request->has('selected_users')) {
+                $newUserIds = is_array($request->selected_users) ? $request->selected_users : [];
+            
+                $existingUserIds = $coupon->couponUses()->pluck('user_id')->toArray();
+            
+                $usersToAdd = array_diff($newUserIds, $existingUserIds);
+                $usersToDelete = array_diff($existingUserIds, $newUserIds);
+            
+                if (!empty($usersToDelete)) {
+                    $coupon->couponUses()->whereIn('user_id', $usersToDelete)->delete();
+                }
+            
+                if (!empty($usersToAdd)) {
+                    $now = now();
+                    $batchData = collect($usersToAdd)->map(function ($userId) use ($coupon, $now) {
+                        return [
+                            'user_id' => $userId,
+                            'coupon_id' => $coupon->id,
+                            'status' => 'unused',
+                            'expired_at' => $now->clone()->addDays(7),
+                            'created_at' => $now,
+                            'updated_at' => $now,
+                        ];
+                    })->toArray();
+            
+                    if (!empty($batchData)) {
+                        DB::table('coupon_uses')->insert($batchData);
+                    }
+                }
+            }
+
             DB::commit();
+
             return redirect()->route('admin.coupons.edit', $coupon->id)->with('success', 'Cập nhật thành công');
         } catch (\Exception $e) {
             DB::rollBack();
             $this->logError($e);
+
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
+
+    public function exportCoupon()
+    {
+        try {
+            return Excel::download(new CouponsExport, 'Coupons.xlsx');
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
+    public function importFile(ImportCouponRequest $request)
+    {
+        try {
+
+            Excel::import(new CouponsImport, $request->file('file'));
+
+            return redirect()->route('admin.coupons.index')->with('success', 'Import dữ liệu thành công');
+        } catch (\Exception $e) {
+
+            $this->logError($e);
+
+            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+        }
+    }
     public function destroy(string $id)
     {
         try {
             DB::beginTransaction();
-            Coupon::findOrFail($id)->delete();
+
+            if (str_contains($id, ',')) {
+
+                $couponID = explode(',', $id);
+
+                $this->deleteCoupons($couponID);
+            } else {
+                $coupon = Coupon::query()->findOrFail($id);
+                $coupon->delete();
+            }
+
             DB::commit();
             return response()->json(['status' => 'success', 'message' => 'Xóa dữ liệu thành công']);
         } catch (\Exception $e) {
@@ -269,6 +346,102 @@ class CouponController extends Controller
                 'error' => true,
                 'message' => 'Có lỗi xảy ra, vui lòng thử lại'
             ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+    public function restoreDelete(string $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            if (str_contains($id, ',')) {
+
+                $couponID = explode(',', $id);
+
+                $this->restoreDeleteBanners($couponID);
+            } else {
+                $coupon = Coupon::query()->onlyTrashed()->findOrFail($id);
+
+                if ($coupon->trashed()) {
+                    $coupon->restore();
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Khôi phục thành công'
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            $this->logError($e);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Khôi phục thất bại'
+            ]);
+        }
+    }
+    public function forceDelete(string $id)
+    {
+        try {
+            DB::beginTransaction();
+
+            if (str_contains($id, ',')) {
+
+                $bannerID = explode(',', $id);
+
+                $this->deleteBanners($bannerID);
+            } else {
+                $banner = Coupon::query()->onlyTrashed()->findOrFail($id);
+
+                $banner->forceDelete();
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Xóa thành công'
+            ]);
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            $this->logError($e);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Xóa thất bại'
+            ]);
+        }
+    }
+    private function deleteCoupons(array $couponID)
+    {
+
+        $coupons = Coupon::query()->whereIn('id', $couponID)->withTrashed()->get();
+
+        foreach ($coupons as $coupon) {
+
+            if ($coupon->trashed()) {
+                $coupon->forceDelete();
+            } else {
+                $coupon->delete();
+            }
+        }
+    }
+    private function restoreDeleteBanners(array $couponID)
+    {
+
+        $coupons = Coupon::query()->whereIn('id', $couponID)->onlyTrashed()->get();
+
+        foreach ($coupons as $coupon) {
+
+            if ($coupon->trashed()) {
+                $coupon->restore();
+            }
         }
     }
 }

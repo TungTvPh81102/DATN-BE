@@ -20,7 +20,8 @@ class Invoice extends Model
         'final_amount',
         'status',
         'payment_method',
-        'invoice_type'
+        'invoice_type',
+        'instructor_commissions'
     ];
 
     protected $attributes = [

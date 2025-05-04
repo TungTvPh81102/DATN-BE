@@ -218,6 +218,7 @@ class ApprovalCourseController extends Controller
             $approval->status = 'approved';
             $approval->content_modification = false;
             $approval->reason = null;
+            $approval->approved_at = now();
             $approval->save();
 
             $approval->logApprovalAction(
@@ -271,6 +272,7 @@ class ApprovalCourseController extends Controller
             $approval->note = $note;
             $approval->content_modification = false;
             $approval->approver_id = auth()->id();
+            $approval->approved_at = now();
             $approval->save();
 
             $approval->logApprovalAction(

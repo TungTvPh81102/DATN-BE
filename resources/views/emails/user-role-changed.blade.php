@@ -115,9 +115,9 @@
                                         <p style="font-size:13px; color:#999; margin:5px 0 0;">
                                             Email này được gửi tự động, vui lòng không trả lời. Nếu bạn cần hỗ trợ, vui
                                             lòng liên hệ
-                                            <a href="mailto:support@coursemely.com"
+                                            <a href="mailto:coursemely@gmail.com"
                                                 style="color:#E27447; text-decoration:none; font-weight: 500;">
-                                                support@coursemely.com
+                                                coursemely@gmail.com
                                             </a>
                                         </p>
                                     </td>

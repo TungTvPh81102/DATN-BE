@@ -14,12 +14,11 @@ class Coding extends Model
         'title',
         'language',
         'hints',
-        'sample_code',
-        'result_code',
         'solution_code',
         'instruct',
+        'code',
+        'student_code',
         'test_case',
-        'ignore_test_case'
     ];
 
     public function lessons()
@@ -29,6 +28,5 @@ class Coding extends Model
 
     protected $casts = [
         'hints' => 'array',
-        'test_case' => 'array'
     ];
 }

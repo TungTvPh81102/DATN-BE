@@ -245,7 +245,7 @@
                                     <select class="form-select form-select-sm" name="status" id="statusTransaction"
                                         data-advanced-filter>
                                         <option value="">Chọn trạng thái</option>
-                                        <option value="Thành công" @selected(request()->input('status') === 'Thành công')>
+                                        <option value="Giao dịch thành công" @selected(request()->input('status') === 'Giao dịch thành công')>
                                             Giao dịch thành công
                                         </option>
                                         <option value="Chờ xử lý" @selected(request()->input('status') === 'Chờ xử lý')>
@@ -321,7 +321,7 @@
                                                     @endif
                                                 </td>
                                                 <td class="col-1">
-                                                    @if ($transaction->status === 'Thành công')
+                                                    @if ($transaction->status === 'Giao dịch thành công')
                                                         <span class="badge bg-success">
                                                             {{ $transaction->status }}
                                                         </span>

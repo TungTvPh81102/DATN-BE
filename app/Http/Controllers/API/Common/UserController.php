@@ -231,6 +231,12 @@ class UserController extends Controller
                     'courseUsers:id,user_id,course_id,progress_percent,source',
                     'category:id,name,slug',
                     'user:id,name,avatar',
+                    'chapters' => function ($q) {
+                        $q->orderBy('order', 'asc');
+                    },
+                    'chapters.lessons' => function ($q) {
+                        $q->orderBy('order', 'asc');
+                    }
                 ])
                 ->withCount([
                     'chapters',
@@ -258,15 +264,17 @@ class UserController extends Controller
 
             $totalProgressPercent = 0;
 
+            $completedLessons = LessonProgress::where('user_id', $user->id)
+                ->where('is_completed', 1)
+                ->pluck('lesson_id')
+                ->toArray();
+
             foreach ($courses as $course) {
                 $lessonIds = $course->chapters->flatMap(function ($chapter) {
                     return $chapter->lessons->pluck('id');
                 });
 
-                $completedCount = LessonProgress::where('user_id', $user->id)
-                    ->whereIn('lesson_id', $lessonIds)
-                    ->where('is_completed', 1)
-                    ->count();
+                $completedCount = count(array_intersect($completedLessons, $lessonIds->toArray()));
 
                 $totalCompletedLessons += $completedCount;
 
@@ -282,7 +290,7 @@ class UserController extends Controller
 
             $averageProgress = $courses->count() > 0 ? $totalProgressPercent / $courses->count() : 0;
 
-            $result = $courses->map(function ($course) use ($courseRatings, $user) {
+            $result = $courses->map(function ($course) use ($courseRatings, $user, $completedLessons) {
                 $videoLessons = $course->chapters->flatMap(function ($chapter) {
                     return $chapter->lessons->where('lessonable_type', Video::class);
                 });
@@ -293,43 +301,56 @@ class UserController extends Controller
 
                 $ratingInfo = $courseRatings->get($course->id);
 
-                $lessonProgress = LessonProgress::query()
-                    ->where('user_id', $user->id)
-                    ->whereHas('lesson', function ($query) use ($course) {
-                        $lessonIds = $course->chapters->flatMap(function ($chapter) {
-                            return $chapter->lessons->pluck('id');
-                        });
+                $progress = $course->courseUsers->where('user_id', $user->id)->first();
+                $progressPercent = $progress ? $progress->progress_percent : 0;
 
-                        $query->whereIn('id', $lessonIds);
-                    })
-                    ->with('lesson:id,title')
-                    ->latest('updated_at')
-                    ->first();
+                $currentLesson = null;
 
-                if (!$lessonProgress) {
-                    $firstChapter = $course->chapters->first();
-                    $firstLesson = $firstChapter ? $firstChapter->lessons->where('is_completed', false)->first() : null;
-
-                    $currentLesson = $firstLesson ? [
-                        'id' => $firstLesson->id,
-                        'title' => $firstLesson->title
-                    ] : null;
+                if ($progressPercent == 100) {
+                    // Trường hợp 3: Đã hoàn thành khóa học - hiển thị bài học cuối cùng
+                    $lastChapter = $course->chapters->last();
+                    if ($lastChapter) {
+                        $lastLesson = $lastChapter->lessons->last();
+                        if ($lastLesson) {
+                            $currentLesson = [
+                                'id' => $lastLesson->id,
+                                'title' => $lastLesson->title
+                            ];
+                        }
+                    }
                 } else {
-                    $progress = $course->courseUsers->where('user_id', $user->id)->first();
+                    // Trường hợp 1 & 2: Mới bắt đầu hoặc đang học dở
+                    // Duyệt qua từng chương và bài học theo thứ tự
+                    $foundCurrentLesson = false;
 
-                    if ($progress && $progress->progress_percent == 100) {
-                        $lastChapter = $course->chapters->last();
-                        $lastLesson = $lastChapter ? $lastChapter->lessons->last() : null;
+                    foreach ($course->chapters as $chapter) {
+                        if ($foundCurrentLesson) break;
 
-                        $currentLesson = $lastLesson ? [
-                            'id' => $lastLesson->id,
-                            'title' => $lastLesson->title
-                        ] : null;
-                    } else {
-                        $currentLesson = [
-                            'id' => $lessonProgress->lesson->id,
-                            'title' => $lessonProgress->lesson->title,
-                        ];
+                        foreach ($chapter->lessons as $lesson) {
+                            // Nếu bài học này chưa hoàn thành, đây là bài học hiện tại
+                            if (!in_array($lesson->id, $completedLessons)) {
+                                $currentLesson = [
+                                    'id' => $lesson->id,
+                                    'title' => $lesson->title
+                                ];
+                                $foundCurrentLesson = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    // Nếu không tìm thấy bài học nào lấy bài đầu tiên
+                    if (!$currentLesson) {
+                        $firstChapter = $course->chapters->first();
+                        if ($firstChapter) {
+                            $firstLesson = $firstChapter->lessons->first();
+                            if ($firstLesson) {
+                                $currentLesson = [
+                                    'id' => $firstLesson->id,
+                                    'title' => $firstLesson->title
+                                ];
+                            }
+                        }
                     }
                 }
 
@@ -348,11 +369,9 @@ class UserController extends Controller
                         'average' => $ratingInfo ? $ratingInfo->average_rating : 0
                     ],
                     'total_video_duration' => $totalVideoDuration,
-                    'progress_percent' => $course->courseUsers
-                        ->where('user_id', $user->id)->first()
-                        ->progress_percent ?? 0,
+                    'progress_percent' => $progressPercent,
                     'current_lesson' => $currentLesson,
-                    'source' => $course->courseUsers->where('user_id', $user->id)->first()->source ?? null,
+                    'source' => $progress ? $progress->source : null,
                     'category' => [
                         'id' => $course->category->id ?? null,
                         'name' => $course->category->name ?? null,
@@ -361,7 +380,8 @@ class UserController extends Controller
                     'user' => [
                         'id' => $course->user->id ?? null,
                         'name' => $course->user->name ?? null,
-                        'avatar' => $course->user->avatar ?? null
+                        'avatar' => $course->user->avatar ?? null,
+                        'code' => $course->user->code ?? null
                     ]
                 ];
             });
@@ -418,9 +438,9 @@ class UserController extends Controller
     {
         try {
             $user = Auth::user();
-    
+
             $orders = Invoice::where('user_id', $user->id)
-                ->with('course:id,name','membershipPlan:id,name')
+                ->with('course:id,name', 'membershipPlan:id,name')
                 ->select(
                     'id',
                     'course_id',
@@ -432,20 +452,20 @@ class UserController extends Controller
                 )
                 ->get()
                 ->groupBy('invoice_type');
-    
+
             return $this->respondOk('Danh sách đơn hàng của người dùng: ' . $user->name, $orders);
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
         }
     }
-    
+
 
     public function showOrdersBought($id)
     {
         try {
             $user = Auth::user();
-    
+
             $order = Invoice::where('id', $id)
                 ->where('user_id', $user->id)
                 ->select(
@@ -462,11 +482,11 @@ class UserController extends Controller
                     'status'
                 )
                 ->first();
-    
+
             if (!$order) {
                 return $this->respondNotFound('Đơn hàng không tồn tại hoặc không thuộc về người dùng.');
             }
-    
+
             if ($order->invoice_type === 'course') {
                 $order->load([
                     'course' => function ($query) {
@@ -475,30 +495,30 @@ class UserController extends Controller
                     }
                 ]);
             }
-    
+
             if ($order->invoice_type === 'membership') {
                 $order->load([
                     'membershipPlan' => function ($query) {
-                        $query->select('id', 'name','instructor_id')
-                        ->with('instructor:id,name');
+                        $query->select('id', 'name', 'instructor_id')
+                            ->with('instructor:id,name');
                     }
                 ]);
                 // dd($order);
             }
-    
+
             $title = match ($order->invoice_type) {
                 'course' => $order->course->name ?? 'Không xác định',
                 'membership' => $order->membership->title ?? 'Không xác định',
                 default => 'Không xác định'
             };
-    
+
             return $this->respondOk("Chi tiết đơn hàng {$title} của người dùng: {$user->name}", $order);
         } catch (\Exception $e) {
             $this->logError($e);
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
         }
     }
-    
+
 
     public function storeCareers(StoreCareerRequest $request)
     {
@@ -1171,14 +1191,14 @@ class UserController extends Controller
     {
         try {
             $user = Auth::user();
-    
+
             $recentCourses = DB::table('lesson_progress')
                 ->join('lessons', 'lesson_progress.lesson_id', '=', 'lessons.id')
                 ->join('chapters', 'lessons.chapter_id', '=', 'chapters.id')
                 ->join('courses', 'chapters.course_id', '=', 'courses.id')
                 ->join('course_users', function ($join) use ($user) {
                     $join->on('course_users.course_id', '=', 'courses.id')
-                         ->where('course_users.user_id', '=', $user->id);
+                        ->where('course_users.user_id', '=', $user->id);
                 })
                 ->where('lesson_progress.user_id', $user->id)
                 ->groupBy('courses.id', 'courses.name', 'courses.thumbnail', 'courses.slug', 'course_users.progress_percent')
@@ -1193,10 +1213,10 @@ class UserController extends Controller
                 ->orderByDesc('last_updated')
                 ->limit(10)
                 ->get();
-    
+
             $coursesWithProgress = $recentCourses->map(function ($course) use ($user) {
                 $courseModel = Course::with(['chapters.lessons.lessonable'])->find($course->course_id);
-    
+
                 if (!$courseModel) {
                     return null;
                 }
@@ -1208,18 +1228,18 @@ class UserController extends Controller
                     ->whereIn('lesson_id', $lessonIds)
                     ->where('is_completed', 1)
                     ->count();
-    
+
                 $lessonProgress = LessonProgress::query()
                     ->where('user_id', $user->id)
                     ->whereIn('lesson_id', $lessonIds)
                     ->with('lesson:id,title')
                     ->latest('updated_at')
                     ->first();
-    
+
                 if (!$lessonProgress) {
                     $firstChapter = $courseModel->chapters->first();
                     $firstLesson = $firstChapter ? $firstChapter->lessons->where('is_completed', false)->first() : null;
-    
+
                     $currentLesson = $firstLesson ? [
                         'id' => $firstLesson->id,
                         'title' => $firstLesson->title
@@ -1228,7 +1248,7 @@ class UserController extends Controller
                     if ($course->progress_percent == 100) {
                         $lastChapter = $courseModel->chapters->last();
                         $lastLesson = $lastChapter ? $lastChapter->lessons->last() : null;
-    
+
                         $currentLesson = $lastLesson ? [
                             'id' => $lastLesson->id,
                             'title' => $lastLesson->title
@@ -1240,7 +1260,7 @@ class UserController extends Controller
                         ];
                     }
                 }
-    
+
                 return [
                     'id' => $course->course_id,
                     'name' => $course->course_name,
@@ -1252,7 +1272,7 @@ class UserController extends Controller
                     'current_lesson' => $currentLesson
                 ];
             })->filter();
-    
+
             return $this->respondOk('Các khóa học bạn đã học gần đây:', [
                 'courses' => $coursesWithProgress->values()
             ]);
@@ -1261,9 +1281,4 @@ class UserController extends Controller
             return $this->respondServerError('Có lỗi xảy ra, vui lòng thử lại.');
         }
     }
-    
-
-    
-    
-
 }

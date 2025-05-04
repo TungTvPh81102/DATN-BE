@@ -14,7 +14,6 @@ use Maatwebsite\Excel\Facades\Excel;
 class TopStudentController extends Controller
 {
     use LoggableTrait;
-    const RATE = 0.4;
     public function index(Request $request)
     {
         try {
@@ -64,44 +63,6 @@ class TopStudentController extends Controller
         }
 
         return $query;
-    }
-
-    private function getFilterDataChart(
-        Request $request,
-        $queryCourseRatings,
-        $querySystem_Funds,
-        $queryTotalAmount,
-        $queryTotalCourse,
-        $queryTotalInstructor,
-        $queryTopCoursesProgress,
-        $queryGetTopViewCourses,
-        $quertTopInstructorsFollows,
-        $queryCategoryStats,
-        $queryTotalByPaymentMethodAndInvoiceType
-    ) {
-        $queryCourseRatings = $this->applyGlobalFilter($queryCourseRatings, $request, 'courses', 'created_at');
-        $querySystem_Funds = $this->applyGlobalFilter($querySystem_Funds, $request, 'invoices', 'created_at');
-        $queryTotalAmount = $this->applyGlobalFilter($queryTotalAmount, $request, 'invoices', 'created_at');
-        $queryTotalCourse = $this->applyGlobalFilter($queryTotalCourse, $request, 'courses', 'created_at');
-        $queryTotalInstructor = $this->applyGlobalFilter($queryTotalInstructor, $request, 'users', 'created_at');
-        $queryTopCoursesProgress = $this->applyGlobalFilter($queryTopCoursesProgress, $request, 'course_users', 'created_at');
-        $queryGetTopViewCourses = $this->applyGlobalFilter($queryGetTopViewCourses, $request, 'courses', 'created_at');
-        $quertTopInstructorsFollows = $this->applyGlobalFilter($quertTopInstructorsFollows, $request, 'users', 'created_at');
-        $queryCategoryStats = $this->applyGlobalFilter($queryCategoryStats, $request, 'categories', 'created_at');
-        $queryTotalByPaymentMethodAndInvoiceType = $this->applyGlobalFilter($queryTotalByPaymentMethodAndInvoiceType, $request, 'invoices', 'created_at');
-
-        return [
-            $queryCourseRatings,
-            $querySystem_Funds,
-            $queryTotalAmount,
-            $queryTotalCourse,
-            $queryTotalInstructor,
-            $queryTopCoursesProgress,
-            $queryGetTopViewCourses,
-            $quertTopInstructorsFollows,
-            $queryCategoryStats,
-            $queryTotalByPaymentMethodAndInvoiceType
-        ];
     }
     private function getTopUser(Request $request)
     {

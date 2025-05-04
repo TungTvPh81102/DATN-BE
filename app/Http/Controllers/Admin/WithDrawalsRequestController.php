@@ -73,13 +73,13 @@ class WithDrawalsRequestController extends Controller
                 ->with([
                     'wallet.user'
                 ])
-                ->find($id);
+                ->findOrFail($id);
 
             return view('withdrawals.show', compact(['title', 'subTitle', 'withDraw']));
         } catch (\Exception $e) {
             $this->logError($e);
 
-            return redirect()->back()->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
+            return redirect()->back()->with('error', 'Không tìm thấy giao dịch, vui lòng thử lại');
         }
     }
 

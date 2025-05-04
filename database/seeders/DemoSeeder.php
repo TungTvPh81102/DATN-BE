@@ -99,7 +99,7 @@ class DemoSeeder extends Seeder
 
                         Follow::createOrFirst([
                             'follower_id' => $userId,
-                            'instructor_id' => $instructor->id, 
+                            'instructor_id' => $instructor->id,
                         ]);
 
                         $chapterIds = Chapter::where('course_id', $course['id'])->pluck('id');
@@ -178,7 +178,7 @@ class DemoSeeder extends Seeder
                             'user_id' => $userId,
                             'amount' => $finalAmount,
                             'type' => 'invoice',
-                            'status' => 'Thành công',
+                            'status' => 'Giao dịch thành công',
                             'transactionable_type' => Invoice::class,
                             'transactionable_id' => $invoiceId,
                             'created_at' => $randomDate,

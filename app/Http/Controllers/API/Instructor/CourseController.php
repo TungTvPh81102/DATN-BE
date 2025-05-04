@@ -84,6 +84,46 @@ class CourseController extends Controller
         }
     }
 
+    public function courseWithPrice()
+    {
+        try {
+            $courses = Course::query()
+                ->where('user_id', Auth::id())
+                ->select([
+                    'id',
+                    'name',
+                    'thumbnail',
+                    'price',
+                    'price_sale',
+                    'status',
+                    'created_at',
+                    'category_id'
+                ])
+                ->with([
+                    'category:id,name',
+                ])
+                ->where('status', 'approved')
+                ->where('is_free', 0)
+                ->where(function ($query) {
+                    $query->where('price', '>', 0)
+                        ->orWhere('price_sale', '>', 0);
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return $this->respondOk(
+                'Danh sách khoá học của: ' . Auth::user()->name,
+                $courses
+            );
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError(
+                'Có lỗi xảy ra, vui lòng thử lại',
+            );
+        }
+    }
+
     public function courseApproved()
     {
         try {
@@ -246,7 +286,7 @@ class CourseController extends Controller
                 'code' => $data['code'],
                 'name' => $data['name'],
                 'slug' => $data['slug'],
-                'thumbnail' => self::THUMBNAIL_DEFAULT ?? '',
+                'thumbnail' => self::THUMBNAIL_DEFAULT ?? null,
                 'benefits' => json_encode([]),
                 'requirements' => json_encode([]),
                 'qa' => json_encode([]),
@@ -819,6 +859,10 @@ class CourseController extends Controller
             foreach ($lessons as $lesson) {
                 if (empty($lesson->title)) {
                     $errors[] = "Bài kiểm tra ID {$lesson->id} không có tiêu đề";
+                } elseif (strlen($lesson->title) < 5) {
+                    $errors[] = "Bài kiểm tra ID {$lesson->id} có tiêu đề quá ngắn";
+                } else {
+                    $pass[] = "Bài kiểm tra có tiêu đề hợp lệ";
                 }
 
                 if ($lesson->lessonable_type === Quiz::class) {
@@ -861,7 +905,7 @@ class CourseController extends Controller
         $pass = [];
 
         if ($chapters->count() > 0) {
-            if ($chapters->count() < 3) {
+            if ($chapters->count() > 0 && $chapters->count() < 3) {
                 $errors[] = "Khóa học phải có ít nhất 3 chương học. Hiện tại có {$chapters->count()} chương.";
             } else {
                 $pass[] = "Khóa học phải có ít nhất 3 chương học.";
@@ -870,7 +914,7 @@ class CourseController extends Controller
 
         foreach ($chapters as $index => $chapter) {
             if (empty($chapter->title)) {
-                $errorsChapter[] = "Chương học ID {$chapter->id} không có tiêu đề.";
+                $errors[] = "Chương học ID {$chapter->id} không có tiêu đề.";
             } else {
                 $pass[] = "Chương học phải có tiêu đề";
             }
@@ -880,7 +924,7 @@ class CourseController extends Controller
             }
 
             if ($chapter->lessons()->count() < 3) {
-                $errorsChapter[] = "Chương học '{$chapter->title}' phải có ít nhất 3 bài học. Hiện tại có {$chapter->lessons()->count()} bài.";
+                $errors[] = "Chương học '{$chapter->title}' phải có ít nhất 3 bài học. Hiện tại có {$chapter->lessons()->count()} bài.";
             } else {
                 $pass[] = "Một chương phải có ít nhất 3 bài học";
             }

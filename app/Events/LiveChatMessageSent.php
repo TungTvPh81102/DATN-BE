@@ -35,7 +35,7 @@ class LiveChatMessageSent implements ShouldBroadcast
             'message' => $this->message->content,
             'user_id' => $this->user->id,
             'user_name' => $this->user->name,
-            'user_avater' => $this->user->avatar ?? 'default-avatar.png',
+            'user_avater' => $this->user->avatar ?? 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1743316311/users/34wNL3FsA1.png',
             'timestamp' => now()->toIso8601String(),
         ];
     }

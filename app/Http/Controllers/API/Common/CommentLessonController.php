@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\API\Common;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Comments\ReportCommentRequest;
 use App\Http\Requests\API\Lessons\ReplyCommentLessonRequest;
 use App\Http\Requests\API\Lessons\StoreCommentLessonRequest;
+use App\Mail\CommentReportMail;
 use App\Models\Chapter;
 use App\Models\Comment;
 use App\Models\Lesson;
 use App\Models\Reaction;
+use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Traits\LoggableTrait;
 use Blaspsoft\Blasp\Facades\Blasp;
@@ -16,6 +19,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
 
 class CommentLessonController extends Controller
@@ -159,6 +163,7 @@ class CommentLessonController extends Controller
             if (!$user) {
                 return $this->respondUnauthorized('Bạn không có quyền truy cập');
             }
+
             // Kiểm tra xem người dùng có bị chặn không
             $blockKey = "comment_block:user_{$user->id}";
             if (Redis::exists($blockKey)) {
@@ -167,25 +172,26 @@ class CommentLessonController extends Controller
                 $minutes = floor($ttl / 60);
                 $seconds = $ttl % 60;
                 $formattedCountdown = sprintf('%02d:%02d', $minutes, $seconds);
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Bạn đã bị cấm bình luận đến ' . $blockUntil->toDateTimeString() . '.',
+
+                return $this->respondError('Bạn đã bị cấm bình luận đến ' . $blockUntil->toDateTimeString() . '.', [
                     'countdown' => $ttl,
                     'formatted_countdown' => $formattedCountdown
-                ], 400);
+                ]);
             }
             $data = $request->validated();
 
             $lessons = Lesson::query()->find($data['lesson_id']);
 
             if (!$lessons) {
-                return $this->respondNotFound('Không tìm thấy lớp học');
+                return $this->respondNotFound('Không tìm thấy bài học');
             }
 
             $customCheck = function ($text, $profanities) {
-                $text = strtolower($text);
+                $plainText = strip_tags($text);
+                $plainText = strtolower($plainText);
+                $plainText = preg_replace('/[^a-z0-9\s]/', '', $plainText);
                 foreach ($profanities as $word) {
-                    if (stripos($text, strtolower($word)) !== false) {
+                    if (stripos($plainText, strtolower($word)) !== false) {
                         return true;
                     }
                 }
@@ -197,18 +203,21 @@ class CommentLessonController extends Controller
             if ($customCheck($data['content'], $profanities)) {
                 $violationKey = "comment_violations:user_{$user->id}";
                 $violations = Redis::incr($violationKey);
+
                 if ($violations === 1) {
-                    Redis::expire($violationKey, 3600); 
+                    Redis::expire($violationKey, 3600);
                 }
+
                 if ($violations > config('comments.max_violations')) {
                     Redis::setex($blockKey, config('comments.block_duration'), true);
-                    Redis::del($violationKey); 
+                    Redis::del($violationKey);
                     return response()->json([
                         'status' => 'error',
                         'message' => 'Bạn đã bị cấm bình luận trong 1 tiếng do sử dụng từ ngữ không phù hợp quá nhiều lần.',
-                        'countdown' => 3600 
+                        'countdown' => 3600
                     ], 400);
                 }
+
                 return $this->respondError('Bình luận chứa từ ngữ không phù hợp.');
             }
 
@@ -223,15 +232,18 @@ class CommentLessonController extends Controller
             return $this->respondCreated('Bình luận thành công', $comment);
         } catch (\Exception $e) {
             Log::error('Error in storeCommentLessonBlog: ' . $e->getMessage());
+
             if ($e instanceof RedisException) {
                 Log::error('Redis error: ' . $e->getMessage());
                 return $this->respondServerError('Hệ thống gặp lỗi, vui lòng thử lại sau.');
             }
+
             $this->logError($e, $request->all());
 
             return $this->respondServerError();
         }
     }
+
     public function getCommentBlockTime(Request $request)
     {
         try {
@@ -244,11 +256,9 @@ class CommentLessonController extends Controller
             // Kiểm tra xem người dùng có bị chặn không
             $blockKey = "comment_block:user_{$user->id}";
             if (!Redis::exists($blockKey)) {
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Bạn không bị cấm bình luận.',
+                return $this->respondOk('Bạn không bị cấm bình luận.', [
                     'is_blocked' => false,
-                ], 200);
+                ]);
             }
 
             // Lấy thời gian còn lại từ Redis
@@ -258,24 +268,25 @@ class CommentLessonController extends Controller
             $seconds = $ttl % 60;
             $formattedCountdown = sprintf('%02d:%02d', $minutes, $seconds);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Bạn đang bị cấm bình luận.',
+            return $this->respondOk('Bạn đang bị cấm bình luận', [
                 'is_blocked' => true,
                 'countdown' => $ttl,
                 'formatted_countdown' => $formattedCountdown,
                 'block_until' => $blockUntil->toDateTimeString(),
-            ], 200);
+            ]);
         } catch (\Exception $e) {
             Log::error('Error in getCommentBlockTime: ' . $e->getMessage());
+
             if ($e instanceof RedisException) {
                 Log::error('Redis error: ' . $e->getMessage());
                 return $this->respondServerError('Hệ thống gặp lỗi, vui lòng thử lại sau.');
             }
+
             $this->logError($e, $request->all());
             return $this->respondServerError();
         }
     }
+
     public function getReplies(Request $request, string $commentId)
     {
         try {
@@ -323,21 +334,8 @@ class CommentLessonController extends Controller
                 return $this->respondNotFound('Không có bình luận cha');
             }
 
-            $customCheck = function ($text, $profanities) {
-                $text = strtolower($text);
-                foreach ($profanities as $word) {
-                    if (stripos($text, strtolower($word)) !== false) {
-                        return true;
-                    }
-                }
-                return false;
-            };
-
-            $profanities = config('blasp.profanities', []);
-
-            if ($customCheck($data['content'], $profanities)) {
-                return $this->respondError('Bình luận chứa từ ngữ không phù hợp.');
-            }
+            $check = $this->checkProfanityAndBlock($data['content'], $user);
+            if ($check) return $check;
 
             $reply = Comment::query()->create([
                 'user_id' => $user->id,
@@ -353,6 +351,52 @@ class CommentLessonController extends Controller
 
             return $this->respondServerError();
         }
+    }
+
+    protected function checkProfanityAndBlock($text, $user)
+    {
+        $blockKey = "comment_block:user_{$user->id}";
+        if (Redis::exists($blockKey)) {
+            $ttl = Redis::ttl($blockKey);
+            $blockUntil = Carbon::now()->addSeconds($ttl);
+            $minutes = floor($ttl / 60);
+            $seconds = $ttl % 60;
+            $formattedCountdown = sprintf('%02d:%02d', $minutes, $seconds);
+
+            return $this->respondError('Bạn đã bị cấm bình luận đến ' . $blockUntil->toDateTimeString(), [
+                'countdown' => $ttl,
+                'formatted_countdown' => $formattedCountdown,
+            ]);
+        }
+
+        $profanities = config('blasp.profanities', []);
+        $content = strip_tags($text);
+        $content = strtolower($content);
+        $content = preg_replace('/[^a-z0-9\s]/', '', $content);
+
+        foreach ($profanities as $word) {
+            if (stripos($content, strtolower($word)) !== false) {
+                $violationKey = "comment_violations:user_{$user->id}";
+                $violations = Redis::incr($violationKey);
+
+                if ($violations === 1) {
+                    Redis::expire($violationKey, 3600);
+                }
+
+                if ($violations > config('comments.max_violations')) {
+                    Redis::setex($blockKey, 3600, true);
+                    Redis::del($violationKey);
+
+                    return $this->respondError('Bạn đã bị cấm bình luận trong 1 tiếng do sử dụng từ ngữ không phù hợp quá nhiều lần', [
+                        'countdown' => 3600
+                    ]);
+                }
+
+                return $this->respondError('Nội dung chứa từ ngữ không phù hợp');
+            }
+        }
+
+        return null;
     }
 
     public function deleteComment(string $commentId)
@@ -399,6 +443,54 @@ class CommentLessonController extends Controller
             $comment->delete();
 
             return $this->respondOk('Xóa bình luận thành công');
+        } catch (\Exception $e) {
+            $this->logError($e);
+
+            return $this->respondServerError();
+        }
+    }
+
+    public function reportCommentLesson(ReportCommentRequest $request,  $lesson_id)
+    {
+        try {
+            $user = Auth::user();
+            if (!$user) {
+                return $this->respondUnauthorized('Bạn không có quyền truy cập');
+            }
+
+            $request->validated();
+
+            $lesson = Lesson::with('chapter.course')->findOrFail($lesson_id);
+
+            if ($lesson->chapter_id === null) {
+                return $this->respondError('Chương hoặc bài học không hợp lệ.');
+            }
+
+            $comment = Comment::with('user')->findOrFail($request->comment_id);
+
+            if ($comment->user_id === $user->id) {
+                return $this->respondError('Bạn không thể báo cáo bình luận của chính mình.');
+            }
+
+            $data = [
+                'course_name'     => $lesson->chapter->course->name,
+                'chapter_name'    => $lesson->chapter->title,
+                'lesson_name'     => $lesson->title,
+                'comment_author'  => $comment->user->name ?? 'Không rõ',
+                'comment_content' => $comment->content,
+                'reporter_name'   => $user->name,
+                'report_content'  => $request->report_content,
+                'comment_id'     => $request->comment_id,
+            ];
+
+            $admin = User::whereHas('roles', function ($query) {
+                $query->where('name', 'admin');
+            })->first();
+            if ($admin) {
+                Mail::to($admin->email)->queue(new CommentReportMail($data));
+            }
+
+            return $this->respondOk('Báo cáo đã được gửi thành công');
         } catch (\Exception $e) {
             $this->logError($e);
 

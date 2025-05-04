@@ -28,7 +28,7 @@ class UpdateUserRequest extends FormRequest
         $roles = array_values($roles);
 
         return [
-            'name'       => ['required', 'string', 'min:2', 'max:255', 'regex:/^[\pL\s]+$/u'],
+            'name'       => ['required', 'string', 'min:2', 'max:255'],
             'avatar'     => ['nullable', 'image', 'max:2000'],
             'status'     => ['required', 'in:active,inactive,blocked'],
             'role' => [
@@ -43,7 +43,6 @@ class UpdateUserRequest extends FormRequest
             // Tên
             'name.required' => 'Tên là bắt buộc.',
             'name.string'   => 'Định dạng tên không hợp lệ.',
-            'name.regex'    => 'Định dạng tên không hợp lệ.',
             'name.min'      => 'Tên phải có ít nhất 2 ký tự',
             'name.max'      => 'Tên không được vượt quá 255 ký tự.',
 

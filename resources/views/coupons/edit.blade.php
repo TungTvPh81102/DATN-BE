@@ -300,38 +300,35 @@
                     <div class="form-section">
                         <div class="section-title">Phạm Vi Áp Dụng</div>
 
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" id="system_wide_coupon" name="system_wide"
-                                value="{{ old('system_wide', 'true') }}"
-                                {{ old('system_wide', 'true') == 'true' ? 'checked' : '' }}>
-                            <label class="form-check-label" for="system_wide_coupon">
-                                Áp Dụng Cho Toàn Bộ Hệ Thống
-                            </label>
-                        </div>
-
-                        <div id="user_selection_section" style="display:none;">
+                        <div id="user_selection_section">
                             <div class="card">
-                                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                                    <h5 class="card-title mb-0">Chọn Người Dùng</h5>
-                                    <span class="badge bg-primary">Đã áp dụng: <span
-                                            id="selected_user_count">{{ $coupon->couponUses->count() }}</span> người
-                                        dùng</span>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-12 mb-3">
-                                            <label class="form-label">Tìm Kiếm Người Dùng</label>
-                                            <div class="d-flex align-items-center gap-2">
-                                                <select id="user_select" class="form-control" multiple
-                                                    name="selected_users[]">
-                                                </select>
-                                                <button type="button" class="btn btn-primary" id="add_user_btn">
-                                                    Thêm
-                                                </button>
+                                @if (Str::startsWith($coupon->code, 'LUCKYWHEEL'))
+                                        <span class="badge bg-success fs-5">Người chơi quay trúng mã giảm giá tại vòng quay may mắn</span>
+                                @else
+                                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                        <h5 class="card-title mb-0">Chọn Người Dùng</h5>
+                                        <span class="badge bg-primary">Đã áp dụng:
+                                            <span id="selected_user_count">{{ $coupon->couponUses->count() }}</span> người
+                                            dùng
+                                        </span>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-12 mb-3">
+                                                <label class="form-label">Tìm Kiếm Người Dùng</label>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <select id="user_select" class="form-control" multiple
+                                                        name="selected_users[]">
+                                                    </select>
+                                                    <button type="button" class="btn btn-primary" id="add_user_btn">
+                                                        Thêm
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                @endif
+
                             </div>
                         </div>
                     </div>
@@ -444,12 +441,15 @@
             let selectedUsers = [];
 
             @foreach ($coupon->couponUses as $use)
-                selectedUsers.push({
-                    id: {{ $use->user->id }},
-                    name: "{{ $use->user->name }}",
-                    email: "{{ $use->user->email }}",
-                    avatar: "{{ $use->user->avatar ?? 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png' }}"
-                });
+                @if ($use->user)
+                    selectedUsers.push({
+                        id: {{ $use->user->id }},
+                        name: "{{ $use->user->name }}",
+                        email: "{{ $use->user->email }}",
+                        avatar: "{{ $use->user->avatar ?? 'https://res.cloudinary.com/dvrexlsgx/image/upload/v1732148083/Avatar-trang-den_apceuv_pgbce6.png' }}",
+                        status: "{{ $use->status }}" // => status từ bảng couponUses
+                    });
+                @endif
             @endforeach
 
             const itemsPerPage = 5;
@@ -516,9 +516,10 @@
                         if (!selectedUsers.some(user => user.id == option.id)) {
                             selectedUsers.push({
                                 id: option.id,
-                                name: option.name,
-                                email: option.email,
-                                avatar: option.avatar
+                                name: option
+                                    .name,
+                                email: option.email || null,
+                                avatar: option.avatar || null
                             });
                         }
                     });
@@ -528,8 +529,12 @@
                     $('#selected_user_count').text(selectedUsers.length);
 
                     $('#user_select').val(null).trigger('change');
+
+                    // 👇 Update lại input hidden sau mỗi lần add
+                    $('#selected_users_input').val(JSON.stringify(selectedUsers));
                 }
             });
+
 
             function formatUser(user) {
                 if (!user.id) {
@@ -586,6 +591,12 @@
 
             $(document).on('click', '.remove-user', function() {
                 const userId = $(this).data('id');
+                const user = selectedUsers.find(user => user.id == userId);
+
+                if (user && user.status === 'unused') {
+                    toastr.warning('Không thể xoá người dùng chưa sử dụng.');
+                    return;
+                }
 
                 selectedUsers = selectedUsers.filter(user => user.id != userId);
 
@@ -593,6 +604,8 @@
 
                 $('#selected_user_count').text(selectedUsers.length);
             });
+
+
 
             function updateSelectedUsersTable() {
                 $('#selected_users_inputs').empty();
@@ -667,7 +680,7 @@
                 const $prevLi = $(`<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"></li>`);
                 const $prevLink = $(
                     '<a class="page-link" href="#" aria-label="Previous"><span aria-hidden="true">&laquo;</span></a>'
-                    );
+                );
                 $prevLink.on('click', function(e) {
                     e.preventDefault();
                     if (currentPage > 1) {
@@ -737,7 +750,7 @@
                 const $nextLi = $(`<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"></li>`);
                 const $nextLink = $(
                     '<a class="page-link" href="#" aria-label="Next"><span aria-hidden="true">&raquo;</span></a>'
-                    );
+                );
                 $nextLink.on('click', function(e) {
                     e.preventDefault();
                     if (currentPage < totalPages) {
@@ -758,26 +771,22 @@
                 $('#user_selection_section').toggle(!isChecked);
             });
 
-            $('#couponForm').on('submit', function(e) {
-                const isSystemWide = $('#system_wide_coupon').prop('checked');
+            // $('#couponForm').on('submit', function(e) {
+            //     let isSystemWide = $('#system_wide_coupon').prop('checked');
 
-                if (!isSystemWide && selectedUsers.length === 0) {
-                    e.preventDefault();
-                    toastr.error('Vui lòng chọn ít nhất một người dùng hoặc chọn áp dụng toàn hệ thống.');
-                }
-            });
+            //     if (!isSystemWide && (!$('#user_select').val() || $('#user_select').val().length === 0)) {
+            //         e.preventDefault();
+            //         $('#user_select').closest('.form-group').find('.error-message')
+            //     .remove(); // tránh bị thêm nhiều lần
+            //         $('#user_select').closest('.form-group').append(
+            //             '<div class="text-danger error-message mt-1 small">Vui lòng chọn ít nhất một người dùng nếu không áp dụng toàn hệ thống.</div>'
+            //         );
+            //         return;
+            //     }
 
-            $('#couponForm').on('submit', function(e) {
-                let isSystemWide = $('#system_wide_coupon').prop('checked');
-                let selectedUsers = $('#user_select').val();
+            //     // Không e.preventDefault() => form tự submit
+            // });
 
-                if (!isSystemWide && (!selectedUsers || selectedUsers.length === 0)) {
-                    e.preventDefault();
-                    $('#user_select').closest('.form-group').append(
-                        '<div class="text-danger error-message mt-1 small">Vui lòng chọn ít nhất một người dùng nếu không áp dụng toàn hệ thống.</div>'
-                    );
-                }
-            });
 
             function formatUser(user) {
                 if (!user.id) {

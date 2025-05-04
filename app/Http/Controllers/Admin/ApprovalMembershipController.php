@@ -99,6 +99,8 @@ class ApprovalMembershipController extends Controller
                     ->paginate(5);
             }
 
+            $conditionalMembership = $this->conditionalMembership($approval->membershipPlan);
+
             $title = 'Kiểm duyệt gói thành viên';
             $subTitle = 'Thông tin kiểm duyệt';
 
@@ -106,6 +108,7 @@ class ApprovalMembershipController extends Controller
                 'title',
                 'subTitle',
                 'approval',
+                'conditionalMembership',
                 'courses',
             ]));
         } catch (\Exception $e) {
@@ -203,7 +206,32 @@ class ApprovalMembershipController extends Controller
                 ->with('error', 'Có lỗi xảy ra, vui lòng thử lại sau');
         }
     }
+    private function conditionalMembership($memberShipPlan)
+    {
+        $errors = [];
+        $pass = [];
+        $courseCount = $memberShipPlan->membershipCourseAccess->count();
 
+        if (empty($memberShipPlan->name) || strlen($memberShipPlan->name) < 5) {
+            $errors[] = "Gói thành viên phải có tên với tối thiểu 5 ký tự.";
+        }else{
+            $pass[] = "Gói thành viên phải có tên với tối thiểu 5 ký tự.";
+        }
+
+        if (empty($memberShipPlan->description) || strlen($memberShipPlan->description) < 10) {
+            $errors[] = "Mô tả gói thành viên phải có tối thiểu 10 ký tự.";
+        }else{
+            $pass[] = "Mô tả gói thành viên phải có tối thiểu 10 ký tự.";
+        }
+
+        if ($courseCount < 5) {
+            $errors[] = 'Gói phải có tối thiểu 5 khoá học để có thể gửi yêu cầu';
+        }else{
+            $pass[] = "Gói phải có tối thiểu 5 khoá học để có thể gửi yêu cầu";
+        }
+
+        return ['errors' => $errors,'pass' => $pass];
+    }
     private function filter(Request $request, $query)
     {
         $filters = [
