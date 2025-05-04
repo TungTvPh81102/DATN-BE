@@ -270,6 +270,10 @@ class SpinController extends Controller
     public function updateSpinConfig(Request $request, $id)
     {
         try {
+            $spinSetting = SpinSetting::first();
+            if ($spinSetting && $spinSetting->status === 'active') {
+                return redirect()->back()->with('error','Không thể cập nhật tỷ lệ trúng khi vòng quay đang hoạt động!');
+            }
             $config = SpinConfig::findOrFail($id);
             $validator = Validator::make($request->all(), [
                 'probability' => 'required|numeric|min:0|max:100',
@@ -321,6 +325,10 @@ class SpinController extends Controller
     // Cập nhật quà hiện vật
     public function updateGift(Request $request, $id)
     {
+        $spinSetting = SpinSetting::first();
+            if ($spinSetting && $spinSetting->status === 'active') {
+                return redirect()->back()->with('error','Không thể cập nhật tỷ lệ trúng khi vòng quay đang hoạt động!');
+            }
         $gift = Gift::findOrFail($id);
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
