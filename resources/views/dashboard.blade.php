@@ -52,12 +52,14 @@
                         style="background: linear-gradient(135deg, #e9f7ef, #d4efdf); border-radius: 12px; position: relative;">
                         <span class="percentage-change fw-bold"
                             style="position: absolute; top: 10px; right: 10px; color: {{ $revenueChange > 0 ? 'green' : ($revenueChange < 0 ? 'red' : 'gray') }};">
-                            @if ($revenueChange > 0)
-                                <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
-                            @else
-                                <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                            @if ($revenueChange != 0)
+                                @if ($revenueChange > 0)
+                                    <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                                @else
+                                    <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                                @endif
+                                {{ is_numeric($revenueChange) ? (fmod($revenueChange, 1) == 0 ? number_format($revenueChange, 0) : number_format($revenueChange, 2)) : $revenueChange }}%
                             @endif
-                            {{ fmod($revenueChange, 1) == 0 ? number_format($revenueChange, 0) : number_format($revenueChange, 2) }}%
                         </span>
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Tổng doanh thu</p>
 
@@ -85,12 +87,14 @@
                         style="background: linear-gradient(135deg, #e9f2ff, #d6eaff); border-radius: 12px;">
                         <span class="percentage-change fw-bold"
                             style="position: absolute; top: 10px; right: 10px; color: {{ $profitChange > 0 ? 'green' : ($profitChange < 0 ? 'red' : 'gray') }};">
-                            @if ($profitChange > 0)
-                                <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
-                            @else
-                                <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                            @if ($profitChange != 0)
+                                @if ($profitChange > 0)
+                                    <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                                @else
+                                    <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                                @endif
+                                {{ is_numeric($profitChange) ? (fmod($profitChange, 1) == 0 ? number_format($profitChange, 0) : number_format($profitChange, 2)) : $profitChange }}%
                             @endif
-                            {{ fmod($profitChange, 1) == 0 ? number_format($profitChange, 0) : number_format($profitChange, 2) }}%
                         </span>
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Lợi nhuận đạt được</p>
                         <div class="d-flex align-items-center justify-content-between">
@@ -115,12 +119,14 @@
                         style="background: linear-gradient(135deg, #fff3e6, #ffeedb); border-radius: 12px;">
                         <span class="percentage-change fw-bold"
                             style="position: absolute; top: 10px; right: 10px; color: {{ $courseChange > 0 ? 'green' : ($courseChange < 0 ? 'red' : 'gray') }};">
-                            @if ($courseChange > 0)
-                                <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
-                            @else
-                                <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                            @if ($courseChange != 0)
+                                @if ($courseChange > 0)
+                                    <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                                @else
+                                    <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                                @endif
+                                {{ is_numeric($courseChange) ? (fmod($courseChange, 1) == 0 ? number_format($courseChange, 0) : number_format($courseChange, 2)) : $courseChange }}%
                             @endif
-                            {{ fmod($courseChange, 1) == 0 ? number_format($courseChange, 0) : number_format($courseChange, 2) }}%
                         </span>
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Tổng khóa học</p>
                         <div class="d-flex align-items-center justify-content-between">
@@ -143,12 +149,14 @@
                         style="background: linear-gradient(135deg, #e9e9ff, #dcdbff); border-radius: 12px;">
                         <span class="percentage-change fw-bold"
                             style="position: absolute; top: 10px; right: 10px; color: {{ $instructorChange > 0 ? 'green' : ($instructorChange < 0 ? 'red' : 'gray') }};">
-                            @if ($instructorChange > 0)
-                                <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
-                            @else
-                                <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                            @if ($instructorChange != 0)
+                                @if ($instructorChange > 0)
+                                    <i class="ri-arrow-right-up-line fs-13 align-middle"></i>
+                                @else
+                                    <i class="ri-arrow-right-down-line fs-13 align-middle"></i>
+                                @endif
+                                {{ is_numeric($instructorChange) ? (fmod($instructorChange, 1) == 0 ? number_format($instructorChange, 0) : number_format($instructorChange, 2)) : $instructorChange }}%
                             @endif
-                            {{ fmod($instructorChange, 1) == 0 ? number_format($instructorChange, 0) : number_format($instructorChange, 2) }}%
                         </span>
                         <p class="text-uppercase fw-semibold text-muted mb-3 fs-13">Tổng số giảng viên </p>
                         <div class="d-flex align-items-center justify-content-between">
@@ -836,29 +844,27 @@
                 legend: {
                     enabled: false
                 },
-                series: [
-                    {
-                        name: 'Doanh thu',
-                        data: renueveDate,
-                        lineColor: Highcharts.getOptions().colors[3],
-                        color: Highcharts.getOptions().colors[4],
-                        fillOpacity: 0.3,
-                        marker: {
-                            enabled: false
-                        },
-                        threshold: null
-                    },{
-                        name: 'Lợi nhuận',
-                        data: profitData,
-                        lineColor: Highcharts.getOptions().colors[1],
-                        color: Highcharts.getOptions().colors[2],
-                        fillOpacity: 0.5,
-                        marker: {
-                            enabled: false
-                        },
-                        threshold: null
-                    }
-                ]
+                series: [{
+                    name: 'Doanh thu',
+                    data: renueveDate,
+                    lineColor: Highcharts.getOptions().colors[3],
+                    color: Highcharts.getOptions().colors[4],
+                    fillOpacity: 0.3,
+                    marker: {
+                        enabled: false
+                    },
+                    threshold: null
+                }, {
+                    name: 'Lợi nhuận',
+                    data: profitData,
+                    lineColor: Highcharts.getOptions().colors[1],
+                    color: Highcharts.getOptions().colors[2],
+                    fillOpacity: 0.5,
+                    marker: {
+                        enabled: false
+                    },
+                    threshold: null
+                }]
             });
         }
 

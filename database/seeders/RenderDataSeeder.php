@@ -4,69 +4,202 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Chapter;
+use App\Models\Conversation;
 use App\Models\Course;
+use App\Models\Invoice;
 use App\Models\Lesson;
 use App\Models\User;
 use App\Models\Video;
+use App\Models\Wallet;
 use Faker\Factory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class RenderDataSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = Factory::create('vi_VN');
+        try {
+            DB::beginTransaction();
+            $faker = Factory::create('vi_VN');
 
-        $categories = Category::all();
-        $instructors = User::query()
-            ->whereHas('roles', fn($q) => $q->where('name', 'instructor'))
-            ->get();
+            $categories = Category::all();
+            $instructors = User::query()
+                ->whereHas('roles', fn($q) => $q->where('name', 'instructor'))
+                ->get();
+            $students = User::query()->inRandomOrder()->whereHas('roles', fn($q) => $q->where('name', 'member'))
+                ->limit(30)->pluck('id')->toArray();
 
-        if ($categories->isEmpty() || $instructors->isEmpty()) {
-            return;
-        }
-
-        foreach ($instructors as $instructor) {
-            $courseCount = rand(5, 10);
-
-            for ($i = 0; $i < $courseCount; $i++) {
-                $category = $categories->random();
-
-                $courseName = $this->generateCourseTitle($category->name, $faker);
-                $courseCode = Str::uuid();
-                $startDate = Carbon::create(2024, 1, 1)->addDays(rand(0, now()->diffInDays('2024-01-01')));
-
-                $isFree = rand(0, 1) === 1;
-                if ($isFree) {
-                    $price = 0;
-                    $priceSale = 0;
-                } else {
-                    $price = rand(60, 200) * 5000; 
-
-                    $priceSale = rand(0, 1) ? rand(50, intval($price / 5000) - 2) * 5000 : null;
-                }
-
-                $course = Course::create([
-                    'name' => $courseName,
-                    'code' => $courseCode,
-                    'slug' => Str::slug($courseName) . '-' . $courseCode,
-                    'description' => $faker->paragraph(5),
-                    'category_id' => $category->id,
-                    'user_id' => $instructor->id,
-                    'level' => $faker->randomElement(['beginner', 'advanced']),
-                    'is_free' => $isFree,
-                    'price' => $price ,
-                    'price_sale' => $priceSale ?? 0,
-                    'created_at' => $startDate,
-                    'benefits' => json_encode($this->generateBenefits($faker)),
-                    'requirements' => json_encode($this->generateRequirements($faker)),
-                    'qa' => json_encode($this->generateQa($faker)),
-                ]);
-
-                $this->createChaptersWithLessonsAndVideos($course, $faker);
+            if ($categories->isEmpty() || $instructors->isEmpty()) {
+                return;
             }
+
+            foreach ($instructors as $instructor) {
+                $courseCount = rand(5, 10);
+
+                for ($i = 0; $i < $courseCount; $i++) {
+                    $category = $categories->random();
+
+                    $courseName = $this->generateCourseTitle($category->name, $faker);
+                    $courseCode = Str::uuid();
+                    $startDate = Carbon::create(2024, 1, 1)->addDays(rand(0, now()->diffInDays('2024-01-01')));
+                    $isFree = rand(0, 1) === 1;
+                    if ($isFree) {
+                        $price = 0;
+                        $priceSale = 0;
+                    } else {
+                        $price = rand(60, 200) * 5000;
+
+                        $priceSale = rand(0, 1) ? rand(50, intval($price / 5000) - 2) * 5000 : null;
+                    }
+
+                    $course = Course::create([
+                        'name' => $courseName,
+                        'code' => $courseCode,
+                        'slug' => Str::slug($courseName) . '-' . $courseCode,
+                        'description' => $faker->paragraph(5),
+                        'category_id' => $category->id,
+                        'user_id' => $instructor->id,
+                        'level' => $faker->randomElement(['beginner', 'advanced']),
+                        'is_free' => $isFree,
+                        'price' => $price,
+                        'price_sale' => $priceSale ?? 0,
+                        'created_at' => $startDate,
+                        'benefits' => json_encode($this->generateBenefits($faker)),
+                        'requirements' => json_encode($this->generateRequirements($faker)),
+                        'qa' => json_encode($this->generateQa($faker)),
+                    ]);
+
+                    $this->createChaptersWithLessonsAndVideos($course, $faker);
+
+                    $instructor = User::query()->where('id', $course['user_id'])->with('instructorCommissions')->first();
+                    $rateInstructor = !empty($instructor?->instructorCommissions->rate) ? $instructor->instructorCommissions->rate : 0.6;
+                    $amount = $course['price'] ?? 100000;
+                    $finalAmount = $amount;
+                    $year = fake()->randomElement([
+                        2024,
+                        2024,
+                        2025,
+                        2025,
+                        2025
+                    ]);
+
+                    if ($year == 2025) {
+                        $randomDate = fake()->dateTimeBetween("2025-05-01", now());
+                    } else {
+                        $randomDate = fake()->dateTimeBetween("{$year}-01-01", "{$year}-12-31");
+                    }
+
+                    $userId = $faker->randomElement($students);
+                    $progress = random_int(0, 100);
+
+                    DB::table('course_users')->insert([
+                        'user_id' => $userId,
+                        'course_id' => $course['id'],
+                        'progress_percent' => $progress,
+                        'enrolled_at' => now()->subDays(rand(1, 30)),
+                        'completed_at' => $progress === 100 ? now() : null,
+                        'source' => 'purchase',
+                        'access_status' => 'active',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    DB::table('courses')
+                        ->where('id', $course['id'])
+                        ->increment('total_student', 1);
+                    $viewsToAdd = rand(5, 20);
+                    DB::table('courses')
+                        ->where('id', $course['id'])
+                        ->increment('views', $viewsToAdd);
+
+                    $invoiceId = DB::table('invoices')->insertGetId([
+                        'code' => 'INV' . strtoupper(Str::random(10)),
+                        'user_id' => $faker->randomElement($students),
+                        'course_id' => $course['id'],
+                        'amount' => $amount,
+                        'final_amount' => $finalAmount,
+                        'status' => 'Đã thanh toán',
+                        'invoice_type' => 'course',
+                        'payment_method' => $i % 2 == 0 ? 'vnpay' : 'momo',
+                        'instructor_commissions' => $rateInstructor,
+                        'created_at' => $randomDate,
+                        'updated_at' => $randomDate,
+                    ]);
+
+                    $transactionId = DB::table('transactions')->insertGetId([
+                        'transaction_code' => 'TXN' . strtoupper(Str::random(10)),
+                        'user_id' => $faker->randomElement($students),
+                        'amount' => $finalAmount,
+                        'type' => 'invoice',
+                        'status' => 'Giao dịch thành công',
+                        'transactionable_type' => Invoice::class,
+                        'transactionable_id' => $invoiceId,
+                        'created_at' => $randomDate,
+                        'updated_at' => $randomDate,
+                    ]);
+
+                    $systemBalance = DB::table('system_funds')->first();
+
+                    if (!$systemBalance) {
+                        DB::table('system_funds')->insert([
+                            'balance' => $finalAmount * (1 - $rateInstructor),
+                            'pending_balance' => $finalAmount * $rateInstructor,
+                            'created_at' => $randomDate,
+                            'updated_at' => $randomDate,
+                        ]);
+                    } else {
+                        DB::table('system_funds')->update([
+                            'balance' => $systemBalance->balance + $finalAmount * (1 - $rateInstructor),
+                            'pending_balance' => $systemBalance->pending_balance + $finalAmount * $rateInstructor,
+                            'updated_at' => $randomDate,
+                        ]);
+                    }
+
+                    DB::table('system_fund_transactions')->insert([
+                        'transaction_id' => $transactionId,
+                        'user_id' => $userId,
+                        'total_amount' => $finalAmount,
+                        'retained_amount' => $finalAmount * (1 - $rateInstructor),
+                        'type' => 'commission_received',
+                        'description' => "Nhận tiền hoa hồng từ việc bán khóa học",
+                        'created_at' => $randomDate,
+                        'updated_at' => $randomDate,
+                    ]);
+
+                    $wallet = Wallet::firstOrCreate(
+                        ['user_id' => $course['user_id']],
+                        ['balance' => 0]
+                    );
+
+                    $wallet->increment('balance', $finalAmount * $rateInstructor);
+
+                    $conversation = Conversation::query()->where([
+                        'conversationable_id' => $course['id'],
+                        'conversationable_type' => Course::class
+                    ])->first();
+
+                    if ($conversation) {
+                        $conversation->users()->syncWithoutDetaching([$userId]);
+                    } else {
+                        $conversation = Conversation::create([
+                            'conversationable_id' => $course['id'],
+                            'conversationable_type' => Course::class,
+                            'name' => "Nhóm thảo luận của khóa học {$course['id']}"
+                        ]);
+
+                        $conversation->users()->attach([$userId, $course['user_id']]);
+                    }
+                }
+            }
+            DB::commit();
+        } catch (\Throwable $th) {
+            DB::rollBack();
+
+            Log::error($th->getMessage());
         }
     }
 
