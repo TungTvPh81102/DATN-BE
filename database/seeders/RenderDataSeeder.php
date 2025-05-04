@@ -9,7 +9,6 @@ use App\Models\Lesson;
 use App\Models\User;
 use App\Models\Video;
 use Faker\Factory;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -18,8 +17,10 @@ class RenderDataSeeder extends Seeder
     /**
      * Run the database seeds.
      */
+
     public function run(): void
     {
+        
         $faker = Factory::create('vi_VN');
 
         $categories = Category::all();
@@ -112,6 +113,7 @@ class RenderDataSeeder extends Seeder
                 $courseCode = Str::uuid();
 
                 $course = Course::query()->create([
+
                     'name' => $courseName,
                     'code' => $courseCode,
                     'slug' => Str::slug($courseName) . '-' . $courseCode,
@@ -128,11 +130,13 @@ class RenderDataSeeder extends Seeder
         }
     }
 
+
     private function createChaptersWithLessonsAndVideos($course, $faker)
     {
         $chapterCount = $faker->numberBetween(4, 10);
 
         for ($i = 0; $i < $chapterCount; $i++) {
+
             $chapter = Chapter::create([
                 'course_id' => $course->id,
                 'title' => $this->generateChapterTitle($course->name, $i + 1),
@@ -197,6 +201,7 @@ class RenderDataSeeder extends Seeder
         ];
 
         $prefix = $prefixes[array_rand($prefixes)];
+
         $topic = $topics[array_rand($topics)];
 
         return sprintf(
